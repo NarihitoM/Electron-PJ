@@ -1,6 +1,6 @@
 import { Server } from "../../../shared/config/axioconfig"
 import { fetchurl } from "../../../shared/config/fetchconfig";
-import { returnslackacc, returnslackcron, returnslackfeedback, returnslackmsg, slackcrondata } from "../types";
+import { returnslackacc, returnslackcron, returnslackfeedback, returnslackmsg, slackcrondata } from "../types/type";
 
 export const slackauth = {
     slackstate: async (): Promise<{ stateId: string }> => {

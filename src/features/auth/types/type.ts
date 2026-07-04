@@ -101,3 +101,9 @@ export interface createuserauth {
         formdata: FormData
     ) => Promise<authfeedback>
 }
+
+export interface AuthClientState {
+    email: string;
+    setEmail: (email: string) => void;
+    resetemail: () => void;
+}

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { dashboardapi } from "../api/api"
-import type { DashboardStats } from "../types"
+import type { DashboardStats } from "../types/type"
 
 export const useDashboardStats = () => {
     return useQuery<DashboardStats, Error>({

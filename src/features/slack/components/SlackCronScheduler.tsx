@@ -25,9 +25,9 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import { ChevronsUpDown } from "lucide-react";
 import type { ModelEntry } from "@/shared/lib/modelsapi";
-import type { slackcrondata } from "@/features/slack/types";
+import type { slackcrondata } from "@/features/slack/types/type";
 import type { NavigateFunction } from "react-router-dom";
-import type { Servicefetch } from "@/features/services/types";
+import type { Servicefetch } from "@/features/services/types/type";
 
 interface Channel {
     id: string;

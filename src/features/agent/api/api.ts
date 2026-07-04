@@ -1,5 +1,5 @@
 import { Server } from "../../../shared/config/axioconfig"
-import { returnagentmessagedata, returnagentmessagefeedback, returnnodedata, returnnodefeedback } from "../types";
+import { returnagentmessagedata, returnagentmessagefeedback, returnnodedata, returnnodefeedback } from "../types/type";
 
 export const agentauth = {
     addnode: async (

@@ -1,6 +1,6 @@
 import { type MemorySaver, Command } from "@langchain/langgraph";
 import { nodes } from "../../src/shared/types/globaltype";
-import { Servicefetch } from "../../src/features/services/types";
+import { Servicefetch } from "../../src/features/services/types/type";
 import { createNodeDeepAgent } from "./node-deepagent";
 import crypto from "crypto";
 

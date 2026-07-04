@@ -1,6 +1,6 @@
 import { Server } from "../../../shared/config/axioconfig"
 import { fetchurl } from "../../../shared/config/fetchconfig";
-import { returngooglefeedback, returngooglefetchmessage } from "../types";
+import { returngooglefeedback, returngooglefetchmessage } from "../types/type";
 
 export const googleauth = {
     addservice: async (

@@ -1,6 +1,6 @@
 import { Server } from "../../../shared/config/axioconfig"
 import { fetchurl } from "../../../shared/config/fetchconfig";
-import { returntelegramcrondata, returntelegramfeedback, returntelegrammessage, telegramcrondata } from "../types";
+import { returntelegramcrondata, returntelegramfeedback, returntelegrammessage, telegramcrondata } from "../types/type";
 
 export const telegramauth = {
     sendmessage: async (

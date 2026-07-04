@@ -1,4 +1,5 @@
 import { create } from "zustand"
+import type { UsageClientState } from "../types/type"
 
 const RECENT_LIMIT = 8;
 
@@ -9,16 +10,7 @@ const INITIAL_STATE = {
     recentLimit: RECENT_LIMIT,
 };
 
-export const usagestore = create<{
-    period: "day" | "week" | "month" | "year";
-    selectedYear: number;
-    recentPage: number;
-    recentLimit: number;
-    setPeriod: (period: "day" | "week" | "month" | "year") => void;
-    setSelectedYear: (year: number) => void;
-    setRecentPage: (page: number) => void;
-    resetUsage: () => void;
-}>((set) => ({
+export const usagestore = create<UsageClientState>((set) => ({
     ...INITIAL_STATE,
     setPeriod: (period) => set({ period, recentPage: 1 }),
     setSelectedYear: (selectedYear) => set({ selectedYear, recentPage: 1 }),

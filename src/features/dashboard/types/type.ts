@@ -13,4 +13,7 @@ export interface Apiresponse<T = void> {
 }
 export type DashboardApiResponse = Apiresponse<DashboardStats>;
 
+export interface DashboardClientState {
+    resetDashboard: () => void;
+}
 

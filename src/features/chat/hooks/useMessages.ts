@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { chatauth } from "../api/api"
-import type { messagefetch } from "../types"
+import type { messagefetch } from "../types/type"
 
 export const useMessages = (chatid: string | undefined, cursor?: number, limit?: number) => {
     return useQuery<messagefetch[]>({

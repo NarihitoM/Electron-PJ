@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { userauthapi } from "../api/api"
-import type { User } from "../types"
+import type { User } from "../types/type"
 
 export const useUser = () => {
     return useQuery<User | null>({

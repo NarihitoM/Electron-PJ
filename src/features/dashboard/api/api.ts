@@ -1,5 +1,5 @@
 import { Server } from "../../../shared/config/axioconfig"
-import { DashboardApiResponse } from "../types";
+import { DashboardApiResponse } from "../types/type";
 
 export const dashboardapi = {
     fetchStats: async (): Promise<DashboardApiResponse> => {

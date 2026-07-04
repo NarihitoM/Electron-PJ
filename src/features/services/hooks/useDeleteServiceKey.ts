@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { serviceauth } from "../api/api"
-import type { authservicefeedback } from "../types"
+import type { authservicefeedback } from "../types/type"
 
 export const useDeleteServiceKey = () => {
     const queryClient = useQueryClient()

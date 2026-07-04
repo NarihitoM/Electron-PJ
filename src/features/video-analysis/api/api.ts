@@ -1,5 +1,5 @@
 import { Server } from "../../../shared/config/axioconfig";
-import { returnvideodata, returnvideourl } from "../types";
+import { returnvideodata, returnvideourl } from "../types/type";
 import axios from "axios";
 
 export const videoauth = {

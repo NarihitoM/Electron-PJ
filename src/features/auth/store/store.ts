@@ -1,10 +1,5 @@
 import { create } from "zustand"
-
-interface AuthClientState {
-    email: string;
-    setEmail: (email: string) => void;
-    resetemail: () => void;
-}
+import type { AuthClientState } from "../types/type"
 
 export const authservicestore = create<AuthClientState>((set) => ({
     email: "",

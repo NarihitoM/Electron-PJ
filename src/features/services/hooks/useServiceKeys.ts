@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { serviceauth } from "../api/api"
-import type { Servicefetch } from "../types"
+import type { Servicefetch } from "../types/type"
 
 export const useServiceKeys = () => {
     return useQuery<Servicefetch[]>({

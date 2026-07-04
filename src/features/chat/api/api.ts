@@ -1,6 +1,6 @@
 import { Server } from "../../../shared/config/axioconfig"
 import { fetchurl } from "../../../shared/config/fetchconfig";
-import { authchatdata, authchatfeedback, authmessagedata } from "../types";
+import { authchatdata, authchatfeedback, authmessagedata } from "../types/type";
 
 export const chatauth = {
     createchat: async (): Promise<authchatfeedback> => {

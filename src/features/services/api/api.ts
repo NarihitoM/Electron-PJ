@@ -1,5 +1,5 @@
 import { Server } from "../../../shared/config/axioconfig"
-import { authservicedata, authservicefeedback } from "../types";
+import { authservicedata, authservicefeedback } from "../types/type";
 
 export const serviceauth = {
     serviceadd: async (

@@ -1,5 +1,5 @@
 import { Server } from "../../../shared/config/axioconfig";
-import { UsageApiResponse } from "../types";
+import { UsageApiResponse } from "../types/type";
 
 export interface LogUsageRequest {
     provider: string;

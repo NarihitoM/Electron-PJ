@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { chatauth } from "../api/api"
-import type { chatfetch } from "../types"
+import type { chatfetch } from "../types/type"
 
 export const useChats = () => {
     return useQuery<chatfetch[]>({

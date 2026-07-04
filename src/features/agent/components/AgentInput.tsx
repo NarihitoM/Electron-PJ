@@ -12,15 +12,17 @@ import { useResetAgentMessages } from "@/features/agent/hooks/useResetAgentMessa
 import { useagentstore } from "../store/store"
 import { voiceauth } from "@/features/voice/api/api"
 import { AgentChatArea } from "./AgentChatArea"
+import { useUser } from "@/features/auth/hooks/useUser"
 
 export const AgentInput = () => {
     const { data: Api = [] } = useServiceKeys()
     const { data: nodesData } = useAgentNodes()
     const resetMsgMutation = useResetAgentMessages()
     const store = useagentstore()
+    const { data: userdata } = useUser()
 
     const agents = nodesData ?? []
-    const nodes = store.nodes
+
     const [recordstatus, setRecordstatus] = useState(false)
     const [loadingrecord, setLoadingrecord] = useState(false)
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -45,13 +47,21 @@ export const AgentInput = () => {
         store.setMessageloading(true)
         store.setHistory([])
         store.workflowGenRef.current++
+
+        const selectedNode = agents.find((n) => n.name === store.selectnode)
+        const runningNodes = selectedNode ? [selectedNode] : agents.length > 0 ? [agents[0]] : []
+        const useremail = userdata?.useremail ?? ""
+
         window.ipcRenderer.send('cancel-workflow')
         window.ipcRenderer.send('run-workflow', {
-            content: store.input,
-            type: store.type,
-            nodeName: store.selectnode,
-            firstNode: store.firstnode,
-            lastNode: store.lastnode,
+            input: store.input,
+            nodes: runningNodes,
+            encryptkey: Api,
+            useremail,
+            firstnode: store.firstnode,
+            lastnode: store.lastnode,
+            targetnode: store.selectnode,
+            simultaneous: false,
         })
         store.setInput("")
     }
@@ -161,7 +171,7 @@ export const AgentInput = () => {
             <div className="bg-card rounded-2xl border p-3 shadow-lg">
                 <div className="relative flex flex-col">
                     <Textarea
-                        disabled={nodes.length === 0 || store.messageloading || loadingrecord || recordstatus}
+                        disabled={agents.length === 0 || store.messageloading || loadingrecord || recordstatus}
                         value={store.input}
                         onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey && !store.messageloading) { e.preventDefault(); onSendMessage() }
@@ -230,7 +240,7 @@ export const AgentInput = () => {
                         </div>
                         <div className="flex gap-2 justify-end items-center">
                             <Button
-                                disabled={loadingrecord || nodes.length === 0}
+                                disabled={loadingrecord || agents.length === 0}
                                 onClick={recordstatus ? stopRecording : startRecording}
                                 size="icon"
                                 className="bg-cyan-500 dark:bg-white rounded-full"
@@ -241,7 +251,7 @@ export const AgentInput = () => {
                             <Button
                                 onClick={store.workflowloading ? onAbortWorkflow : onSendMessage}
                                 size="icon"
-                                disabled={!store.workflowloading && (!store.type || !store.input || nodes.length === 0 || store.messageloading || loadingrecord || recordstatus)}
+                                disabled={!store.workflowloading && (!store.type || !store.input || agents.length === 0 || store.messageloading || loadingrecord || recordstatus)}
                                 className={store.workflowloading ? "bg-red-500 hover:bg-red-600 rounded-full" : "bg-cyan-500 dark:bg-white rounded-full"}
                             >
                                 {store.workflowloading ? <Square size={16} className="fill-current" /> : <ArrowUp size={16} />}

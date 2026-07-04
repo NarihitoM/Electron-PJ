@@ -1,6 +1,6 @@
 import { Server } from "../../../shared/config/axioconfig"
 import { fetchurl } from "../../../shared/config/fetchconfig";
-import { returnnotionacc, returnnotionfeedback, returnnotionmsg } from "../types";
+import { returnnotionacc, returnnotionfeedback, returnnotionmsg } from "../types/type";
 
 export const notionauth = {
     notionstate: async (): Promise<{ stateId: string }> => {

@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { usageapi } from "../api/api"
 import { usagestore } from "../store/store"
-import type { UsageStats } from "../types"
+import type { UsageStats } from "../types/type"
 
 function buildDateRange(period: string, selectedYear: number) {
     const now = new Date()

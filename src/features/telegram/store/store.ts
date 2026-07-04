@@ -1,6 +1,5 @@
 import { create } from "zustand"
-import type { chatsession } from "@/shared/types/globaltype"
-import type { telegramcrondata } from "@/features/telegram/types"
+import type { telegramcrondata, TelegramClientState } from "@/features/telegram/types/type"
 
 const initialTelegramCron: telegramcrondata = {
     isActive: false,
@@ -13,92 +12,6 @@ const initialTelegramCron: telegramcrondata = {
     triggerAt: "",
     timezone: "",
     customSchedule: ""
-}
-
-interface TelegramClientState {
-    provider: string;
-    model: string;
-    mode: string;
-    selectedGroupId: string;
-    selectedContactId: string;
-    sessionmessage: chatsession[];
-    input: string;
-    sending: boolean;
-    reasoningLevel: "" | "low" | "medium" | "high";
-    pendingImages: File[];
-    uploadingImages: boolean;
-    uploadingImageUrls: Set<string>;
-    loadingfetch: boolean;
-    loadingerror: boolean;
-    nextCursor: string | null;
-    hasMore: boolean;
-    loadingMore: boolean;
-    type: string;
-    hover: boolean;
-    opencreate: boolean;
-    openverify: boolean;
-    opencron: boolean;
-    phonenumber: string;
-    countryCode: string;
-    phonecode: string;
-    password: string;
-    loading: boolean;
-    loadingverify: boolean;
-    loadingdeletemsg: boolean;
-    loadingcroncreate: boolean;
-    pendingApproval: { name: string; query: Record<string, unknown> | null } | null;
-    pendingApprovalRef: { current: { name: string; query: Record<string, unknown> | null } | null };
-    threadIdRef: { current: string | null };
-    lightboxImages: string[];
-    lightboxIndex: number;
-    lightboxOpen: boolean;
-    copiedIndex: number | null;
-    telegramcron: telegramcrondata;
-    customDayOfWeek: number[];
-    customDayOfMonth: number[];
-    customMonth: number[];
-
-    setProvider: (v: string) => void;
-    setModel: (v: string) => void;
-    setmode: (v: string) => void;
-    setSelectedGroupId: (v: string) => void;
-    setSelectedContactId: (v: string) => void;
-    setsessionmessage: (v: chatsession[]) => void;
-    setInput: (v: string) => void;
-    setSending: (v: boolean) => void;
-    setReasoningLevel: (v: "" | "low" | "medium" | "high") => void;
-    setPendingImages: (v: File[]) => void;
-    setUploadingImages: (v: boolean) => void;
-    setUploadingImageUrls: (v: Set<string>) => void;
-    setloadingfetch: (v: boolean) => void;
-    setloadingerror: (v: boolean) => void;
-    setNextCursor: (v: string | null) => void;
-    setHasMore: (v: boolean) => void;
-    setLoadingMore: (v: boolean) => void;
-    settype: (v: string) => void;
-    setHover: (v: boolean) => void;
-    setOpencreate: (v: boolean) => void;
-    setOpenverify: (v: boolean) => void;
-    setOpencron: (v: boolean) => void;
-    setPhonenumber: (v: string) => void;
-    setCountryCode: (v: string) => void;
-    setPhonecode: (v: string) => void;
-    setPassword: (v: string) => void;
-    setLoading: (v: boolean) => void;
-    setLoadingverify: (v: boolean) => void;
-    setLoadingdeletemsg: (v: boolean) => void;
-    setLoadingcroncreate: (v: boolean) => void;
-    setPendingApproval: (v: { name: string; query: Record<string, unknown> | null } | null) => void;
-    setLightboxImages: (v: string[]) => void;
-    setLightboxIndex: (v: number) => void;
-    setLightboxOpen: (v: boolean) => void;
-    setCopiedIndex: (v: number | null) => void;
-    setTelegramcron: (v: telegramcrondata) => void;
-    setCustomDayOfWeek: (v: number[]) => void;
-    setCustomDayOfMonth: (v: number[]) => void;
-    setCustomMonth: (v: number[]) => void;
-    resettelegram: () => void;
-    updateSessionMessages: (updater: (prev: chatsession[]) => chatsession[]) => void;
 }
 
 export const telegramauthstore = create<TelegramClientState>((set) => ({

@@ -189,7 +189,7 @@ export const ChatMessageList = () => {
                                         </Avatar>
                                     ) : (
                                         <div className="relative flex items-center justify-center">
-                                            {store.sending && isLastMessage && !msg.content && (!msg.toolsCall || msg.toolsCall.length === 0 || msg.toolsCall.some((t) => t.status === "loading")) ? (
+                                            {store.sending && isLastMessage && !msg.content && (!msg.toolsCall || msg.toolsCall.length === 0 || msg.toolsCall.some((t: { status: string }) => t.status === "loading")) ? (
                                                 <Dot className="h-15 w-15 ml-2 text-cyan-500 dark:text-white relative animate-pulse" />
                                             ) : msg.provider && BRAND_ASSETS[msg.provider] ? (
                                                 <img src={BRAND_ASSETS[msg.provider]} className="w-7 h-7 rounded bg-white dark:bg-card" />
@@ -208,7 +208,7 @@ export const ChatMessageList = () => {
                                     )}
                                     {isUser && msg.images && msg.images.length > 0 && (
                                         <div className="flex flex-wrap gap-1 mb-1">
-                                            {msg.images.map((url, i) => (
+                                            {msg.images.map((url: string, i: number) => (
                                                 <div
                                                     key={i}
                                                     className="relative w-20 h-20 rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
@@ -226,7 +226,7 @@ export const ChatMessageList = () => {
                                     )}
                                     {!isUser && msg.generatedImages && msg.generatedImages.length > 0 && (
                                         <div className="flex flex-wrap gap-2 mb-2">
-                                            {msg.generatedImages.map((url, i) => (
+                                            {msg.generatedImages.map((url: string, i: number) => (
                                                 <div
                                                     key={i}
                                                     className="relative rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity max-w-[300px]"
@@ -240,7 +240,7 @@ export const ChatMessageList = () => {
                                     <div className={`rounded-2xl leading-relaxed text-[15px] whitespace-pre-wrap w-full overflow-hidden wrap-break-word min-w-0 ${isUser ? "bg-muted text-foreground rounded-tr-none p-3" : "bg-transparent text-foreground rounded-tl-none"}`}>
                                         <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="wrap-break-word p-1">
                                             <div className="grid grid-cols-1 gap-2 mb-1 w-fit">
-                                                {msg.toolsCall?.map((tool) => (
+                                                {msg.toolsCall?.map((tool: { id: string; name: string; status: string; result: string | null; query: Record<string, unknown> | null }) => (
                                                     <Collapsible key={tool.id} className="w-full space-y-2">
                                                         <CollapsibleTrigger asChild>
                                                             <Button variant="ghost" className={`group flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold transition-all active:scale-95 ${tool.status === "done" ? "text-foreground shadow-sm" : "text-foreground"}`}>

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { notionauth } from "../api/api"
-import type { notiondata } from "../types"
+import type { notiondata } from "../types/type"
 
 export const useNotionAccount = () => {
     return useQuery<notiondata>({

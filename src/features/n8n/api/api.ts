@@ -1,6 +1,6 @@
 import { Server } from "../../../shared/config/axioconfig"
 import { fetchurl } from "../../../shared/config/fetchconfig";
-import { returnn8nconfig, returnn8nmsg, returnn8nfeedback, returnn8ntest } from "../types";
+import { returnn8nconfig, returnn8nmsg, returnn8nfeedback, returnn8ntest } from "../types/type";
 
 export const n8nauth = {
     testConnection: async (n8nUrl: string, authType: string, authValue?: string): Promise<returnn8ntest> => {

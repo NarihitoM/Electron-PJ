@@ -1,5 +1,5 @@
 import { Server } from "../../../shared/config/axioconfig"
-import { authdata, authfeedback } from "../types";
+import { authdata, authfeedback } from "../types/type";
 
 export const userauthapi = {
     login: async (

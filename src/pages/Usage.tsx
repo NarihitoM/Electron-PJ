@@ -1,3 +1,5 @@
 import { UsageView } from "@/features/usage/components/UsageView"
 
-export const Usage = () => <UsageView />
+export const Usage = () => {
+    return <UsageView />
+}

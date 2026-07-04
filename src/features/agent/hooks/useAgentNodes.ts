@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { agentauth } from "../api/api"
-import type { nodedata } from "../types"
+import type { nodedata } from "../types/type"
 
 export const useAgentNodes = () => {
     return useQuery<nodedata[]>({

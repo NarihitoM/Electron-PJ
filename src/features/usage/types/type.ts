@@ -61,4 +61,13 @@ export interface ApiResponse<T = void> {
 
 export type UsageApiResponse = ApiResponse<UsageStats>;
 
-
+export interface UsageClientState {
+    period: "day" | "week" | "month" | "year";
+    selectedYear: number;
+    recentPage: number;
+    recentLimit: number;
+    setPeriod: (period: "day" | "week" | "month" | "year") => void;
+    setSelectedYear: (year: number) => void;
+    setRecentPage: (page: number) => void;
+    resetUsage: () => void;
+}
