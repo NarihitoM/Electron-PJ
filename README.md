@@ -63,27 +63,23 @@ MultimateAi is a desktop application that orchestrates AI agents across multiple
 
 ## Installation
 
-### Prerequisites
+### Download
+
+Download the latest release for your platform:
+
+**[Download v1.0.0 from GitHub Releases](https://github.com/NarihitoM/MultimateAi/releases/tag/v1.0.0)**
+
+### From Source
 
 - [Node.js](https://nodejs.org/) >= 18
 - [Git](https://git-scm.com/)
-- [pnpm](https://pnpm.io/) (recommended) or npm
-
-### Steps
 
 ```bash
-# Clone the repository (release tag)
 git clone --branch v1.0.0 https://github.com/NarihitoM/MultimateAi.git
 cd MultimateAi
-
-# Install dependencies
 npm install
-
-# Start development server (Vite + Electron)
 npm run dev
 ```
-
-> **Note:** This is an Electron desktop application. `npm run dev` starts both the Vite dev server and the Electron window. The app runs as a native desktop window, not in the browser.
 
 ### Available Scripts
 
