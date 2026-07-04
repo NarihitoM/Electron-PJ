@@ -65,8 +65,6 @@ MultimateAi is a desktop application that orchestrates AI agents across multiple
 
 ### Download
 
-Download the latest release for your platform:
-
 **[Download from GitHub Releases](https://github.com/NarihitoM/MultimateAi/releases)**
 
 ### From Source
