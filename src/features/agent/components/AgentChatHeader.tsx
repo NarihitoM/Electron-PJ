@@ -1,6 +1,5 @@
 import { Button } from "@/shared/components/ui/button"
 import { Badge } from "@/shared/components/ui/badge"
-import { Skeleton } from "@/shared/components/ui/skeleton"
 import { Bot } from "lucide-react"
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys"
 import { useagentstore } from "../store/store"
@@ -30,9 +29,9 @@ export const AgentChatHeader = () => {
             </div>
             <div className="flex gap-2 items-center">
                 {store.messageloading ? (
-                    <span className="flex items-center gap-2 px-1 py-1 rounded-full border border-transparent">
-                        <Skeleton className="w-20 h-4 rounded-md bg-zinc-200 dark:bg-zinc-800" />
-                    </span>
+                     <Badge className="bg-yellow-50 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300">
+                        Working
+                    </Badge>
                 ) : (
                     <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
                         Up To Date

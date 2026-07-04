@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import { useagentstore } from "../store/store"
 import { agentauth } from "../api/api"
 import { ToolApprovalDialog } from "@/shared/components/layout/ToolApprovalDialog"
@@ -12,6 +13,7 @@ import { AgentNodeForm } from "./AgentNodeForm"
 
 export const AgentChat = () => {
     const store = useagentstore()
+    const queryClient = useQueryClient()
 
     useEffect(() => {
         return () => {
@@ -89,6 +91,9 @@ export const AgentChat = () => {
                 if (!isWorkflowStillRunning) {
                     store.setWorkflowloading(false);
                     store.setMessageloading(false);
+                    queryClient.invalidateQueries({ queryKey: ["usage-stats"] });
+                    queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+                    queryClient.invalidateQueries({ queryKey: ["key"] });
                 }
 
                 return updatedNodes;
