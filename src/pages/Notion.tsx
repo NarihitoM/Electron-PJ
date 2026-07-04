@@ -1,89 +1,100 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUp, ToolCaseIcon, X, Mic, Square, Dot, CheckCircle2, ChevronDown, Cpu, Terminal, RefreshCw, XCircle, Box } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { userauthstore } from "@/store/userauthstore";
-import { authservicestore } from "@/store/serviceauthstore";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-} from "@/components/ui/select"
-import { BRAND_ASSETS, PROVIDER_MODELS } from "@/features/providermodels";
-import { useNavigate } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
+import { useUser } from "@/features/auth/hooks/useUser";
+import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
+import type { ModelEntry } from "@/shared/lib/modelsapi";
+import { BRAND_ASSETS, getProviderModels } from "@/shared/config/providermodels";
+import { Toaster } from "@/shared/components/ui/sonner";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
-import {
-    DropdownMenu,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-    DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
-import AiContent from "@/components/ui/LayoutAiresponse";
-import { chatsession } from "@/types/globaltype";
-import { voiceauth } from "@/api/voiceauth";
-import { Spinner } from "@/components/ui/spinner";
-import { notionauth } from "@/api/notionauth";
-import { notionauthstore } from "@/store/notionauthstore";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Notiontool } from "@/features/toolsselection";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { chatsession } from "@/shared/types/globaltype";
+import { voiceauth } from "@/features/voice/api/api";
+import { notionauth } from "@/features/notion/api/api";
+import { notionauthstore } from "@/features/notion/store/store";
+import { useNotionAccount } from "@/features/notion/hooks/useNotionAccount";
+import { useDeleteNotionMessage } from "@/features/notion/hooks/useDeleteNotionMessage";
+import { ToolApprovalDialog } from "@/shared/components/layout/ToolApprovalDialog";
+import { datafetch } from "@/shared/config/tanstackqueryconfig";
+import { Server } from "@/shared/config/axioconfig";
+import { ImageLightbox } from "@/shared/components/ImageLightbox";
+import { chatauth } from "@/features/chat/api/api";
+import { NotionChatHeader } from "@/features/notion/components/NotionChatHeader";
+import { NotionMessageList } from "@/features/notion/components/NotionMessageList";
+import { NotionInput } from "@/features/notion/components/NotionInput";
 
 
 export const Notion = () => {
 
     //Store
-    const {
-        userdata,
-    } = userauthstore();
+    const { data: userdata } = useUser();
+    const { data: notionAccount } = useNotionAccount()
+    const deleteNotionMsgMutation = useDeleteNotionMessage()
 
     const {
         model,
         provider,
         setModel,
         setProvider,
-        fetchnotionacc,
-        workspacename,
-        pages,
-        loadingnotion,
-        fetchnotionmsg,
         sendmessage,
-        loadingnotionmsg,
-        deletenotionmessage
     } = notionauthstore()
-    const {
-        Api,
-        fetchservicekey
-    } = authservicestore()
+    const { data: Api = [], refetch: fetchservicekey } = useServiceKeys()
+
+    const workspacename = (notionAccount as any)?.workspacename ?? ""
+    const pages = (notionAccount as any)?.pages ?? []
+    const loadingnotion = !notionAccount
 
     //States
     const [sessionmessage, setsessionmessage] = useState<chatsession[]>([]);
     const [input, setInput] = useState("");
     const [sending, setSending] = useState(false);
     const [loadingfetch, setloadingfetch] = useState<boolean>(false);
+    const [loadingnotionmsg, setloadingnotionmsg] = useState<boolean>(false);
     const [refresh, setrefresh] = useState<boolean>(false);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const [type, settype] = useState<string | null>("text");
-    const [hover, setHover] = useState(false);
     const [recordstatus, setrecordstatus] = useState<boolean>(false)
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const [loadingrecord, setloadingrecord] = useState<boolean>(false);
     const [isChecking, setIsChecking] = useState(false);
     const [pageid, setpageid] = useState<string | null>(null);
+    const [nextCursor, setNextCursor] = useState<string | null>(null);
+    const [hasMore, setHasMore] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [loadingerror, setloadingerror] = useState<boolean>(false);
+    const topSentinelRef = useRef<HTMLDivElement | null>(null);
+    const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const lastSentInputRef = useRef<string>("");
+    const [pendingApproval, setPendingApproval] = useState<{ name: string; query: Record<string, unknown> | null } | null>(null);
+    const pendingApprovalRef = useRef<{ name: string; query: Record<string, unknown> | null } | null>(null);
+    const threadIdRef = useRef<string | null>(null);
+    const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+    const [modelList, setModelList] = useState<ModelEntry[]>([]);
+    const [modelsLoading, setModelsLoading] = useState(false);
+    const [reasoningLevel, setReasoningLevel] = useState<"" | "low" | "medium" | "high">("");
+    const [pendingImages, setPendingImages] = useState<File[]>([]);
+    const [uploadingImages, setUploadingImages] = useState(false);
+    const [uploadingImageUrls, setUploadingImageUrls] = useState<Set<string>>(new Set());
+    const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
+    const [lightboxOpen, setLightboxOpen] = useState(false);
 
-
-    //Navigation
-
-    const navigate = useNavigate();
 
     //Functions
     useEffect(() => {
         fetchservicekey();
     }, [])
+
+    useEffect(() => {
+        if (!provider) { setModelList([]); return; }
+        setModelsLoading(true);
+        getProviderModels(provider).then(models => {
+            setModelList(models);
+            setModelsLoading(false);
+            if (models.length > 0 && !models.some((m: any) => m.model === model)) {
+                setModel(models[0].model);
+            }
+        });
+    }, [provider]);
 
     //Smooth Scrolling
     const scrollToBottom = () => {
@@ -94,32 +105,92 @@ export const Notion = () => {
         scrollToBottom();
     }, [sessionmessage, sending]);
 
+    const loadMore = async () => {
+        if (!nextCursor || !hasMore || loadingMore) return;
+        setLoadingMore(true);
+        try {
+            const container = scrollContainerRef.current;
+            const prevScrollHeight = container?.scrollHeight ?? 0;
+
+            const response = await notionauth.fetchnotionmsg(nextCursor);
+            if (response.success && response.data) {
+                const data = response.data;
+                setsessionmessage(prev => [...(data.messages ?? []), ...prev]);
+                setNextCursor(data.nextCursor);
+                setHasMore(data.hasMore);
+
+                requestAnimationFrame(() => {
+                    if (container) {
+                        container.scrollTop = container.scrollHeight - prevScrollHeight;
+                    }
+                });
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any;
+                const error = Error.response?.data?.message || err.message;
+                toast.error(error);
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            setLoadingMore(false);
+        }
+    };
 
     useEffect(() => {
-        fetchnotionacc();
+        const observer = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore && !loadingMore) {
+                loadMore();
+            }
+        }, { threshold: 0.1 });
+
+        const el = topSentinelRef.current;
+        if (el) observer.observe(el);
+
+        return () => observer.disconnect();
+    }, [hasMore, loadingMore]);
+
+    useEffect(() => {
+        datafetch.invalidateQueries({ queryKey: ["notion"] });
     }, [refresh])
 
 
     //Listen from backend to see status
     useEffect(() => {
         let interval: string | number | NodeJS.Timeout | undefined;
+        let fallbackTimeout: string | number | NodeJS.Timeout | undefined;
 
         if (isChecking) {
+            fallbackTimeout = setTimeout(() => {
+                setIsChecking(false);
+                if (interval) clearInterval(interval);
+            }, 180000);
+            
             interval = setInterval(async () => {
                 try {
                     const response = await notionauth.notioncheckstatus();
                     if (response.success) {
-                        console.log("Authorize Complete!");
                         setIsChecking(false);
+                        await datafetch.invalidateQueries({ queryKey: ["notion"] })
                         setrefresh(prev => !prev);
-                        clearInterval(interval);
+                        if (interval) clearInterval(interval);
+                        if (fallbackTimeout) clearTimeout(fallbackTimeout);
                     }
                 } catch (err) {
                     console.error("Polling error", err);
                 }
             }, 1000);
+
+            return () => {
+                if (interval) clearInterval(interval);
+                if (fallbackTimeout) clearTimeout(fallbackTimeout);
+            };
         }
-        return () => clearInterval(interval);
+        return () => {
+            if (interval) clearInterval(interval);
+            if (fallbackTimeout) clearTimeout(fallbackTimeout);
+        };
     }, [isChecking]);
 
 
@@ -127,8 +198,13 @@ export const Notion = () => {
     const connectNotion = async () => {
         const response = await notionauth.notionstate();
         const stateId = response.stateId;
-        const clientid = "352d872b-594c-81fd-8a40-003794864bca";
-        const redirecturi = encodeURIComponent("http://localhost:4000/notion/api/callback");
+        const clientid = import.meta.env.VITE_NOTION_CLIENT_ID;
+        if (!clientid) {
+            toast.error("Notion Client ID not configured.");
+            return;
+        }
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://multimate-server.vercel.app";
+        const redirecturi = encodeURIComponent(`${backendUrl}/notion/api/callback`);
 
         const url = `https://api.notion.com/v1/oauth/authorize?client_id=${clientid}&response_type=code&owner=user&redirect_uri=${redirecturi}&state=${stateId}`;
         (window.ipcRenderer as any).openInBrowser(url);
@@ -138,19 +214,72 @@ export const Notion = () => {
 
     //Send the message to ai
     const handleSend = async () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            if (!input.trim()) return;
+        }
+
         if (!input.trim() || !provider || !model)
             return;
 
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
         setSending(true);
-        const userMsg: chatsession = { role: "user", content: input };
+
+        const currentInput = input;
+        const currentImages = [...pendingImages];
+        lastSentInputRef.current = currentInput;
+        setInput("");
+        setPendingImages([]);
+
+        // Create blob URLs for immediate preview
+        const blobUrls = currentImages.map(file => URL.createObjectURL(file));
+
+        // Add user message immediately with blob URLs
+        const userMsg: chatsession = { role: "user", content: currentInput, images: blobUrls.length > 0 ? blobUrls : undefined };
         setsessionmessage((prev) => [
             ...prev,
             userMsg,
-            { role: "assistant", content: "" }
+            { role: "assistant", content: "", provider, model }
         ]);
 
-        const currentInput = input;
-        setInput("");
+        // Mark these blob URLs as uploading
+        if (blobUrls.length > 0) {
+            setUploadingImageUrls(new Set(blobUrls));
+        }
+
+        // Upload images in background
+        let uploadedUrls: string[] = [];
+        if (currentImages.length > 0) {
+            setUploadingImages(true);
+            try {
+                uploadedUrls = await Promise.all(
+                    currentImages.map(file => chatauth.uploadImage(file))
+                );
+            } catch (err) {
+                toast.error("Failed to upload images");
+                setSending(false);
+                setUploadingImages(false);
+                setUploadingImageUrls(new Set());
+                setsessionmessage(prev => prev.slice(0, -2));
+                return;
+            }
+            setUploadingImages(false);
+            setUploadingImageUrls(new Set());
+
+            // Replace blob URLs with real uploaded URLs
+            setsessionmessage(prev => {
+                const newMsgs = [...prev];
+                const userMsgIdx = newMsgs.length - 2;
+                if (userMsgIdx >= 0 && newMsgs[userMsgIdx].role === "user") {
+                    newMsgs[userMsgIdx] = { ...newMsgs[userMsgIdx], images: uploadedUrls };
+                }
+                return newMsgs;
+            });
+
+            blobUrls.forEach(url => URL.revokeObjectURL(url));
+        }
 
         try {
             await sendmessage(
@@ -160,6 +289,7 @@ export const Notion = () => {
                 pageid ?? "",
                 workspacename ?? "",
                 type ?? "",
+                uploadedUrls.length > 0 ? uploadedUrls : undefined,
                 (data) => {
                     setsessionmessage((prev) => {
                         const newSession = [...prev];
@@ -183,11 +313,30 @@ export const Notion = () => {
                         const currentMessage = { ...newSession[lastIndex] };
                         const toolCalls = [...(currentMessage.toolsCall || [])];
 
-                        if (status.step === "tool_start") {
+                        if (status.type === "chain" && status.step === "start") {
+                            toolCalls.push({
+                                id: status.id,
+                                name: status.name ?? "Thinking",
+                                query: null,
+                                status: "loading",
+                                result: null,
+                                isChain: true,
+                                input: status.input,
+                            });
+                        }
+
+                        else if (status.type === "chain" && status.step === "end") {
+                            const idx = toolCalls.findIndex(t => t.id === status.id);
+                            if (idx !== -1) {
+                                toolCalls[idx] = { ...toolCalls[idx], status: "done", output: status.output };
+                            }
+                        }
+
+                        else if (status.step === "tool_start") {
                             toolCalls.push({
                                 id: status.id,
                                 name: status.tool ?? "Tool",
-                                query: status.query,
+                                query: status.query as any ?? null,
                                 status: "loading",
                                 result: null
                             });
@@ -208,9 +357,40 @@ export const Notion = () => {
                         }
                         newSession[lastIndex] = { ...currentMessage, toolsCall: toolCalls }; return newSession;
                     });
-                }
+                },
+                (data: { thread_id: string; tool_calls: Array<{ id: string; name: string; query: Record<string, unknown> }> }) => {
+                    const toolCall = data.tool_calls[0];
+                    if (toolCall) {
+                        threadIdRef.current = data.thread_id;
+                        pendingApprovalRef.current = { name: toolCall.name, query: toolCall.query ?? null };
+                        setPendingApproval({ name: toolCall.name, query: toolCall.query ?? null });
+                    }
+                },
+                controller.signal,
+                reasoningLevel || undefined,
+                (url: string) => {
+                    setsessionmessage((prev) => {
+                        const newMessages = [...prev];
+                        const lastIndex = newMessages.length - 1;
+                        if (lastIndex >= 0 && newMessages[lastIndex].role === "assistant") {
+                            const current = newMessages[lastIndex];
+                            newMessages[lastIndex] = {
+                                ...current,
+                                generatedImages: [...(current.generatedImages || []), url],
+                            };
+                        }
+                        return newMessages;
+                    });
+                    scrollToBottom();
+                },
             );
         } catch (err) {
+            if ((err as any)?.name === "AbortError") {
+                if (abortControllerRef.current === controller) {
+                    setInput(lastSentInputRef.current);
+                }
+                return;
+            }
             if (err instanceof Error) {
                 const Error = err as any;
                 const error = Error.response?.data?.message || err.message;
@@ -219,47 +399,79 @@ export const Notion = () => {
                 toast.error("An unexpected error occurred.")
             }
         } finally {
-            setSending(false);
+            if (abortControllerRef.current === controller) {
+                setSending(false);
+                abortControllerRef.current = null;
+            }
         }
     };
 
-    //fetchthechatmessage
+    const handleApprove = () => {
+        if (pendingApprovalRef.current) {
+            Server.post("/tool/approve", { thread_id: threadIdRef.current }).catch(() => {});
+            pendingApprovalRef.current = null;
+            setPendingApproval(null);
+        }
+    };
+
+    const handleReject = () => {
+        if (pendingApprovalRef.current) {
+            const { name, query } = pendingApprovalRef.current;
+            const fallbackId = `${name}-${Date.now()}`;
+            setsessionmessage((prev) => {
+                const newSession = [...prev];
+                const lastIndex = newSession.length - 1;
+                if (newSession[lastIndex]?.role !== "assistant") return prev;
+                const currentMessage = { ...newSession[lastIndex] };
+                const toolCalls = [...(currentMessage.toolsCall || [])];
+                toolCalls.push({ id: fallbackId, name, query, status: "rejected", result: "Tool execution rejected by user." });
+                newSession[lastIndex] = { ...currentMessage, toolsCall: toolCalls };
+                return newSession;
+            });
+            Server.post("/tool/reject", { thread_id: threadIdRef.current }).catch(() => {});
+            pendingApprovalRef.current = null;
+            setPendingApproval(null);
+        }
+    };
+
+    // Cleanup on unmount
     useEffect(() => {
-        const fetchchatmessage = async () => {
-            try {
-                setloadingfetch(true);
-                setSending(false);
-                const response = await fetchnotionmsg()
-                if (response.success) {
-                    setsessionmessage(response.data ?? []);
-                }
-            }
-            catch (err: unknown) {
-                if (err instanceof Error) {
-                    const Error = err as any;
-                    const error = Error.response?.data?.message || err.message;
-                    toast.error(error, {
-                        id: "notionmsg-error",
-                        description: "There was a problem connecting to the server.",
-                        duration: Infinity,
-                        action: {
-                            label: "Retry",
-                            onClick: () => {
-                                toast.dismiss("notionmsg-error")
-                                fetchchatmessage()
-                            },
-                        },
-                    });
-                } else {
-                    toast.error("An unexpected error occurred.")
-                }
-            }
-            finally {
-                setloadingfetch(false);
+        return () => abortControllerRef.current?.abort();
+    }, []);
+
+    //fetchthechatmessage
+    const fetchMessages = async () => {
+        try {
+            setloadingfetch(true);
+            setloadingerror(false);
+            setSending(false);
+            setsessionmessage([]);
+            setNextCursor(null);
+            setHasMore(false);
+            const response = await notionauth.fetchnotionmsg()
+            if (response.success && response.data) {
+                setsessionmessage(response.data.messages ?? []);
+                setNextCursor(response.data.nextCursor);
+                setHasMore(response.data.hasMore);
             }
         }
-        fetchchatmessage();
-    }, [refresh])
+        catch (err: unknown) {
+            setloadingerror(true);
+            if (err instanceof Error) {
+                const Error = err as any;
+                toast.error(Error.response?.data?.message || err.message);
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        }
+        finally {
+            setloadingfetch(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchMessages();
+    }, [])
 
 
     const startRecording = async () => {
@@ -289,7 +501,7 @@ export const Notion = () => {
 
             const form = new FormData();
             form.append("voice", audioBlob, "voice.webm");
-            console.log(audioBlob);
+
 
             try {
                 setloadingrecord(true)
@@ -329,10 +541,11 @@ export const Notion = () => {
 
     const deletenotionmsg = async () => {
         try {
-            const response = await deletenotionmessage()
+            setloadingnotionmsg(true);
+            const response = await deleteNotionMsgMutation.mutateAsync()
             if (response.success) {
                 toast.success(response.message);
-                setrefresh(prev => !prev);
+                setsessionmessage([]);
             }
         }
         catch (err: unknown) {
@@ -343,17 +556,18 @@ export const Notion = () => {
             } else {
                 toast.error("An unexpected error occurred.")
             }
+        } finally {
+            setloadingnotionmsg(false);
         }
     }
 
     const selectedPagename = useMemo(() => {
-        return pages.find(g => g.id === pageid)?.title || "";
+        return pages.find((g: any) => g.id === pageid)?.title || "";
     }, [pageid, pages]);
 
 
 
     //models for each prroviders
-    const availableModels = provider ? PROVIDER_MODELS[provider] || [] : [];
 
     const apiWithLogos = Api ? Api.map((provider) => ({
         ...provider,
@@ -364,404 +578,84 @@ export const Notion = () => {
     return (
         <>
             <Toaster position="top-right" richColors />
+            <ToolApprovalDialog
+                open={pendingApproval !== null}
+                toolName={pendingApproval?.name || ""}
+                toolQuery={pendingApproval?.query || null}
+                onApprove={handleApprove}
+                onReject={handleReject}
+            />
             <div className="flex h-[92vh] w-full flex-col bg-background">
-                <div className="mx-auto w-full max-w-5xl flex justify-between gap-1">
-                    <div className="flex flex-col gap-1">
-                        <h1 className="text-2xl  font-bold flex items-center gap-3"><img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" className="w-7 h-7" />NotionAgent</h1>
-                        <p className="text-muted-foreground">You can edit and update with your notion agent.</p>
-                    </div>
-                    <div className="flex gap-2 items-center">
-
-                        {loadingnotion ?
-                            <span className="flex items-center gap-2 px-1 py-1 rounded-full border border-transparent">
-                                <Skeleton className="w-4 h-4 rounded-sm bg-zinc-200 dark:bg-zinc-800 shrink-0" />
-                                <Skeleton className="w-20 h-4 rounded-md bg-zinc-200 dark:bg-zinc-800" />
-                            </span> :
-                            workspacename &&
-                            <span className="text-[13px] flex items-center gap-2 px-2 py-1 rounded-full border bg-card">
-                                <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" className="w-4 h-4" />{workspacename.substring(0, 10) + "..."}
-                            </span>}
-                        {Api.length > 0 ? (
-                            <div className="flex gap-2">
-                                <Select onValueChange={(value) => setProvider(value ?? "")} value={provider}>
-                                    <SelectTrigger >
-                                        {provider ?
-                                            <>
-                                                <img src={BRAND_ASSETS[provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                                <span>{provider.charAt(0).toUpperCase() + provider.slice(1)}</span>
-                                            </> : "Select Provider"}
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {apiWithLogos.map((item) => (
-                                            <SelectItem key={item.provider} value={item.provider}>
-                                                <img src={item.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                                <span>{item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}</span>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        ) : (
-                            <Button className="bg-cyan-500 dark:bg-white" onClick={() => navigate("/app/settings")}>Add Provider</Button>
-                        )}
-                    </div>
-                </div>
-                <div className="flex-1 overflow-y-auto mt-4" style={{ scrollbarWidth: "none" }}>
-                    <div className="mx-auto max-w-5xl py-5">
-                        {loadingfetch || loadingnotion ? (
-                            <div className="mx-auto max-w-5xl py-5 space-y-8 animate-pulse">
-                                {[1, 2, 3].map((i) => (
-                                    <div key={i} className="flex flex-col gap-8">
-                                        <div className="flex w-full gap-4 flex-row-reverse">
-                                            <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-                                            <div className="flex flex-col gap-2 items-end w-full">
-                                                <Skeleton className="h-3 w-16" />
-                                                <Skeleton className="h-16 w-[60%] rounded-2xl rounded-tr-none" />
-                                            </div>
-                                        </div>
-
-                                        <div className="flex w-full gap-4 flex-row">
-                                            <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-                                            <div className="flex flex-col gap-2 items-start w-full">
-                                                <Skeleton className="h-3 w-24" />
-                                                <div className="space-y-2 w-[80%]">
-                                                    <Skeleton className="h-4 w-full" />
-                                                    <Skeleton className="h-4 w-[90%]" />
-                                                    <Skeleton className="h-4 w-[40%]" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) :
-                            (sessionmessage && sessionmessage.length > 0 ?
-                                (sessionmessage.map((msg, index) => {
-                                    const isUser = msg.role === "user";
-                                    const isLastMessage = index === sessionmessage.length - 1;
-                                    const username = userdata?.username;
-                                    return (
-                                        <div
-                                            className={`group mb-8 flex w-full gap-4 ${isUser ? "flex-row-reverse" : "flex-row"
-                                                }`}
-                                        >
-                                            <div className="flex h-8 w-8 items-center justify-center rounded-full mt-1">
-                                                {isUser ? (
-                                                    <Avatar className="h-8 w-8">
-                                                        <AvatarImage
-                                                            src={
-                                                                userdata?.profileurl
-                                                                    ? `${userdata.profileurl}?v=${userdata?.useremail}`
-                                                                    : undefined
-                                                            }
-                                                            alt={userdata?.username}
-                                                        />
-                                                        <AvatarFallback className="bg-cyan-500 dark:bg-white border text-white dark:text-black">
-                                                            {userdata?.username.substring(0, 1)}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                ) : (
-                                                    <div className="relative flex items-center justify-center">
-                                                        {sending && isLastMessage && <Dot className="h-15 w-15 text-cyan-500 dark:text-white relative animate-pulse" />}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div
-                                                className={`flex flex-col gap-1 max-w-[80%] min-w-0 ${isUser ? "items-end text-left" : "items-start text-left"
-                                                    }`}
-                                            >
-                                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                                                    {isUser ? username : ""}
-                                                </span>
-
-                                                <div
-                                                    className={`rounded-2xl leading-relaxed text-[15px] whitespace-pre-wrap w-full overflow-hidden ${isUser
-                                                        ? "bg-muted text-foreground rounded-tr-none p-3"
-                                                        : "bg-transparent text-foreground rounded-tl-none"
-                                                        }`}
-                                                >
-                                                    <motion.div
-                                                        initial={{ opacity: 0, y: 5 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ duration: 0.4 }}
-                                                        className="wrap-break-word p-1 w-full"
-                                                    >
-                                                        <div className="grid grid-cols-1 gap-2 mb-1 w-fit">
-                                                            {msg.toolsCall?.map((tool) => (
-                                                                <Collapsible key={tool.id} className="w-full space-y-2">
-                                                                    <CollapsibleTrigger asChild>
-                                                                        <Button className={`group flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-bold transition-all hover:bg-zinc-50 active:scale-95 ${tool.status === "done"
-                                                                            ? "text-black dark:text-white border-zinc-100 dark:border-zinc-800 bg-white dark:bg-card shadow-sm"
-                                                                            : "bg-zinc-50 dark:text-white border-zinc-100 dark:border-zinc-800 dark:bg-card text-black"
-                                                                            }`}>
-                                                                            {tool.status === "loading" && (
-                                                                                <Spinner className="w-4 h-4 animate-spin text-cyan-500 dark:text-white" />
-                                                                            )}
-                                                                            {tool.status === "done" && (
-                                                                                <CheckCircle2 size={12} className="text-green-500" />
-                                                                            )}
-                                                                            {tool.status === "error" && (
-                                                                                <XCircle size={12} className="text-red-500" />
-                                                                            )}
-                                                                            {Notiontool[tool.name.toLowerCase()]}
-                                                                            <ChevronDown
-                                                                                size={15}
-                                                                                className="ml-1 text-black dark:text-white transition-transform duration-300 group-data-[state=open]:rotate-180"
-                                                                            />
-                                                                        </Button>
-                                                                    </CollapsibleTrigger>
-
-                                                                    <CollapsibleContent className="animate-in fade-in slide-in-from-top-1 duration-200">
-                                                                        <div className="flex flex-col rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-black overflow-hidden shadow-sm max-w-[95%]">
-
-                                                                            <div className="border-b dark:border-zinc-800">
-                                                                                <div className="px-3 py-1.5 flex items-center gap-2 bg-zinc-50/50 dark:bg-zinc-900/50">
-                                                                                    <Terminal size={10} className="text-blue-400" />
-                                                                                    <span className="text-[9px] font-medium text-muted-foreground uppercase">Arguments</span>
-                                                                                </div>
-                                                                                <div className="p-3 overflow-x-auto scrollbar-hide">
-                                                                                    <pre className="text-[10px] font-mono text-cyan-700 dark:text-cyan-500 whitespace-pre-wrap">
-                                                                                        {JSON.stringify(tool.query, null, 2)}
-                                                                                    </pre>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            {tool.result && (
-                                                                                <div className="flex-1 overflow-hidden">
-                                                                                    <div className="px-3 py-1.5 flex items-center gap-2 bg-zinc-50/50 dark:bg-zinc-900/50 border-b dark:border-zinc-800">
-                                                                                        <Cpu size={10} className="text-emerald-400" />
-                                                                                        <span className="text-[9px] font-medium text-muted-foreground uppercase">Execution</span>
-                                                                                    </div>
-                                                                                    <div className="p-3 max-h-62.5 overflow-y-auto scrollbar-thin" style={{ scrollbarWidth: "none" }}>
-                                                                                        <pre className="text-[10px] font-mono text-green-700 dark:text-green-500 whitespace-pre-wrap">
-                                                                                            {typeof tool.result === 'string' ? tool.result : JSON.stringify(tool.result, null, 2)}
-                                                                                        </pre>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </CollapsibleContent>
-                                                                </Collapsible>
-                                                            ))}
-                                                        </div>
-                                                        <AiContent content={msg.content} />
-                                                    </motion.div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })) : (
-                                    <div className="min-h-[50vh] flex flex-col gap-2 justify-center items-center">
-                                        <h1 className="text-3xl">Notion Agenting</h1>
-                                        <p className="text-sm text-muted-foreground">Send Message To Get Started Notion Agenting.</p>
-                                        {workspacename ? "" : <Button disabled={isChecking} className="bg-cyan-500 dark:bg-white" onClick={() => connectNotion()}>{isChecking ? <Spinner /> : "Connect Notion"}</Button>}
-                                    </div>
-                                ))}
-                        <div ref={messagesEndRef} />
-                    </div>
-                </div>
-                <div className="flex w-full gap-2 justify-between mx-auto max-w-5xl mb-3 mt-3">
-                    <Button onClick={deletenotionmsg} disabled={sessionmessage.length === 0 || loadingnotionmsg} className="bg-cyan-500 dark:bg-white">{loadingnotionmsg ? <Spinner /> : <><RefreshCw />Reset Chat</>}</Button>
-                    <div className="flex gap-2 items-center">
-                        {workspacename && (
-                            <>
-                                {pages.length > 0 && (
-                                    <Select
-                                        value={pageid}
-                                        onValueChange={(value) => setpageid(value)}
-                                        key={`${provider}-${type}`}
-                                        disabled={!provider || loadingnotion}
-                                    >
-                                        <SelectTrigger>
-                                            <span className="truncate">
-                                                {pageid ? selectedPagename.substring(0, 15) + "..." : "Select Pages"}
-                                            </span>
-                                        </SelectTrigger>
-                                        <SelectContent className="p-1 w-60">
-                                            {pages.map((m) => (
-                                                <SelectItem key={m.id} value={m.id}>
-                                                    {m.title}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                )}
-                            </>
-                        )}
-                    </div>
-                </div>
-                <div className="w-full bg-card mx-auto max-w-5xl rounded-2xl border p-3 shadow-lg">
-                    <Textarea
-                        disabled={Api.length === 0 || !workspacename || !model || !provider || loadingrecord || recordstatus}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder={recordstatus ? "Listening..." : loadingrecord ? "Transcribing..." : "Message..."}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSend();
-                            }
-                        }}
-                        className="border-none max-h-50 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
-                    />
-
-                    <div className="flex items-center justify-between mt-2">
-                        <div className="flex gap-2">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger>
-                                    <Button variant="outline" className="flex gap-1 items-center cursor-pointer">
-                                        <ToolCaseIcon size={15} />
-                                        <span className="text-sm">Tools</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start" side="top" className="w-40">
-                                    <DropdownMenuItem onClick={() => settype("read")}>
-                                        <Box /> Read Data
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => settype("edit")}>
-                                        <Box /> Edit Data
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => settype("createsubpage")}>
-                                        <Box />  Create Subpage
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => settype("updatetitle")}>
-                                        <Box /> Update Title
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            {type === "read" &&
-                                <button
-                                    onClick={() => {
-                                        settype("text");
-                                        setHover(false);
-                                    }}
-                                    disabled={sending}
-                                    onMouseEnter={() => setHover(true)}
-                                    onMouseLeave={() => setHover(false)}
-                                    className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
-                                >
-                                    {hover ? (
-                                        <X size={17} className="text-blue-400" />
-                                    ) : (
-                                        <Box size={17} className="text-blue-400" />
-                                    )}
-                                    <span className="text-[13px] text-blue-400">
-                                        Read Data
-                                    </span>
-                                </button>}
-                            {type === "edit" &&
-                                <button
-                                    onClick={() => {
-                                        settype("text");
-                                        setHover(false);
-                                    }}
-                                    disabled={sending}
-                                    onMouseEnter={() => setHover(true)}
-                                    onMouseLeave={() => setHover(false)}
-                                    className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
-                                >
-                                    {hover ? (
-                                        <X size={17} className="text-blue-400" />
-                                    ) : (
-                                        <Box size={17} className="text-blue-400" />
-                                    )}
-                                    <span className="text-[13px] text-blue-400">
-                                        Edit Data
-                                    </span>
-                                </button>}
-                            {type === "createsubpage" &&
-                                <button
-                                    onClick={() => {
-                                        settype("text");
-                                        setHover(false);
-                                    }}
-                                    disabled={sending}
-                                    onMouseEnter={() => setHover(true)}
-                                    onMouseLeave={() => setHover(false)}
-                                    className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
-                                >
-                                    {hover ? (
-                                        <X size={17} className="text-blue-400" />
-                                    ) : (
-                                        <Box size={17} className="text-blue-400" />
-                                    )}
-                                    <span className="text-[13px] text-blue-400">
-                                        Create Subpage
-                                    </span>
-                                </button>}
-                            {type === "updatetitle" &&
-                                <button
-                                    onClick={() => {
-                                        settype("text");
-                                        setHover(false);
-                                    }}
-                                    disabled={sending}
-                                    onMouseEnter={() => setHover(true)}
-                                    onMouseLeave={() => setHover(false)}
-                                    className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
-                                >
-                                    {hover ? (
-                                        <X size={17} className="text-blue-400" />
-                                    ) : (
-                                        <Box size={17} className="text-blue-400" />
-                                    )}
-                                    <span className="text-[13px] text-blue-400">
-                                        Update Title
-                                    </span>
-                                </button>}
-                        </div>
-                        <div className="flex gap-2">
-                            {Api.length > 0 && (
-                                <Select
-                                    key={`${provider}-${type}`}
-                                    onValueChange={(val) => setModel(val ?? "")}
-                                    value={model}
-                                    disabled={!provider}
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <div className="flex items-center gap-2">
-                                            {model && (
-                                                <img
-                                                    src={availableModels.find((m: any) => m.model === model)?.imageUrl}
-                                                    className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
-                                                />
-                                            )}
-                                            <span className="truncate">
-                                                {model ? model.substring(0, 15) + "..." : "Select Model"}
-                                            </span>
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent className="p-1 w-64">
-                                        {availableModels.map((m: any) => (
-                                            <SelectItem key={m.model} value={m.model}>
-                                                <div className="flex items-center gap-3">
-                                                    <img src={m.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" alt="" />
-                                                    <span className="text-sm">{m.model.substring(0, 25) + "..."}</span>
-                                                </div>
-                                            </SelectItem>))}
-                                    </SelectContent>
-                                </Select>
-                            )}
-                            <Button
-                                disabled={loadingrecord || !workspacename || !model || !provider}
-                                onClick={recordstatus ? stopRecording : startRecording}
-                                size="icon"
-                                className="bg-cyan-500 dark:bg-white rounded-full">
-                                {recordstatus ? <Square size={14} className="fill-current" /> :
-                                    loadingrecord ? <Spinner /> : <Mic size={14} />}
-                            </Button>
-                            <Button
-                                onClick={handleSend}
-                                disabled={sending || !workspacename || !input.trim() || !model || !provider || loadingrecord || recordstatus}
-                                size="icon"
-                                className="bg-cyan-500 dark:bg-white rounded-full"
-                            >
-                                <ArrowUp size={16} className={sending ? "animate-pulse" : ""} />
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+                <NotionChatHeader
+                    loadingnotion={loadingnotion}
+                    workspacename={workspacename}
+                    Api={Api}
+                    provider={provider}
+                    setProvider={setProvider}
+                    apiWithLogos={apiWithLogos}
+                />
+                <NotionMessageList
+                    sessionmessage={sessionmessage}
+                    loadingfetch={loadingfetch}
+                    loadingnotion={loadingnotion}
+                    loadingerror={loadingerror}
+                    sending={sending}
+                    workspacename={workspacename}
+                    userdata={userdata ?? undefined}
+                    uploadingImageUrls={uploadingImageUrls}
+                    copiedIndex={copiedIndex}
+                    setCopiedIndex={setCopiedIndex}
+                    setLightboxImages={setLightboxImages}
+                    setLightboxIndex={setLightboxIndex}
+                    setLightboxOpen={setLightboxOpen}
+                    loadingMore={loadingMore}
+                    topSentinelRef={topSentinelRef}
+                    messagesEndRef={messagesEndRef}
+                    scrollContainerRef={scrollContainerRef}
+                    isChecking={isChecking}
+                    connectNotion={connectNotion}
+                    fetchMessages={fetchMessages}
+                />
+                <NotionInput
+                    input={input}
+                    setInput={setInput}
+                    sending={sending}
+                    recordstatus={recordstatus}
+                    loadingrecord={loadingrecord}
+                    workspacename={workspacename}
+                    model={model}
+                    provider={provider}
+                    Api={Api}
+                    pages={pages}
+                    pageid={pageid}
+                    setPageid={setpageid}
+                    type={type}
+                    settype={settype}
+                    loadingnotion={loadingnotion}
+                    loadingnotionmsg={loadingnotionmsg}
+                    pendingImages={pendingImages}
+                    setPendingImages={setPendingImages}
+                    uploadingImages={uploadingImages}
+                    sessionmessage={sessionmessage}
+                    modelList={modelList}
+                    modelsLoading={modelsLoading}
+                    reasoningLevel={reasoningLevel}
+                    setReasoningLevel={setReasoningLevel}
+                    setModel={setModel}
+                    handleSend={handleSend}
+                    startRecording={startRecording}
+                    stopRecording={stopRecording}
+                    deletenotionmsg={deletenotionmsg}
+                    abortControllerRef={abortControllerRef}
+                    selectedPagename={selectedPagename}
+                />
             </div>
+            <ImageLightbox
+                images={lightboxImages}
+                initialIndex={lightboxIndex}
+                open={lightboxOpen}
+                onOpenChange={setLightboxOpen}
+            />
         </>
     );
 }

@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
@@ -149,6 +148,23 @@
 
   html {
     @apply font-sans;
+  }
+  
+  
+  
+  /* WebKit-specific parts to ensure the displayed time text picks up color */
+  .time-input::-webkit-datetime-edit,
+  .time-input::-webkit-datetime-edit-fields-wrapper,
+  .time-input::-webkit-datetime-edit-text {
+    color: inherit;
+  }
+  
+  .time-input::-webkit-calendar-picker-indicator {
+    filter: invert(45%) sepia(62%) saturate(430%) hue-rotate(142deg) brightness(96%) contrast(92%);
+  }
+  
+  .time-input::-moz-focus-inner {
+    color: inherit;
   }
 }
 

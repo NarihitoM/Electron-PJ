@@ -1,0 +1,50 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
+import { Skeleton } from "@/shared/components/ui/skeleton"
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/shared/components/ui/chart"
+import { PieChart, Pie, Cell } from "recharts"
+const pieChartConfig = { tokens: { label: "Tokens" } } satisfies ChartConfig;
+
+export const ProviderPieChart = ({ pieData, loading }: { pieData: { name: string; value: number; fill: string }[]; loading: boolean }) => {
+    return (
+        <Card>
+            <CardHeader>
+                {pieData.length > 0 && !loading ? <CardTitle className="text-base">By Provider</CardTitle> : <Skeleton className="h-5 w-24" />}
+            </CardHeader>
+            <CardContent>
+                {pieData.length > 0 && !loading ? (
+                    <>
+                        <ChartContainer config={pieChartConfig} className="h-[200px] w-full">
+                            <PieChart>
+                                <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={35} paddingAngle={2}>
+                                    {pieData.map((entry, i) => (
+                                        <Cell key={i} fill={entry.fill} />
+                                    ))}
+                                </Pie>
+                                <ChartTooltip content={<ChartTooltipContent />} />
+                            </PieChart>
+                        </ChartContainer>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {pieData.map((entry, i) => (
+                                <div key={i} className="flex items-center gap-1 text-xs">
+                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.fill }} />
+                                    {entry.name}
+                                </div>
+                            ))}
+                        </div>
+                    </>
+                ) : loading ? (
+                    <>
+                        <Skeleton className="h-[200px] w-full rounded-lg" />
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {[1, 2, 3].map((i) => (
+                                <Skeleton key={i} className="h-4 w-16 rounded-full" />
+                            ))}
+                        </div>
+                    </>
+                ) : (
+                    <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">No data</div>
+                )}
+            </CardContent>
+        </Card>
+    );
+};

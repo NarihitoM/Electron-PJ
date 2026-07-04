@@ -1,58 +1,57 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { BRAND_ASSETS, PROVIDER_MODELS } from "@/features/providermodels";
-import { useagentstore } from "@/store/agentauthstore";
-import { authservicestore } from "@/store/serviceauthstore";
-import { userauthstore } from "@/store/userauthstore";
-import { nodes } from "@/types/globaltype";
-import { ArrowUp, Bot, BotIcon, EllipsisVertical, Mic, PenBox, Square, Trash } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Spinner } from "@/shared/components/ui/spinner";
+import { ScrollArea } from "@/shared/components/ui/scroll-area";
+import { useAgentNodes } from "@/features/agent/hooks/useAgentNodes";
+import { useCreateAgentNode } from "@/features/agent/hooks/useCreateAgentNode";
+import { useDeleteAgentNode } from "@/features/agent/hooks/useDeleteAgentNode";
+import { useResetAgentMessages } from "@/features/agent/hooks/useResetAgentMessages";
+import { useagentstore } from "@/features/agent/store/store";
+import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
+import { useUser } from "@/features/auth/hooks/useUser";
+import { nodes } from "@/shared/types/globaltype";
+import { Mail, PenBox, Trash } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/shared/components/ui/sonner";
 import { toast } from "sonner";
-import { Spinner } from "@/components/ui/spinner";
-import { Skeleton } from "@/components/ui/skeleton";
-import AiContent from "@/components/ui/LayoutAiresponse";
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { agentsession } from "@/types/agenttype";
-import { voiceauth } from "@/api/voiceauth";
-import { ToolRecord, ToolType } from "@/features/toolsselection";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { agentsession } from "@/features/agent/types";
+import { voiceauth } from "@/features/voice/api/api";
+import { toolToRole } from "@/shared/config/toolsselection";
+import { agentauth } from "@/features/agent/api/api";
+import { useEmailCreds } from "@/features/email/hooks/useEmailCreds";
+import { useSaveEmailCreds } from "@/features/email/hooks/useSaveEmailCreds";
+import { useRemoveEmailCreds } from "@/features/email/hooks/useRemoveEmailCreds";
+import { ToolApprovalDialog } from "@/shared/components/layout/ToolApprovalDialog";
+import { AgentNodeList } from "@/features/agent/components/AgentNodeList";
+import { AgentChatArea } from "@/features/agent/components/AgentChatArea";
+import { AgentInput } from "@/features/agent/components/AgentInput";
+import { AgentNodeForm } from "@/features/agent/components/AgentNodeForm";
+import { AgentChatHeader } from "@/features/agent/components/AgentChatHeader";
+import type { ModelEntry } from "@/shared/lib/modelsapi";
+import { getProviderModels } from "@/shared/config/providermodels";
 
 export const LocalAgent = () => {
 
     //Store
-    const {
-        userdata,
-    } = userauthstore();
+    const { data: userdata } = useUser();
 
-    const {
-        fetchservicekey,
-        Api
-    } = authservicestore();
+    const { data: Api = [], refetch: fetchservicekey } = useServiceKeys();
 
+    const { data: nodesData, isLoading: loadingfetch } = useAgentNodes()
+    const createNodeMutation = useCreateAgentNode()
+    const deleteNodeMutation = useDeleteAgentNode()
+    const resetMsgMutation = useResetAgentMessages()
+
+    const Node = nodesData ?? []
+    const loadingnode = createNodeMutation.isPending
+    const loadingresetmsg = resetMsgMutation.isPending
     const {
-        Node,
-        fetchnode,
-        addnode,
-        updatenode,
-        deletenode,
-        loadingfetch,
-        loadingnode,
-        fetchagentmessages,
-        storeagentmessage,
         type,
-        settype
-    } = useagentstore();
+        setType: settype,
+    } = useagentstore()
 
 
     //States
@@ -67,7 +66,6 @@ export const LocalAgent = () => {
     const [actor, setactor] = useState<string>("");
     const [prompt, setprompt] = useState<string>("");
     const [input, setinput] = useState<string>("");
-    const [refresh, setrefresh] = useState<boolean>(false);
     const [selectnode, setselectnode] = useState<string | null>("");
     const [firstnode, setfirstnode] = useState<string | null>(null);
     const [lastnode, setlastnode] = useState<string | null>(null);
@@ -80,6 +78,34 @@ export const LocalAgent = () => {
     const streamRef = useRef<MediaStream | null>(null);
     const [loadingrecord, setloadingrecord] = useState<boolean>(false);
     const [tool, settool] = useState<string | null>("");
+    const [toolOpen, settoolOpen] = useState(false);
+    const [modelOpen, setModelOpen] = useState(false);
+    const [servicesOpen, setServicesOpen] = useState(false);
+    const [credDialogOpen, setCredDialogOpen] = useState(false);
+    const [credHost, setCredHost] = useState("");
+    const [credPort, setCredPort] = useState(587);
+    const [credUser, setCredUser] = useState("");
+    const [credPass, setCredPass] = useState("");
+    const { data: credData, refetch: fetchCreds } = useEmailCreds();
+    const saveCredsMutation = useSaveEmailCreds();
+    const removeCredsMutation = useRemoveEmailCreds();
+    const credExists = credData?.exists ?? false;
+    const creds = credData?.data ?? null;
+    const [credSaving, setCredSaving] = useState(false);
+    const [credDeleting, setCredDeleting] = useState(false);
+    const [historyNextCursor, setHistoryNextCursor] = useState<string | null>(null);
+    const [historyHasMore, setHistoryHasMore] = useState(false);
+    const [historyLoadingMore, setHistoryLoadingMore] = useState(false);
+    const [historyError, setHistoryError] = useState<boolean>(false);
+    const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+    const [modelList, setModelList] = useState<ModelEntry[]>([]);
+    const [modelsLoading, setModelsLoading] = useState(false);
+    const topSentinelRef = useRef<HTMLDivElement | null>(null);
+    const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+    const workflowGenRef = useRef(0);
+    const lastSentInputRef = useRef<string>("");
+    const historyEndRef = useRef<HTMLDivElement | null>(null);
+    const [pendingToolApproval, setPendingToolApproval] = useState<{ nodeName: string; toolName: string; args: Record<string, unknown> } | null>(null);
 
     //Navigate
     const navigate = useNavigate();
@@ -87,48 +113,74 @@ export const LocalAgent = () => {
     //Functions
     useEffect(() => {
         fetchservicekey();
+        fetchCreds();
     }, [])
 
+    // Auto-set role when tool changes
     useEffect(() => {
-        const fetchmessage = async () => {
-            try {
-                setmessageloading(true);
-                const response = await fetchagentmessages();
-                if (response.success && response.data) {
-                    setHistory(response.data);
-                }
-            }
-            catch (err: unknown) {
-                if (err instanceof Error) {
-                    const Error = err as any;
-                    const error = Error.response?.data?.message || err.message;
-                    toast.error(error, {
-                        id: "agentmsg-error",
-                        description: "There was a problem connecting to the server.",
-                        duration: Infinity,
-                        action: {
-                            label: "Retry",
-                            onClick: () => {
-                                toast.dismiss("agentmsg-error")
-                                fetchmessage()
-                            },
-                        },
-                    });
-                } else {
-                    toast.error("An unexpected error occurred.")
-                }
-            }
-            finally {
-                setmessageloading(false);
+        if (tool) {
+            setactor(toolToRole(tool));
+        }
+    }, [tool]);
+
+    // Cleanup on unmount — abort running workflow
+    useEffect(() => {
+        return () => {
+            window.ipcRenderer.send('cancel-workflow');
+        };
+    }, []);
+
+    const fetchMessages = async () => {
+        try {
+            setmessageloading(true);
+            setHistoryError(false);
+            setHistoryNextCursor(null);
+            setHistoryHasMore(false);
+            const response = await agentauth.fetchagentmessages();
+            if (response.success && response.data) {
+                setHistory((response.data.messages ?? []).reverse());
+                setHistoryNextCursor(response.data.nextCursor);
+                setHistoryHasMore(response.data.hasMore);
             }
         }
-        fetchmessage();
+        catch (err: unknown) {
+            setHistoryError(true);
+            if (err instanceof Error) {
+                const Error = err as any;
+                toast.error(Error.response?.data?.message || err.message);
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        }
+        finally {
+            setmessageloading(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchMessages();
     }, [])
+
+    const scrollHistoryToBottom = () => {
+        historyEndRef.current?.scrollIntoView({ behavior: "auto" });
+    };
+
+    useEffect(() => {
+        scrollHistoryToBottom();
+    }, [history]);
 
 
     useEffect(() => {
-        fetchnode();
-    }, [refresh]);
+        if (!provider) { setModelList([]); return; }
+        setModelsLoading(true);
+        getProviderModels(provider!).then(models => {
+            setModelList(models);
+            setModelsLoading(false);
+            if (models.length > 0 && model && !models.some((m: any) => m.model === model)) {
+                setmodel(models[0].model);
+            }
+        });
+    }, [provider]);
 
     useEffect(() => {
         if (Node) {
@@ -194,14 +246,7 @@ export const LocalAgent = () => {
             if (!name || !provider || !actor || !model || !tool || !prompt) {
                 return;
             }
-            const response = await addnode(
-                name,
-                provider,
-                actor,
-                model,
-                tool,
-                prompt
-            )
+            const response = await createNodeMutation.mutateAsync({ name, provider: provider!, actor, model: model!, tool: tool!, prompt })
             if (response.success) {
                 toast.success(response.message);
                 setnodeid("");
@@ -212,7 +257,6 @@ export const LocalAgent = () => {
                 setmodel("");
                 settool("");
                 setopen(false);
-                setrefresh(prev => !prev);
 
             }
         }
@@ -234,7 +278,7 @@ export const LocalAgent = () => {
             if (!name || !provider || !actor || !model || !tool || !prompt) {
                 return;
             }
-            const response = await updatenode(
+            const response = await agentauth.updatenode(
                 nodeid,
                 name,
                 provider,
@@ -253,7 +297,6 @@ export const LocalAgent = () => {
                 setmodel("");
                 settool("");
                 setopenupdate(false);
-                setrefresh(prev => !prev);
             }
         }
         catch (err: unknown) {
@@ -273,21 +316,25 @@ export const LocalAgent = () => {
             if (!nodeid) {
                 return;
             }
-            const response = await deletenode(
-                nodeid
-            )
-            if (response.success) {
-                toast.success(response.message);
-                setnodeid("");
-                setname("");
-                setactor("");
-                setprompt("");
-                setprovider("");
-                setmodel("");
-                settool("");
-                setopendelete(false);
-                setrefresh(prev => !prev);
+            const response = await deleteNodeMutation.mutateAsync(nodeid);
+            if (!response.success) return;
+
+            toast.success(response.message);
+
+            // Also delete this node's conversation history
+            if (name) {
+                await agentauth.resetagentmessages(name);
+                setHistory(prev => prev.filter(msg => msg.name !== name));
             }
+
+            setnodeid("");
+            setname("");
+            setactor("");
+            setprompt("");
+            setprovider("");
+            setmodel("");
+            settool("");
+            setopendelete(false);
         }
         catch (err: unknown) {
             if (err instanceof Error) {
@@ -304,29 +351,41 @@ export const LocalAgent = () => {
     //Response from electron
     useEffect(() => {
         const handleStart = (_: any, data: any) => {
-            setnodes((prev) => prev.map(n =>
-                n.name === data.nodeName ? { ...n, status: 'running' as const } : n
-            ));
+            if (!data?.nodeName) return;
+            const gen = workflowGenRef.current;
+            setnodes((prev) => {
+                if (workflowGenRef.current !== gen) return prev;
+                return prev.map((n: any) =>
+                    n.name === data.nodeName ? { ...n, status: 'running' as const } : n
+                );
+            });
         };
 
         const handleFinished = async (_: any, data: any) => {
+            if (!data?.nodeName) return;
+            const gen = workflowGenRef.current;
             setnodes((prev) => {
+                if (workflowGenRef.current !== gen) return prev;
                 const targetNode = prev.find((n) => n.name === data.nodeName);
 
-                if (targetNode && targetNode.output) {
-                    const finalContent = targetNode.output;
+                if (targetNode) {
                     const Agentname = targetNode.name;
+                    const finalContent = targetNode.output || targetNode.thinking || "";
 
-                    setHistory((element) => [...element, {
-                        role: "assistant",
-                        content: finalContent,
-                        name: Agentname
-                    }]);
+                    if (finalContent) {
+                        setHistory((element) => [...element, {
+                            role: "assistant",
+                            content: finalContent,
+                            name: Agentname,
+                            provider: targetNode.provider,
+                            model: targetNode.model
+                        }]);
 
-                    storeagentmessage("assistant", finalContent, Agentname);
+                        agentauth.storeagentmessage("assistant", finalContent, Agentname, targetNode.provider, targetNode.model);
+                    }
                 }
 
-                const updatedNodes = prev.map((n) =>
+                const updatedNodes = prev.map((n: any) =>
                     n.name === data.nodeName ? { ...n, status: "idle" as const } : n
                 );
 
@@ -340,39 +399,68 @@ export const LocalAgent = () => {
             });
         };
         const handleStream = (_: any, data: any) => {
-            setnodes((prev) => prev.map(n =>
-                n.name === data.nodeName ? { ...n, output: (n.output || "") + data.chunk } : n
-            ));
+            if (!data?.nodeName) return;
+            const gen = workflowGenRef.current;
+            setnodes((prev) => {
+                if (workflowGenRef.current !== gen) return prev;
+                return prev.map((n: any) =>
+                    n.name === data.nodeName ? { ...n, output: (n.output || "") + data.chunk } : n
+                );
+            });
 
         };
         //Thinking
         const handleThinking = (_: any, data: any) => {
-            setnodes((prev) => prev.map(n =>
-                n.name === data.nodeName ? { ...n, thinking: (n.thinking || "") + data.chunk } : n
-            ));
+            if (!data?.nodeName) return;
+            const gen = workflowGenRef.current;
+            setnodes((prev) => {
+                if (workflowGenRef.current !== gen) return prev;
+                return prev.map((n: any) =>
+                    n.name === data.nodeName ? { ...n, thinking: (n.thinking || "") + data.chunk } : n
+                );
+            });
         };
 
         //ToolCalling
         const handleTool = (_: any, data: any) => {
-            setnodes((prev) => prev.map(n =>
-                n.name === data.nodeName ? { ...n, activeTool: data.toolName } : n
-            ));
+            if (!data?.nodeName) return;
+            const gen = workflowGenRef.current;
+            setnodes((prev) => {
+                if (workflowGenRef.current !== gen) return prev;
+                return prev.map((n: any) =>
+                    n.name === data.nodeName ? { ...n, activeTool: data.toolName } : n
+                );
+            });
         };
         const handleToolFinished = (_: any, data: any) => {
-            setnodes(prev => prev.map(n =>
-                n.name === data.nodeName ? { ...n, activeTool: null } : n
-            ));
+            if (!data?.nodeName) return;
+            const gen = workflowGenRef.current;
+            setnodes(prev => {
+                if (workflowGenRef.current !== gen) return prev;
+                return prev.map((n: any) =>
+                    n.name === data.nodeName ? { ...n, activeTool: null } : n
+                );
+            });
         };
 
-        const handleError = (_: any) => {
-
+        const handleError = (_: any, data: { message?: string }) => {
+            const gen = workflowGenRef.current;
             setworkflowloading(false);
+            if (data?.message) {
+                toast.error("Workflow Error", { description: data.message });
+            }
+            setnodes((prev) => {
+                if (workflowGenRef.current !== gen) return prev;
+                return prev.map((n: any) => ({
+                    ...n,
+                    status: 'idle' as const,
+                    activeTool: null
+                }));
+            });
+        };
 
-            setnodes((prev) => prev.map(n => ({
-                ...n,
-                status: 'idle' as const,
-                activeTool: null
-            })));
+        const handleToolApprovalRequest = (_: any, data: { nodeName: string; toolName: string; args: Record<string, unknown> }) => {
+            setPendingToolApproval(data);
         };
 
 
@@ -382,7 +470,8 @@ export const LocalAgent = () => {
         window.ipcRenderer.on('node-tool-finished', handleToolFinished);
         window.ipcRenderer.on('node-start', handleStart);
         window.ipcRenderer.on('node-finished', handleFinished);
-        window.ipcRenderer.on("node-error", handleError)
+        window.ipcRenderer.on("node-error", handleError);
+        window.ipcRenderer.on("tool-approval-request", handleToolApprovalRequest);
 
         return () => {
             window.ipcRenderer.removeAllListeners('node-stream');
@@ -392,20 +481,58 @@ export const LocalAgent = () => {
             window.ipcRenderer.removeAllListeners('node-start');
             window.ipcRenderer.removeAllListeners('node-finished');
             window.ipcRenderer.removeAllListeners("node-error");
+            window.ipcRenderer.removeAllListeners("tool-approval-request");
         };
     }, []);
 
+    const handleToolApprovalResponse = (approved: boolean) => {
+        window.ipcRenderer.send('tool-approval-response', { approved });
+        setPendingToolApproval(null);
+    };
 
     //Messagesend
     const sendMessage = async () => {
-        if (!input || !type || messageloading || workflowloading) {
+        if (!input || messageloading) {
             return;
         }
 
+        if (workflowloading) {
+            window.ipcRenderer.send('cancel-workflow');
+            if (!input) return;
+        }
+
+        if (!input || !type || messageloading) {
+            return;
+        }
+
+        workflowGenRef.current++;
+
         setworkflowloading(true);
-        const updatedHistory = [...history, { role: "user", content: input, name: userdata?.username ?? "User" }];
+
+        const newMsg = { role: "user", content: input, name: userdata?.username ?? "User" } as const;
+        const updatedHistory = [...history, newMsg];
         setHistory(updatedHistory);
+
+        // Scope agent memory: only include user messages + target agent's own history
+        let agentNames: string[];
+        if (type === "Specific Node" && selectnode) {
+            agentNames = [selectnode];
+        } else if ((type === "Linear Sequence" || type === "Range Node") && firstnode && lastnode) {
+            const idxA = nodes.findIndex(n => n.name === firstnode);
+            const idxB = nodes.findIndex(n => n.name === lastnode);
+            const start = Math.min(idxA, idxB);
+            const end = Math.max(idxA, idxB);
+            agentNames = nodes.slice(start, end + 1).map((n: any) => n.name);
+        } else {
+            agentNames = nodes.map((n: any) => n.name);
+        }
+        const agentHistory = history.filter(msg =>
+            msg.role === "user" || agentNames.includes(msg.name)
+        );
+        const workflowInput = [...agentHistory, newMsg];
+
         const messageToSave = input;
+        lastSentInputRef.current = input;
 
         setinput("")
 
@@ -418,12 +545,12 @@ export const LocalAgent = () => {
 
         setnodes(runningNodes);
 
-        await storeagentmessage("user", messageToSave, userdata?.username ?? "User");
+        await agentauth.storeagentmessage("user", messageToSave, type === "Specific Node" && selectnode ? selectnode : userdata?.username ?? "User", undefined, undefined);
 
 
         if (type === "Linear Sequence") {
             window.ipcRenderer.send('run-workflow', {
-                input: updatedHistory,
+                input: workflowInput,
                 nodes: runningNodes,
                 encryptkey: Api,
                 firstnode: firstnode,
@@ -433,7 +560,7 @@ export const LocalAgent = () => {
         }
         else if (type === "Range Node") {
             window.ipcRenderer.send('run-workflow', {
-                input: updatedHistory,
+                input: workflowInput,
                 nodes: runningNodes,
                 encryptkey: Api,
                 firstnode: firstnode,
@@ -443,7 +570,7 @@ export const LocalAgent = () => {
         }
         else if (type === "Simultaneous") {
             window.ipcRenderer.send('run-workflow', {
-                input: updatedHistory,
+                input: workflowInput,
                 nodes: runningNodes,
                 encryptkey: Api,
                 useremail: userdata?.useremail,
@@ -452,7 +579,7 @@ export const LocalAgent = () => {
         }
         else {
             window.ipcRenderer.send('run-workflow', {
-                input: updatedHistory,
+                input: workflowInput,
                 nodes: runningNodes,
                 encryptkey: Api,
                 targetnode: selectnode,
@@ -461,6 +588,77 @@ export const LocalAgent = () => {
         }
 
     }
+
+    const abortWorkflow = () => {
+        window.ipcRenderer.send('cancel-workflow');
+        setworkflowloading(false);
+        setnodes((prev) => prev.map((n: any) => ({
+            ...n,
+            output: "",
+            thinking: "",
+            status: 'idle' as const,
+            activeTool: null
+        })));
+        setinput(lastSentInputRef.current);
+    };
+
+    //Reset history
+    const handleResetHistory = async () => {
+        const response = await resetMsgMutation.mutateAsync(undefined);
+        if (response.success) {
+            setHistory([]);
+            setHistoryNextCursor(null);
+            setHistoryHasMore(false);
+            toast.success(response.message);
+        }
+    };
+
+    //Load older history (cursor-based pagination)
+    const loadMoreHistory = async () => {
+        if (!historyNextCursor || !historyHasMore || historyLoadingMore) return;
+        setHistoryLoadingMore(true);
+        try {
+            const container = scrollContainerRef.current;
+            const prevScrollHeight = container?.scrollHeight ?? 0;
+
+            const response = await agentauth.fetchagentmessages(historyNextCursor);
+            if (response.success && response.data) {
+                const data = response.data;
+                setHistory(prev => [...(data.messages ?? []).reverse(), ...prev]);
+                setHistoryNextCursor(data.nextCursor);
+                setHistoryHasMore(data.hasMore);
+
+                requestAnimationFrame(() => {
+                    if (container) {
+                        container.scrollTop = container.scrollHeight - prevScrollHeight;
+                    }
+                });
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any;
+                toast.error(Error.response?.data?.message || err.message);
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            setHistoryLoadingMore(false);
+        }
+    };
+
+    //IntersectionObserver for infinite scroll up
+    useEffect(() => {
+        const observer = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && historyHasMore && !historyLoadingMore) {
+                loadMoreHistory();
+            }
+        }, { threshold: 0.1 });
+
+        const el = topSentinelRef.current;
+        if (el) observer.observe(el);
+
+        return () => observer.disconnect();
+    }, [historyHasMore, historyLoadingMore]);
 
     const startRecording = async () => {
         if (recordstatus) {
@@ -489,7 +687,7 @@ export const LocalAgent = () => {
 
             const form = new FormData();
             form.append("voice", audioBlob, "voice.webm");
-            console.log(audioBlob);
+
 
             try {
                 setloadingrecord(true)
@@ -526,608 +724,258 @@ export const LocalAgent = () => {
             streamRef.current = null;
         }
     };
-    //providers
-    const availableModels = provider ? PROVIDER_MODELS[provider] || [] : [];
+    const servicesContent = (
+        <ScrollArea className="h-[calc(100vh-140px)] mt-6 p-4">
+            <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div className="flex items-center gap-3">
+                        <Mail size={18} className="text-muted-foreground" />
+                        <div>
+                            <p className="text-sm font-medium">Email SMTP</p>
+                            <p className="text-xs text-muted-foreground">{credExists ? creds?.smtp_user : "Not configured"}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center">
+                        <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                                if (credExists && creds) {
+                                    setCredHost(creds.smtp_host);
+                                    setCredPort(creds.smtp_port || 587);
+                                    setCredUser(creds.smtp_user);
+                                    setCredPass(creds.smtp_pass);
+                                }
+                                setCredDialogOpen(true);
+                            }}
+                        >
+                            <PenBox size={14} />
+                        </Button>
+                        <Button variant="ghost" size="sm" disabled={credDeleting} onClick={async () => {
+                            setCredDeleting(true);
+                            await removeCredsMutation.mutateAsync();
+                            setCredDeleting(false);
+                            toast.success("Email credentials deleted.");
+                        }} className="text-red-500 hover:text-red-600">
+                            {credDeleting ? <Spinner className="size-4" /> : <Trash size={14} />}
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </ScrollArea>
+    );
 
-    const apiWithLogos = Api ? Api.map((provider) => ({
-        ...provider,
-        imageUrl: BRAND_ASSETS[provider.provider.toLowerCase()]
-    })) : [];
+    const historyContent = (
+        <AgentChatArea
+            history={history}
+            nodes={nodes}
+            userdata={userdata}
+            historyLoadingMore={historyLoadingMore}
+            historyError={historyError}
+            historyHasMore={historyHasMore}
+            topSentinelRef={topSentinelRef}
+            historyEndRef={historyEndRef}
+            scrollContainerRef={scrollContainerRef}
+            onRetryLoad={fetchMessages}
+            copiedIndex={copiedIndex}
+            setCopiedIndex={setCopiedIndex}
+        />
+    );
 
     return (
         <>
             <Toaster position="top-right" richColors />
-            {/*Create*/}
-            <Dialog open={open} onOpenChange={(isOpen) => {
-                setopen(isOpen)
-                if (!isOpen) resetForm()
-            }} modal={false}>
+            <ToolApprovalDialog
+                open={pendingToolApproval !== null}
+                toolName={pendingToolApproval?.toolName || ""}
+                toolQuery={pendingToolApproval?.args || null}
+                onApprove={() => handleToolApprovalResponse(true)}
+                onReject={() => handleToolApprovalResponse(false)}
+            />
+
+            <AgentNodeForm
+                mode="create"
+                open={open}
+                onOpenChange={(isOpen) => {
+                    setopen(isOpen);
+                    if (!isOpen) resetForm();
+                }}
+                name={name}
+                setName={setname}
+                actor={actor}
+                prompt={prompt}
+                setPrompt={setprompt}
+                provider={provider}
+                setProvider={setprovider}
+                model={model}
+                setModel={setmodel}
+                tool={tool}
+                setTool={settool}
+                toolOpen={toolOpen}
+                setToolOpen={settoolOpen}
+                modelOpen={modelOpen}
+                setModelOpen={setModelOpen}
+                modelList={modelList}
+                modelsLoading={modelsLoading}
+                Api={Api}
+                loadingnode={loadingnode}
+                onSubmit={Addnode}
+                onNavigateSettings={() => navigate("/app/settings")}
+            />
+
+            <AgentNodeForm
+                mode="update"
+                open={openupdate}
+                onOpenChange={(isOpen) => {
+                    setopenupdate(isOpen);
+                    if (!isOpen) resetForm();
+                }}
+                name={name}
+                setName={setname}
+                actor={actor}
+                prompt={prompt}
+                setPrompt={setprompt}
+                provider={provider}
+                setProvider={setprovider}
+                model={model}
+                setModel={setmodel}
+                tool={tool}
+                setTool={settool}
+                toolOpen={toolOpen}
+                setToolOpen={settoolOpen}
+                modelOpen={modelOpen}
+                setModelOpen={setModelOpen}
+                modelList={modelList}
+                modelsLoading={modelsLoading}
+                Api={Api}
+                loadingnode={loadingnode}
+                onSubmit={Updatenode}
+                onNavigateSettings={() => navigate("/app/settings")}
+            />
+
+            <AgentNodeForm
+                mode="delete"
+                open={opendelete}
+                onOpenChange={(isOpen) => {
+                    setopendelete(isOpen);
+                    if (!isOpen) resetForm();
+                }}
+                name={name}
+                setName={setname}
+                actor={actor}
+                prompt={prompt}
+                setPrompt={setprompt}
+                provider={provider}
+                setProvider={setprovider}
+                model={model}
+                setModel={setmodel}
+                tool={tool}
+                setTool={settool}
+                toolOpen={toolOpen}
+                setToolOpen={settoolOpen}
+                modelOpen={modelOpen}
+                setModelOpen={setModelOpen}
+                modelList={modelList}
+                modelsLoading={modelsLoading}
+                Api={Api}
+                loadingnode={loadingnode}
+                onSubmit={Deletenode}
+                onNavigateSettings={() => navigate("/app/settings")}
+            />
+
+            <Dialog open={credDialogOpen} onOpenChange={(isOpen) => {
+                setCredDialogOpen(isOpen);
+                if (!isOpen) { setCredHost(""); setCredPort(587); setCredUser(""); setCredPass(""); }
+            }}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle className="text-2xl">Add Agent Node</DialogTitle>
+                        <DialogTitle className="text-2xl">Email SMTP Configuration</DialogTitle>
                     </DialogHeader>
-                    <DialogDescription>Add your own ai agent into your workflow.</DialogDescription>
+                    <DialogDescription>Configure your SMTP credentials to enable email sending.</DialogDescription>
                     <div className="flex flex-col gap-2">
-                        <Label htmlFor="name">Agent Name</Label>
-                        <Input id="name" placeholder="Enter Agent Name" value={name} onChange={(e) => setname(e.target.value)} />
+                        <Label htmlFor="credHost">SMTP Host</Label>
+                        <Input id="credHost" placeholder="smtp.gmail.com" value={credHost} onChange={(e) => setCredHost(e.target.value)} />
                     </div>
                     <div className="flex flex-col gap-2">
-                        <Label htmlFor="role">Role</Label>
-                        <Input id="role" placeholder="Enter Agent Role" value={actor} onChange={(e) => setactor(e.target.value)} />
+                        <Label htmlFor="credPort">SMTP Port</Label>
+                        <Input id="credPort" type="number" placeholder="587" value={credPort} onChange={(e) => setCredPort(Number(e.target.value))} />
                     </div>
                     <div className="flex flex-col gap-2">
-                        <Label htmlFor="prompt">Prompt</Label>
-                        <Textarea id="prompt" placeholder="Enter Agent Prompt" className="resize-none h-20" value={prompt} onChange={(e) => setprompt(e.target.value)} />
+                        <Label htmlFor="credUser">SMTP Username</Label>
+                        <Input id="credUser" placeholder="your@email.com" value={credUser} onChange={(e) => setCredUser(e.target.value)} />
                     </div>
-                    <div className="flex justify-between gap-2">
-                        <div className="flex flex-col gap-1">
-                            <Label htmlFor="provider">Provider</Label>
-                            <Select onValueChange={(value) => {
-                                setprovider(value ?? "")
-                                setmodel("")
-                            }} value={provider}>
-                                <SelectTrigger >
-                                    {provider ?
-                                        <>
-                                            <img src={BRAND_ASSETS[provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                            <span>{provider.charAt(0).toUpperCase() + provider.slice(1)}</span>
-                                        </> : "Select Provider"}
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {apiWithLogos.map((item) => (
-                                        <SelectItem key={item.provider} value={item.provider}>
-                                            <img src={item.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                            <span>{item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}</span>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <Label htmlFor="Tool">Tools</Label>
-                            <Select id="Tool" onValueChange={(value) => settool(value)} value={tool}>
-                                <SelectTrigger >
-                                    {tool ? ToolRecord[tool as ToolType] : "Select Tools"}
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Object.entries(ToolRecord).map(([key, label]) => (
-                                        <SelectItem key={key} value={key}>
-                                            {label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <Label htmlFor="model">Models</Label>
-                            {Api.length > 0 && (
-                                <Select
-                                    key={`${provider}-${type}`}
-                                    onValueChange={(val) => setmodel(val ?? "")}
-                                    value={model}
-                                    disabled={!provider}
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <div className="flex items-center gap-2">
-                                            {model && (
-                                                <img
-                                                    src={availableModels.find((m: any) => m.model === model)?.imageUrl}
-                                                    className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
-                                                />
-                                            )}
-                                            <span className="truncate">
-                                                {model ? model.substring(0, 15) + "..." : "Select Model"}
-                                            </span>
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent className="p-1 w-64">
-                                        {availableModels.map((m: any) => (
-                                            <SelectItem key={m.model} value={m.model}>
-                                                <div className="flex items-center gap-3">
-                                                    <img src={m.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" alt="" />
-                                                    <span className="text-sm">{m.model.substring(0, 25) + "..."}</span>
-                                                </div>
-                                            </SelectItem>))}
-                                    </SelectContent>
-                                </Select>
-                            )}
-                        </div>
+                    <div className="flex flex-col gap-2">
+                        <Label htmlFor="credPass">SMTP Password</Label>
+                        <Input id="credPass" type="password" placeholder="App password or SMTP password" value={credPass} onChange={(e) => setCredPass(e.target.value)} />
                     </div>
                     <DialogFooter>
-                        <Button disabled={loadingnode} onClick={Addnode} className="bg-cyan-500 dark:bg-card-foreground dark:text-black">{loadingnode ? <Spinner /> : "Add"}</Button>
-                        <Button onClick={() => {
-                            setopen(false)
-                            resetForm();
-                        }} variant="destructive">Cancel</Button>
+                        <Button disabled={credSaving} onClick={async () => {
+                            setCredSaving(true);
+                            const result = await saveCredsMutation.mutateAsync({ smtp_host: credHost, smtp_port: credPort, smtp_user: credUser, smtp_pass: credPass });
+                            setCredSaving(false);
+                            if (result.success) { setCredDialogOpen(false); toast.success("Email credentials saved!"); }
+                            else { toast.error("Failed to save email credentials."); }
+                        }} className="bg-cyan-500 dark:bg-card-foreground dark:text-black">{credSaving ? <Spinner /> : "Save"}</Button>
+                        <Button onClick={() => setCredDialogOpen(false)} variant="outline">Cancel</Button>
                     </DialogFooter>
                 </DialogContent>
-            </Dialog>
-
-            {/*Update*/}
-            <Dialog open={openupdate} onOpenChange={(isOpen) => {
-                setopenupdate(isOpen);
-                if (!isOpen) resetForm();
-            }} modal={false}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle className="text-2xl">Update Agent Node</DialogTitle>
-                    </DialogHeader>
-                    <DialogDescription>Add your own ai agent into your workflow.</DialogDescription>
-                    <div className="flex flex-col gap-2">
-                        <Label htmlFor="name">Agent Name</Label>
-                        <Input id="name" placeholder="Enter New Agent" value={name} onChange={(e) => setname(e.target.value)} />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <Label htmlFor="role">Role</Label>
-                        <Input id="role" placeholder="Enter New Agent Role" value={actor} onChange={(e) => setactor(e.target.value)} />
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        <Label htmlFor="prompt">Prompt</Label>
-                        <Textarea id="prompt" placeholder="Enter New Agent Prompt" className="resize-none h-20" value={prompt} onChange={(e) => setprompt(e.target.value)} />
-                    </div>
-                    <div className="flex justify-between gap-2">
-                        <div className="flex flex-col gap-1">
-                            <Label htmlFor="provider">Provider</Label>
-                            <Select onValueChange={(value) => {
-                                setprovider(value ?? "")
-                                setmodel("")
-                            }} value={provider}>
-                                <SelectTrigger >
-                                    {provider ?
-                                        <>
-                                            <img src={BRAND_ASSETS[provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                            <span>{provider.charAt(0).toUpperCase() + provider.slice(1)}</span>
-                                        </> : "Select Provider"}
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {apiWithLogos.map((item) => (
-                                        <SelectItem key={item.provider} value={item.provider}>
-                                            <img src={item.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                            <span>{item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}</span>
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <Label htmlFor="Tool">Tools</Label>
-                            <Select id="Tool" onValueChange={(value) => settool(value)} value={tool}>
-                                <SelectTrigger >
-                                    {tool ? ToolRecord[tool as ToolType] : "Select Tools"}
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {Object.entries(ToolRecord).map(([key, label]) => (
-                                        <SelectItem key={key} value={key}>
-                                            {label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                            <Label htmlFor="model">Models</Label>
-                            {Api.length > 0 && (
-                                <Select
-                                    key={`${provider}-${type}`}
-                                    onValueChange={(val) => setmodel(val ?? "")}
-                                    value={model}
-                                    disabled={!provider}
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <div className="flex items-center gap-2">
-                                            {model && (
-                                                <img
-                                                    src={availableModels.find((m: any) => m.model === model)?.imageUrl}
-                                                    className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
-                                                />
-                                            )}
-                                            <span className="truncate">
-                                                {model ? model.substring(0, 15) + "..." : "Select Model"}
-                                            </span>
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent className="p-1 w-64">
-                                        {availableModels.map((m: any) => (
-                                            <SelectItem key={m.model} value={m.model}>
-                                                <div className="flex items-center gap-3">
-                                                    <img src={m.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" alt="" />
-                                                    <span className="text-sm">{m.model.substring(0, 15) + "..."}</span>
-                                                </div>
-                                            </SelectItem>))}
-                                    </SelectContent>
-                                </Select>
-                            )}
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button disabled={loadingnode} onClick={Updatenode} className="bg-cyan-500 dark:bg-card-foreground dark:text-black">{loadingnode ? <Spinner /> : "Update"}</Button>
-                        <Button onClick={() => {
-                            setopenupdate(false)
-                            resetForm();
-                        }} variant="destructive">Cancel</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/*Delete*/}
-            <Dialog open={opendelete} onOpenChange={(isOpen) => {
-                setopendelete(isOpen)
-                if (!isOpen) resetForm()
-            }} modal={false}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Delete Agent Node</DialogTitle>
-                    </DialogHeader>
-                    <DialogDescription>Are you sure do you want to delete <span className="font-semibold">"{name}"</span>?</DialogDescription>
-                    <DialogFooter>
-                        <Button disabled={loadingnode} onClick={Deletenode} className="bg-cyan-500 dark:bg-card-foreground dark:text-black">{loadingnode ? <Spinner /> : "Delete"}</Button>
-                        <Button onClick={() => {
-                            setopendelete(false);
-                            resetForm();
-                        }} variant="destructive">Cancel</Button>
-                    </DialogFooter>
-                </DialogContent>
-
             </Dialog>
 
             <div className="flex h-[92vh] w-full flex-col bg-background">
-                <div className="mx-auto w-full max-w-5xl flex justify-between gap-1">
-                    <div className="flex flex-col gap-1">
-                        <h1 className="text-2xl font-bold flex gap-3 items-center">
-                            <Bot className="w-6 h-6 text-cyan-500 dark:text-white" />
-                            Multimate-MultiAgent</h1>
-                        <p className="text-muted-foreground">Ai that does work.</p>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                        {messageloading ?
-                            <span className="flex items-center gap-2 px-1 py-1 rounded-full border border-transparent">
-                                <Skeleton className="w-20 h-4 rounded-md bg-zinc-200 dark:bg-zinc-800" />
-                            </span> : <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                                Up To Date
-                            </Badge>}
-                        {(nodes.length > 0 || Api.length > 0) ? <Button onClick={() => setopen(true)} className="bg-cyan-500 hover:bg-cyan-600 text-white dark:bg-white dark:text-black">Add Node</Button> : <Button className="bg-cyan-500 dark:bg-white" onClick={() => navigate("/app/settings")}>Add Provider</Button>}
-                    </div>
-                </div>
+                <AgentChatHeader
+                    messageloading={messageloading}
+                    Api={Api}
+                    nodes={nodes}
+                    onAddNode={() => setopen(true)}
+                    onAddProvider={() => navigate("/app/settings")}
+                />
+
                 <div className="flex-1 px-3 overflow-y-auto mt-4" style={{ scrollbarWidth: "none" }}>
                     <div className="mx-auto max-w-5xl py-5">
-                        {loadingfetch ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
-                                    <Card key={i} className="flex flex-col h-30 shadow-sm">
-                                        <CardHeader className="pb-3">
-                                            <div className="flex justify-between items-start">
-                                                <div className="space-y-2 w-full">
-                                                    <Skeleton className="h-5 w-[60%]" />
-                                                    <Skeleton className="h-3 w-[40%]" />
-                                                </div>
-                                                <Skeleton className="h-5 w-16 rounded-full" />
-                                            </div>
-                                        </CardHeader>
-                                    </Card>
-                                ))}
-                            </div>
-                        ) :
-                            nodes && nodes.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {nodes.map((element, idx) => {
-                                        const isActive = element.status === 'running';
-                                        return (
-                                            <Card key={idx} className={`flex flex-col h-full hover:border hover:border-cyan-500/50 relative overflow-hidden
-                                                ${isActive
-                                                    ? "border-cyan-500 shadow-[0_0_20px_-5px_rgba(6,182,212,0.4)] scale-[1.02] bg-cyan-50/5 dark:bg-cyan-950/10 z-10"
-                                                    : "border-border opacity-80"
-                                                }`}>
-                                                {isActive && (
-                                                    <div className="absolute top-0 left-0 right-0 h-0.5 bg-cyan-500 shadow-[0_0_10px_#06b6d4] animate-[pulse_2s_infinite]" />
-                                                )}
-                                                <CardHeader className="pb-3">
-                                                    <div className="flex justify-between items-start">
-                                                        <div className="flex flex-col gap-2">
-                                                            <CardTitle className=" flex items-center gap-2 text-lg max-lg:text-sm">
-                                                                <Bot className={`text-cyan-500 dark:text-white ${isActive ? "animate-bounce" : ""}`} />{element.name}
-                                                                <p className={`text-[10px] px-2 py-1 rounded-full border transition-all duration-300 ${isActive
-                                                                    ? "bg-cyan-500 text-white border-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.5)]"
-                                                                    : "bg-cyan-500/10 text-cyan-500 border-cyan-500/20"
-                                                                    }`}>
-                                                                    {isActive ? "ACTIVE" : element.actor}
-                                                                </p>
-                                                            </CardTitle>
-                                                            <CardDescription className="text-xs flex gap-1 items-center">
-                                                                <img src={BRAND_ASSETS[element.provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5" /><span className="font-bold">{element.model}</span>
-                                                            </CardDescription>
-                                                            <CardDescription className="text-xs">
-                                                                Tools: <span className="text-green-500"> {ToolRecord[element.tool as ToolType]} </span>
-                                                            </CardDescription>
-                                                        </div>
-                                                        <CardAction>
-                                                            <DropdownMenu>
-                                                                <DropdownMenuTrigger className="dark:hover:bg-zinc-700 hover:bg-black/10 p-1 rounded-full">
-                                                                    <EllipsisVertical size={17} className="text-muted-foreground dark:text-white" />
-                                                                </DropdownMenuTrigger >
-                                                                <DropdownMenuContent side="right" align="start">
-                                                                    <DropdownMenuItem onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handleupdate(idx);
-                                                                    }} className="flex ">
-                                                                        <PenBox /> Update
-                                                                    </DropdownMenuItem>
-                                                                    <DropdownMenuItem className="text-red-600 flex" onClick={(e) => {
-                                                                        e.stopPropagation();
-                                                                        handledelete(idx);
-                                                                    }} >
-                                                                        <Trash /> Delete
-                                                                    </DropdownMenuItem>
-                                                                </DropdownMenuContent>
-                                                            </DropdownMenu>
-                                                        </CardAction>
-                                                    </div>
-                                                </CardHeader>
-                                                <div className="px-6 pb-6 flex-1 overflow-y-auto max-h-75 text-sm space-y-3" style={{ scrollbarWidth: "none" }}>
-                                                    {element.thinking && (
-                                                        <div className="p-3 bg-muted/50 rounded-lg border-l-2 border-cyan-500 text-xs text-muted-foreground italic">
-                                                            <span className="block font-bold mb-1 opacity-50">THINKING...</span>
-                                                            {element.thinking}
-                                                        </div>
-                                                    )}
-
-                                                    {element.activeTool && (
-                                                        <div className="flex items-center gap-2 text-xs text-amber-500 font-medium animate-pulse">
-                                                            <div className="h-2 w-2 rounded-full bg-amber-500" />
-                                                            Using Tool: {element.activeTool}
-                                                        </div>
-                                                    )}
-
-                                                    <div className="leading-relaxed whitespace-pre-wrap">
-                                                        {(element.output || element.activeTool || element.thinking) ? <AiContent content={element.output!} /> :
-                                                            <motion.span
-                                                                animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
-                                                                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                                                                style={{
-                                                                    backgroundImage: "linear-gradient(90deg, #6b7280 0%, #f3f4f6 50%, #6b7280 100%)",
-                                                                    backgroundSize: "200% 100%",
-                                                                    WebkitBackgroundClip: "text",
-                                                                    WebkitTextFillColor: "transparent",
-                                                                }}
-                                                                className="italic"
-                                                            > Awaiting sequence...
-                                                            </motion.span>}
-                                                    </div>
-                                                </div>
-                                            </Card>
-                                        )
-                                    })}
-                                </div>
-                            ) : (
-                                <div className="min-h-[60vh] flex flex-col justify-center items-center text-center">
-                                    <h1 className="text-3xl font-semibold mb-2">Build your Agent Chain</h1>
-                                    <p className="text-muted-foreground mb-6">Connect multiple models to solve complex tasks.</p>
-                                    {Api.length > 0 ? <Button onClick={() => setopen(true)} className="bg-cyan-500 hover:bg-cyan-600 text-white dark:bg-white dark:text-black">Add First Node</Button> : <Button className="bg-cyan-500 dark:bg-white" onClick={() => navigate("/app/settings")}>Add Provider</Button>}
-                                </div>
-                            )}
-                    </div>
-                </div>
-                {nodes.length > 0 && <div className="flex w-full gap-2 justify-end mx-auto max-w-5xl mb-3 mt-3">
-                    <Select
-                        onValueChange={(val) => settype(val ?? "")}
-                        value={type}
-                    >
-                        <SelectTrigger >
-                            <span className="truncate">
-                                {type ? type.substring(0, 15) + "..." : "Select Mode"}
-                            </span>
-                        </SelectTrigger>
-                        <SelectContent side="top" align="end" className="p-1 w-60">
-                            <SelectItem value="Linear Sequence">
-                                Linear Sequence
-                            </SelectItem>
-                            <SelectItem value="Specific Node">
-                                Specific Node
-                            </SelectItem>
-                            <SelectItem value="Range Node">
-                                Range Node
-                            </SelectItem>
-                            <SelectItem value="Simultaneous">
-                                Simultaneous
-                            </SelectItem>
-                        </SelectContent>
-                    </Select>
-                    {type === "Specific Node" && <Select
-                        onValueChange={(val) => setselectnode(val)}
-                        value={selectnode}
-                        disabled={!type}
-                    >
-                        <SelectTrigger >
-                            <span className="truncate">
-                                {selectnode ? selectnode.substring(0, 15) + "..." : "Select Agent Node"}
-                            </span>
-                        </SelectTrigger>
-                        <SelectContent className="p-1 w-60">
-                            {Node.map((n) => (
-                                <SelectItem key={n.id} value={n.name}>
-                                    {n.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>}
-                    {type === "Range Node" &&
-                        <div className="flex items-center">
-                            {nodes.length > 1 ?
-                                <div className="flex gap-2">
-                                    <Select
-                                        onValueChange={(val) => setfirstnode(val)}
-                                        value={firstnode}
-                                        disabled={!type}
-                                    >
-                                        <SelectTrigger >
-                                            <span className="truncate">
-                                                {firstnode ? firstnode.substring(0, 15) + "..." : "Select First Agent Node"}
-                                            </span>
-                                        </SelectTrigger>
-                                        <SelectContent className="p-1 w-60">
-                                            {Node.map((n) => (
-                                                <SelectItem key={n.id} value={n.name}>
-                                                    {n.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <Select
-                                        onValueChange={(val) => setlastnode(val)}
-                                        value={lastnode}
-                                        disabled={!type}
-                                    >
-                                        <SelectTrigger >
-                                            <span className="truncate">
-                                                {lastnode ? lastnode.substring(0, 15) + "..." : "Select Last Agent Node"}
-                                            </span>
-                                        </SelectTrigger>
-                                        <SelectContent className="p-1 w-60">
-                                            {Node.map((n) => (
-                                                <SelectItem key={n.id} value={n.name}>
-                                                    {n.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                                :
-                                <h1 className="text-sm text-red-400">Please Add At least Two nodes.</h1>
-                            }
-                        </div>
-                    }
-                </div>
-                }
-                {nodes.length > 0 && <div className="w-full bg-card mx-auto max-w-5xl rounded-2xl border p-3 shadow-lg">
-                    <div className="relative flex flex-col">
-                        <Textarea
-                            disabled={workflowloading || nodes.length === 0 || messageloading || loadingrecord || recordstatus}
-                            value={input}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" && !e.shiftKey && !messageloading && !workflowloading) {
-                                    e.preventDefault();
-                                    sendMessage();
-                                }
-                            }}
-                            onChange={(e) => setinput(e.target.value)}
-                            placeholder={recordstatus ? "Listening..." : loadingrecord ? "Transcribing..." : "Message..."}
-                            className="border-none max-h-50 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
+                        <AgentNodeList
+                            nodes={nodes}
+                            loadingfetch={loadingfetch}
+                            Api={Api}
+                            onUpdate={handleupdate}
+                            onDelete={handledelete}
+                            onAddNode={() => setopen(true)}
+                            onAddProvider={() => navigate("/app/settings")}
                         />
-
-                        <div className="flex items-center justify-between gap-2 mt-2">
-                            <div className="flex items-center gap-2">
-                                <Sheet >
-                                    <SheetTrigger asChild>
-                                        <Button className="bg-cyan-500 dark:bg-white rounded-full">
-                                            History
-                                        </Button>
-                                    </SheetTrigger>
-                                    <SheetContent side="right">
-                                        <SheetHeader>
-                                            <SheetTitle>Chat History</SheetTitle>
-                                            <SheetDescription>
-                                                View your previous interactions with the agents.
-                                            </SheetDescription>
-                                        </SheetHeader>
-                                        <ScrollArea className="h-[calc(100vh-120px)] mt-4 p-4">
-                                            <div className="flex flex-col gap-4">
-                                                {history.length === 0 ? (
-                                                    <p className="text-sm text-muted-foreground text-center py-10">
-                                                        No history yet.
-                                                    </p>
-                                                ) : (
-                                                    history.map((msg, index) => {
-                                                        const isUser = msg.role === "user";
-
-                                                        return (
-                                                            <div
-                                                                key={index}
-                                                                className={`group mb-4 flex w-full gap-4 ${isUser ? "flex-row-reverse" : "flex-row"
-                                                                    }`}
-                                                            >
-                                                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full mt-1">
-                                                                    {isUser ? (
-                                                                        <Avatar className="h-8 w-8">
-                                                                            <AvatarImage
-                                                                                src={
-                                                                                    userdata?.profileurl
-                                                                                        ? `${userdata.profileurl}?v=${userdata?.useremail}`
-                                                                                        : undefined
-                                                                                }
-                                                                                alt={userdata?.username}
-                                                                            />
-                                                                            <AvatarFallback className="bg-cyan-500 dark:bg-white border text-white dark:text-black">
-                                                                                {userdata?.username.substring(0, 1)}
-                                                                            </AvatarFallback>
-                                                                        </Avatar>
-                                                                    ) : (
-                                                                        <Bot className="h-5 w-5 text-cyan-500 dark:text-white relative" />
-                                                                    )}
-                                                                </div>
-
-                                                                <div
-                                                                    className={`flex flex-col gap-1 max-w-[85%] min-w-0 ${isUser ? "items-end text-right" : "items-start text-left"
-                                                                        }`}
-                                                                >
-                                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                                                                        {isUser ? userdata?.username : msg.name || "Agent"}
-                                                                    </span>
-
-                                                                    <div
-                                                                        className={`py-2 rounded-2xl leading-relaxed text-[15px] whitespace-pre-wrap w-full overflow-hidden ${isUser
-                                                                            ? "bg-muted text-foreground rounded-tr-none p-3"
-                                                                            : "bg-transparent text-foreground rounded-tl-none"
-                                                                            }`}
-                                                                    >
-                                                                        <motion.div
-                                                                            initial={{ opacity: 0, y: 5 }}
-                                                                            animate={{ opacity: 1, y: 0 }}
-                                                                            transition={{ duration: 0.4 }}
-                                                                            className="wrap-break-word w-full"
-                                                                        >
-                                                                            <AiContent content={msg.content} />
-                                                                        </motion.div>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        );
-                                                    })
-                                                )}
-                                            </div>
-                                        </ScrollArea>
-                                    </SheetContent>
-                                </Sheet>
-                                {(type === "Specific Node" && selectnode) && (
-                                    <div className="inline-flex gap-2 items-center p-1.5 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20">
-                                        <span className="text-sm flex items-center gap-2">
-                                            {selectnode}
-                                            <BotIcon size={18} />
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="flex gap-2 justify-end items-center">
-                                <Button
-                                    disabled={loadingrecord || nodes.length === 0}
-                                    onClick={recordstatus ? stopRecording : startRecording}
-                                    size="icon"
-                                    className="bg-cyan-500 dark:bg-white rounded-full">
-                                    {recordstatus ? <Square size={14} className="fill-current" /> :
-                                        loadingrecord ? <Spinner /> : <Mic size={14} />}
-                                </Button>
-                                <Button
-                                    onClick={sendMessage}
-                                    size="icon"
-                                    disabled={!type || !input || nodes.length === 0 || messageloading || workflowloading || loadingrecord || recordstatus}
-                                    className="bg-cyan-500 dark:bg-white rounded-full"
-                                >
-                                    {workflowloading ? <Spinner /> : <ArrowUp size={16} />}
-                                </Button>
-                            </div>
-                        </div>
                     </div>
-                </div>}
-            </div >
+                </div>
+
+                {nodes.length > 0 && (
+                    <AgentInput
+                        input={input}
+                        setInput={setinput}
+                        nodes={nodes}
+                        Node={Node}
+                        messageloading={messageloading}
+                        loadingrecord={loadingrecord}
+                        recordstatus={recordstatus}
+                        workflowloading={workflowloading}
+                        type={type}
+                        setType={settype}
+                        selectnode={selectnode}
+                        setSelectnode={setselectnode}
+                        firstnode={firstnode}
+                        setFirstnode={setfirstnode}
+                        lastnode={lastnode}
+                        setLastnode={setlastnode}
+                        servicesOpen={servicesOpen}
+                        setServicesOpen={setServicesOpen}
+                        servicesContent={servicesContent}
+                        historyContent={historyContent}
+                        historyLength={history.length}
+                        loadingresetmsg={loadingresetmsg}
+                        onResetHistory={handleResetHistory}
+                        onSendMessage={sendMessage}
+                        onAbortWorkflow={abortWorkflow}
+                        onStartRecording={startRecording}
+                        onStopRecording={stopRecording}
+                    />
+                )}
+            </div>
         </>
-    )
-}
+    );
+};

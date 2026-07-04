@@ -14,7 +14,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     define: {
-      'process.env.BACKEND_URL': JSON.stringify(env.BACKEND_URL)
+        'process.env.BACKEND_URL': JSON.stringify(env.BACKEND_URL),
+      'process.env.VITE_SUPABASE': JSON.stringify(env.VITE_SUPABASE),
     },
     plugins: [
       tailwindcss(),
@@ -25,6 +26,8 @@ export default defineConfig(({ mode }) => {
           vite: {
             define: {
               'process.env.VITE_BACKEND_URL': JSON.stringify(env.VITE_BACKEND_URL),
+              'process.env.VITE_SUPABASE': JSON.stringify(env.VITE_SUPABASE),
+              'process.env.VITE_CLIENTID': JSON.stringify(env.VITE_CLIENTID),
             },
             build: {
               minify: 'terser',

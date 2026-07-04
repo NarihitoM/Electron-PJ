@@ -1,74 +1,71 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUp, ToolCaseIcon, X, Mic, Square, Dot, CheckCircle2, ChevronDown, Cpu, Terminal, RefreshCw, XCircle, Box } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { userauthstore } from "@/store/userauthstore";
-import { authservicestore } from "@/store/serviceauthstore";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-} from "@/components/ui/select"
-import { BRAND_ASSETS, PROVIDER_MODELS } from "@/features/providermodels";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useUser } from "@/features/auth/hooks/useUser";
+import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
+import type { ModelEntry } from "@/shared/lib/modelsapi";
+import { BRAND_ASSETS, getProviderModels } from "@/shared/config/providermodels";
 import { useNavigate } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
+import { Toaster } from "@/shared/components/ui/sonner";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
-import {
-    DropdownMenu,
-    DropdownMenuTrigger,
-    DropdownMenuContent,
-    DropdownMenuItem,
-} from "@/components/ui/dropdown-menu"
-import AiContent from "@/components/ui/LayoutAiresponse";
-import { chatsession } from "@/types/globaltype";
-import { voiceauth } from "@/api/voiceauth";
-import { Spinner } from "@/components/ui/spinner";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { slackauth } from "@/api/slackauth";
-import { useslackstore } from "@/store/slackauthstore";
-import { Slacktool } from "@/features/toolsselection";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { chatsession } from "@/shared/types/globaltype";
+import { voiceauth } from "@/features/voice/api/api";
+import { slackauth } from "@/features/slack/api/api";
+import { slackauthstore } from "@/features/slack/store/store";
+import { useSlackAccount } from "@/features/slack/hooks/useSlackAccount";
+import { useSlackChannels } from "@/features/slack/hooks/useSlackChannels";
+import { ToolApprovalDialog } from "@/shared/components/layout/ToolApprovalDialog";
+import { datafetch } from "@/shared/config/tanstackqueryconfig";
+import { slackcrondata } from "@/features/slack/types";
+import { Server } from "@/shared/config/axioconfig";
+import { ImageLightbox } from "@/shared/components/ImageLightbox";
+import { chatauth } from "@/features/chat/api/api";
+import { SlackChatHeader } from "@/features/slack/components/SlackChatHeader";
+import { SlackMessageList } from "@/features/slack/components/SlackMessageList";
+import { SlackInput } from "@/features/slack/components/SlackInput";
 
 
 export const Slack = () => {
 
     //Store
-    const {
-        userdata,
-    } = userauthstore();
+    const { data: userdata } = useUser();
+
+    const { data: slackAccount, isLoading: loadingslack } = useSlackAccount()
+    useSlackChannels()
+
+    const workspace = (slackAccount as any)?.workspace ?? ""
+    const publichannel = (slackAccount as any)?.public ?? []
+    const privatechannel = (slackAccount as any)?.private ?? []
+    const im = (slackAccount as any)?.im ?? []
+    const mpim = (slackAccount as any)?.mpim ?? []
+
+    const [loadingcroncreate, setloadingcroncreate] = useState<boolean>(false)
+    const [loadingslackdelmsg, setloadingslackdelmsg] = useState<boolean>(false)
 
     const {
-        model,
         provider,
-        setModel,
+        model,
         setProvider,
-        fetchslackacc,
-        loadingslack,
-        workspace,
-        public: publichannel,
-        private: privatechannel,
-        im,
-        mpim,
-        fetchslackmessage,
-        deleteslackmsg,
-        loadingslackdelmsg,
-        sendslackmessage
-    } = useslackstore();
+        setModel,
+    } = slackauthstore();
 
-    const {
-        Api,
-        fetchservicekey
-    } = authservicestore()
+    const { data: Api = [], refetch: fetchservicekey } = useServiceKeys()
 
     //States
     const [sessionmessage, setsessionmessage] = useState<chatsession[]>([]);
     const [input, setInput] = useState("");
     const [sending, setSending] = useState(false);
+    const [nextCursor, setNextCursor] = useState<string | null>(null);
+    const [hasMore, setHasMore] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const topSentinelRef = useRef<HTMLDivElement | null>(null);
+    const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+    const abortControllerRef = useRef<AbortController | null>(null);
+    const lastSentInputRef = useRef<string>("");
     const [loadingfetch, setloadingfetch] = useState<boolean>(false);
+    const [loadingerror, setloadingerror] = useState<boolean>(false);
     const [refresh, setrefresh] = useState<boolean>(false);
+    const [pendingApproval, setPendingApproval] = useState<{ name: string; query: Record<string, unknown> | null } | null>(null);
+    const pendingApprovalRef = useRef<{ name: string; query: Record<string, unknown> | null } | null>(null);
+    const threadIdRef = useRef<string | null>(null);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
     const [type, settype] = useState<string | null>("text");
     const [hover, setHover] = useState(false);
@@ -78,8 +75,109 @@ export const Slack = () => {
     const [loadingrecord, setloadingrecord] = useState<boolean>(false);
     const [isChecking, setIsChecking] = useState(false);
     const [mode, setmode] = useState<string>("");
+    const [opencron, setopencron] = useState<boolean>(false);
     const [channelid, setchannelid] = useState<string | null>(null);
+    const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+    const [modelList, setModelList] = useState<ModelEntry[]>([]);
+    const [modelsLoading, setModelsLoading] = useState(false);
+    const [cronModelList, setCronModelList] = useState<ModelEntry[]>([]);
+    const [modelOpen, setModelOpen] = useState(false);
+    const [reasoningLevel, setReasoningLevel] = useState<"" | "low" | "medium" | "high">("");
+    const [pendingImages, setPendingImages] = useState<File[]>([]);
+    const [uploadingImages, setUploadingImages] = useState(false);
+    const [uploadingImageUrls, setUploadingImageUrls] = useState<Set<string>>(new Set());
+    const [lightboxImages, setLightboxImages] = useState<string[]>([]);
+    const [lightboxIndex, setLightboxIndex] = useState(0);
+    const [lightboxOpen, setLightboxOpen] = useState(false);
 
+    const initialSlackCron: slackcrondata = {
+        isActive: false,
+        channel: "",
+        roomId: "",
+        workspace: "",
+        model: "",
+        provider: "",
+        message: "",
+        crontype: "",
+        triggerAt: "",
+        timezone: "",
+        customSchedule: ""
+    };
+    const [slackcron, setslackcron] = useState<slackcrondata>(initialSlackCron);
+
+    const [customDayOfWeek, setCustomDayOfWeek] = useState<number[]>([]);
+    const [customDayOfMonth, setCustomDayOfMonth] = useState<number[]>([]);
+    const [customMonth, setCustomMonth] = useState<number[]>([]);
+
+    const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    const getDaysInMonth = (monthIndex: number): number => {
+        return new Date(new Date().getFullYear(), monthIndex + 1, 0).getDate();
+    };
+
+    const maxDayOfMonth = useMemo(() => {
+        if (customMonth.length === 0) return 31;
+        return Math.min(...customMonth.map(m => getDaysInMonth(m)));
+    }, [customMonth]);
+
+    const toggleCustomDayOfWeek = (day: number) => {
+        setCustomDayOfWeek(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
+    };
+    const toggleCustomDayOfMonth = (day: number) => {
+        setCustomDayOfMonth(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
+    };
+    const toggleCustomMonth = (month: number) => {
+        setCustomMonth(prev => {
+            const next = prev.includes(month) ? prev.filter(m => m !== month) : [...prev, month];
+            if (next.length > 0) {
+                const maxDays = Math.min(...next.map(m => getDaysInMonth(m)));
+                setCustomDayOfMonth(d => d.filter(day => day <= maxDays));
+            }
+            return next;
+        });
+    };
+
+    const handlechange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    ) => {
+        const { name, value } = e.target;
+        setslackcron((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const cronsubmint = async () => {
+        try {
+            setloadingcroncreate(true);
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            const payload = {
+                ...slackcron,
+                timezone: userTimezone,
+                customSchedule: slackcron.crontype === "custom"
+                    ? JSON.stringify({ dayOfWeek: customDayOfWeek, dayOfMonth: customDayOfMonth, month: customMonth })
+                    : ""
+            };
+
+            const response = await slackauth.slackcroncreate(payload);
+
+            if (response.success) {
+                toast.success(response.message);
+                setopencron(false);
+            }
+        }
+        catch (err) {
+            if (err instanceof Error) {
+                const Error = err as any;
+                const error = Error.response?.data?.message || err.message;
+                toast.error(error);
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        }
+        finally {
+            setloadingcroncreate(false);
+        }
+    }
 
     //Navigation
 
@@ -87,8 +185,71 @@ export const Slack = () => {
 
     //Functions
     useEffect(() => {
+        if (workspace) {
+            setslackcron(prev => ({ ...prev, workspace: workspace }));
+        }
+    }, [workspace]);
+
+    useEffect(() => {
+        if (!provider) { setModelList([]); return; }
+        setModelsLoading(true);
+        getProviderModels(provider).then(models => {
+            setModelList(models);
+            setModelsLoading(false);
+            if (models.length > 0 && !models.some(m => m.model === model)) {
+                setModel(models[0].model);
+            }
+        });
+    }, [provider]);
+
+    useEffect(() => {
+        if (!slackcron.provider) return;
+        getProviderModels(slackcron.provider).then(models => setCronModelList(models));
+    }, [slackcron.provider]);
+
+    useEffect(() => {
         fetchservicekey();
     }, [])
+
+    useEffect(() => {
+        const getslackcron = async () => {
+            try {
+                const response = await slackauth.slackcronget();
+                if (response.success && response.data) {
+
+                    setslackcron(response.data);
+                } else {
+                    setslackcron(initialSlackCron);
+                }
+            }
+            catch (err) {
+                if (err instanceof Error) {
+                    const Error = err as any;
+                    const error = Error.response?.data?.message || err.message;
+                    toast.error(error);
+                } else {
+                    toast.error("An unexpected error occurred.")
+                }
+            }
+        }
+
+        getslackcron();
+    }, [])
+
+    useEffect(() => {
+        if (slackcron.customSchedule) {
+            try {
+                const schedule = JSON.parse(slackcron.customSchedule);
+                setCustomDayOfWeek(schedule.dayOfWeek || []);
+                setCustomDayOfMonth(schedule.dayOfMonth || []);
+                setCustomMonth(schedule.month || []);
+            } catch {
+                setCustomDayOfWeek([]);
+                setCustomDayOfMonth([]);
+                setCustomMonth([]);
+            }
+        }
+    }, [slackcron.customSchedule])
 
     //Smooth Scrolling
     const scrollToBottom = () => {
@@ -99,32 +260,123 @@ export const Slack = () => {
         scrollToBottom();
     }, [sessionmessage, sending]);
 
+    //Load older messages (cursor-based pagination)
+    const loadMore = async () => {
+        if (!nextCursor || !hasMore || loadingMore) return;
+        setLoadingMore(true);
+        try {
+            const container = scrollContainerRef.current;
+            const prevScrollHeight = container?.scrollHeight ?? 0;
+
+            const response = await slackauth.fetchslackmessage(nextCursor);
+            if (response.success && response.data) {
+                const data = response.data;
+                setsessionmessage(prev => [...(data.messages ?? []), ...prev]);
+                setNextCursor(data.nextCursor);
+                setHasMore(data.hasMore);
+
+                requestAnimationFrame(() => {
+                    if (container) {
+                        container.scrollTop = container.scrollHeight - prevScrollHeight;
+                    }
+                });
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any;
+                const error = Error.response?.data?.message || err.message;
+                toast.error(error);
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            setLoadingMore(false);
+        }
+    };
+
+    //IntersectionObserver for infinite scroll up
+    useEffect(() => {
+        const observer = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore && !loadingMore) {
+                loadMore();
+            }
+        }, { threshold: 0.1 });
+
+        const el = topSentinelRef.current;
+        if (el) observer.observe(el);
+
+        return () => observer.disconnect();
+    }, [hasMore, loadingMore]);
 
     useEffect(() => {
-        fetchslackacc();
+        datafetch.invalidateQueries({ queryKey: ["slack"] })
     }, [refresh])
 
 
     //Listen from backend to see status
     useEffect(() => {
         let interval: string | number | NodeJS.Timeout | undefined;
+        let fallbackTimeout: string | number | NodeJS.Timeout | undefined;
+        let pollingDelay = 1000;
+
+        const checkStatus = async () => {
+            try {
+                const response = await slackauth.slackcheckstatus();
+                if (response.success) {
+                    setIsChecking(false);
+                    await datafetch.invalidateQueries({ queryKey: ["slack"] })
+                    setrefresh(prev => !prev);
+                    if (interval) clearInterval(interval);
+                    if (fallbackTimeout) clearTimeout(fallbackTimeout);
+                }
+            } catch (err) {
+                console.error("Polling error", err);
+            }
+        };
+
+        const stopPolling = async () => {
+            if (interval) clearInterval(interval);
+            if (fallbackTimeout) clearTimeout(fallbackTimeout);
+            try {
+                const response = await slackauth.slackcheckstatus();
+                if (response.success) {
+                    await datafetch.invalidateQueries({ queryKey: ["slack"] })
+                    setrefresh(prev => !prev);
+                }
+            } catch (err) {
+                console.error("Final check error", err);
+            }
+            setIsChecking(false);
+        };
+
+        const onVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                checkStatus();
+                if (interval) { clearInterval(interval); }
+                pollingDelay = 1000;
+                interval = setInterval(checkStatus, pollingDelay);
+            } else {
+                pollingDelay = 5000;
+                if (interval) { clearInterval(interval); }
+                interval = setInterval(checkStatus, pollingDelay);
+            }
+        };
 
         if (isChecking) {
-            interval = setInterval(async () => {
-                try {
-                    const response = await slackauth.slackcheckstatus();
-                    if (response.success) {
-                        console.log("Authorize Complete!");
-                        setIsChecking(false);
-                        setrefresh(prev => !prev);
-                        clearInterval(interval);
-                    }
-                } catch (err) {
-                    console.error("Polling error", err);
-                }
-            }, 1000);
+            document.addEventListener('visibilitychange', onVisibilityChange);
+            fallbackTimeout = setTimeout(stopPolling, 180000);
+            interval = setInterval(checkStatus, pollingDelay);
+
+            return () => {
+                document.removeEventListener('visibilitychange', onVisibilityChange);
+                if (interval) clearInterval(interval);
+                if (fallbackTimeout) clearTimeout(fallbackTimeout);
+            };
         }
-        return () => clearInterval(interval);
+        return () => {
+            if (interval) clearInterval(interval);
+            if (fallbackTimeout) clearTimeout(fallbackTimeout);
+        };
     }, [isChecking]);
 
 
@@ -132,8 +384,13 @@ export const Slack = () => {
     const connectSlack = async () => {
         const response = await slackauth.slackstate();
         const stateId = response.stateId;
-        const clientid = "10744475925509.11080804868902";
-        const redirecturi = encodeURIComponent("http://localhost:4000/slack/api/callback");
+        const clientid = import.meta.env.VITE_SLACK_CLIENT_ID;
+        if (!clientid) {
+            toast.error("Slack Client ID not configured.");
+            return;
+        }
+        const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://multimate-server.vercel.app";
+        const redirecturi = encodeURIComponent(`${backendUrl}/slack/api/callback`);
         const scopes = [
             "channels:history",
             "groups:history",
@@ -156,28 +413,82 @@ export const Slack = () => {
 
     //Send the message to ai
     const handleSend = async () => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            if (!input.trim()) return;
+        }
+
         if (!input.trim() || !provider || !model)
             return;
 
+        const controller = new AbortController();
+        abortControllerRef.current = controller;
+
         setSending(true);
-        const userMsg: chatsession = { role: "user", content: input };
+
+        const currentInput = input;
+        const currentImages = [...pendingImages];
+        lastSentInputRef.current = currentInput;
+        setInput("");
+        setPendingImages([]);
+
+        // Create blob URLs for immediate preview
+        const blobUrls = currentImages.map(file => URL.createObjectURL(file));
+
+        // Add user message immediately with blob URLs
+        const userMsg: chatsession = { role: "user", content: currentInput, images: blobUrls.length > 0 ? blobUrls : undefined };
         setsessionmessage((prev) => [
             ...prev,
             userMsg,
-            { role: "assistant", content: "" }
+            { role: "assistant", content: "", provider, model }
         ]);
 
-        const currentInput = input;
-        setInput("");
+        // Mark these blob URLs as uploading
+        if (blobUrls.length > 0) {
+            setUploadingImageUrls(new Set(blobUrls));
+        }
+
+        // Upload images in background
+        let uploadedUrls: string[] = [];
+        if (currentImages.length > 0) {
+            setUploadingImages(true);
+            try {
+                uploadedUrls = await Promise.all(
+                    currentImages.map(file => chatauth.uploadImage(file))
+                );
+            } catch (err) {
+                toast.error("Failed to upload images");
+                setSending(false);
+                setUploadingImages(false);
+                setUploadingImageUrls(new Set());
+                setsessionmessage(prev => prev.slice(0, -2));
+                return;
+            }
+            setUploadingImages(false);
+            setUploadingImageUrls(new Set());
+
+            // Replace blob URLs with real uploaded URLs
+            setsessionmessage(prev => {
+                const newMsgs = [...prev];
+                const userMsgIdx = newMsgs.length - 2;
+                if (userMsgIdx >= 0 && newMsgs[userMsgIdx].role === "user") {
+                    newMsgs[userMsgIdx] = { ...newMsgs[userMsgIdx], images: uploadedUrls };
+                }
+                return newMsgs;
+            });
+
+            blobUrls.forEach(url => URL.revokeObjectURL(url));
+        }
 
         try {
-            await sendslackmessage(
+            await slackauth.sendmessage(
                 currentInput,
                 provider,
                 model,
                 channelid ?? "",
                 workspace ?? "",
                 type ?? "",
+                uploadedUrls.length > 0 ? uploadedUrls : undefined,
                 (data) => {
                     setsessionmessage((prev) => {
                         const newSession = [...prev];
@@ -201,11 +512,30 @@ export const Slack = () => {
                         const currentMessage = { ...newSession[lastIndex] };
                         const toolCalls = [...(currentMessage.toolsCall || [])];
 
-                        if (status.step === "tool_start") {
+                        if (status.type === "chain" && status.step === "start") {
+                            toolCalls.push({
+                                id: status.id,
+                                name: status.name ?? "Thinking",
+                                query: null,
+                                status: "loading",
+                                result: null,
+                                isChain: true,
+                                input: status.input,
+                            });
+                        }
+
+                        else if (status.type === "chain" && status.step === "end") {
+                            const idx = toolCalls.findIndex(t => t.id === status.id);
+                            if (idx !== -1) {
+                                toolCalls[idx] = { ...toolCalls[idx], status: "done", output: status.output };
+                            }
+                        }
+
+                        else if (status.step === "tool_start") {
                             toolCalls.push({
                                 id: status.id,
                                 name: status.tool ?? "Tool",
-                                query: status.query,
+                                query: status.query as any ?? null,
                                 status: "loading",
                                 result: null
                             });
@@ -226,9 +556,40 @@ export const Slack = () => {
 
                         newSession[lastIndex] = { ...currentMessage, toolsCall: toolCalls }; return newSession;
                     });
-                }
+                },
+                (data: { thread_id: string; tool_calls: Array<{ id: string; name: string; query: Record<string, unknown> }> }) => {
+                    const toolCall = data.tool_calls[0];
+                    if (toolCall) {
+                        threadIdRef.current = data.thread_id;
+                        pendingApprovalRef.current = { name: toolCall.name, query: toolCall.query ?? null };
+                        setPendingApproval({ name: toolCall.name, query: toolCall.query ?? null });
+                    }
+                },
+                (url: string) => {
+                    setsessionmessage((prev) => {
+                        const newMessages = [...prev];
+                        const lastIndex = newMessages.length - 1;
+                        if (lastIndex >= 0 && newMessages[lastIndex].role === "assistant") {
+                            const current = newMessages[lastIndex];
+                            newMessages[lastIndex] = {
+                                ...current,
+                                generatedImages: [...(current.generatedImages || []), url],
+                            };
+                        }
+                        return newMessages;
+                    });
+                    scrollToBottom();
+                },
+                controller.signal,
+                reasoningLevel || undefined,
             );
         } catch (err) {
+            if ((err as any)?.name === "AbortError") {
+                if (abortControllerRef.current === controller) {
+                    setInput(lastSentInputRef.current);
+                }
+                return;
+            }
             if (err instanceof Error) {
                 const Error = err as any;
                 const error = Error.response?.data?.message || err.message;
@@ -237,47 +598,79 @@ export const Slack = () => {
                 toast.error("An unexpected error occurred.")
             }
         } finally {
-            setSending(false);
+            if (abortControllerRef.current === controller) {
+                setSending(false);
+                abortControllerRef.current = null;
+            }
         }
     };
 
-    //fetchthechatmessage
+    const handleApprove = () => {
+        if (pendingApprovalRef.current) {
+            Server.post("/tool/approve", { thread_id: threadIdRef.current }).catch(() => {});
+            pendingApprovalRef.current = null;
+            setPendingApproval(null);
+        }
+    };
+
+    const handleReject = () => {
+        if (pendingApprovalRef.current) {
+            const { name, query } = pendingApprovalRef.current;
+            const fallbackId = `${name}-${Date.now()}`;
+            setsessionmessage((prev) => {
+                const newSession = [...prev];
+                const lastIndex = newSession.length - 1;
+                if (newSession[lastIndex]?.role !== "assistant") return prev;
+                const currentMessage = { ...newSession[lastIndex] };
+                const toolCalls = [...(currentMessage.toolsCall || [])];
+                toolCalls.push({ id: fallbackId, name, query, status: "rejected", result: "Tool execution rejected by user." });
+                newSession[lastIndex] = { ...currentMessage, toolsCall: toolCalls };
+                return newSession;
+            });
+            Server.post("/tool/reject", { thread_id: threadIdRef.current }).catch(() => {});
+            pendingApprovalRef.current = null;
+            setPendingApproval(null);
+        }
+    };
+
+    // Cleanup on unmount
     useEffect(() => {
-        const fetchchatmessage = async () => {
-            try {
-                setloadingfetch(true);
-                setSending(false);
-                const response = await fetchslackmessage()
-                if (response.success) {
-                    setsessionmessage(response.data ?? []);
-                }
-            }
-            catch (err: unknown) {
-                if (err instanceof Error) {
-                    const Error = err as any;
-                    const error = Error.response?.data?.message || err.message;
-                    toast.error(error, {
-                        id: "slackmsg-error",
-                        description: "There was a problem connecting to the server.",
-                        duration: Infinity,
-                        action: {
-                            label: "Retry",
-                            onClick: () => {
-                                toast.dismiss("slackmsg-error")
-                                fetchslackmessage()
-                            },
-                        },
-                    });
-                } else {
-                    toast.error("An unexpected error occurred.")
-                }
-            }
-            finally {
-                setloadingfetch(false);
+        return () => abortControllerRef.current?.abort();
+    }, []);
+
+    //fetchthechatmessage
+    const fetchMessages = async () => {
+        try {
+            setloadingfetch(true);
+            setloadingerror(false);
+            setSending(false);
+            setsessionmessage([]);
+            setNextCursor(null);
+            setHasMore(false);
+            const response = await slackauth.fetchslackmessage()
+            if (response.success && response.data) {
+                setsessionmessage(response.data.messages ?? []);
+                setNextCursor(response.data.nextCursor);
+                setHasMore(response.data.hasMore);
             }
         }
-        fetchchatmessage();
-    }, [refresh])
+        catch (err: unknown) {
+            setloadingerror(true);
+            if (err instanceof Error) {
+                const Error = err as any;
+                toast.error(Error.response?.data?.message || err.message);
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        }
+        finally {
+            setloadingfetch(false);
+        }
+    }
+
+    useEffect(() => {
+        fetchMessages();
+    }, [])
 
 
     const startRecording = async () => {
@@ -307,7 +700,7 @@ export const Slack = () => {
 
             const form = new FormData();
             form.append("voice", audioBlob, "voice.webm");
-            console.log(audioBlob);
+
 
             try {
                 setloadingrecord(true)
@@ -347,10 +740,14 @@ export const Slack = () => {
 
     const deleteslackmessage = async () => {
         try {
-            const response = await deleteslackmsg()
+            setloadingslackdelmsg(true);
+            const response = await slackauth.deleteslackmsg()
             if (response.success) {
                 toast.success(response.message);
-                setrefresh(prev => !prev);
+                setsessionmessage([]);
+                setNextCursor(null);
+                setHasMore(false);
+
             }
         }
         catch (err: unknown) {
@@ -362,30 +759,51 @@ export const Slack = () => {
                 toast.error("An unexpected error occurred.")
             }
         }
+        finally {
+            setloadingslackdelmsg(false);
+        }
     }
 
 
 
+    //Channel
     const selectedPublicchannel = useMemo(() => {
-        return publichannel.find(p => p.id === channelid)?.name || "";
+        return publichannel.find((p: any) => p.id === channelid)?.name || "";
     }, [channelid, publichannel])
 
     const selectedPrivatechannel = useMemo(() => {
-        return privatechannel.find(p => p.id === channelid)?.name || "";
+        return privatechannel.find((p: any) => p.id === channelid)?.name || "";
     }, [channelid, privatechannel])
 
     const selectedimchannel = useMemo(() => {
-        return im.find(p => p.id === channelid)?.name || "";
+        return im.find((p: any) => p.id === channelid)?.name || "";
     }, [channelid, im])
 
     const selectedmpimchannel = useMemo(() => {
-        return mpim.find(p => p.id === channelid)?.name || "";
+        return mpim.find((p: any) => p.id === channelid)?.name || "";
     }, [channelid, mpim])
 
 
+    //Cron
+    const selectedPublicchannelcron = useMemo(() => {
+        return publichannel.find((p: any) => p.id === slackcron.roomId)?.name || "";
+    }, [slackcron.roomId, publichannel])
 
-    //models for each prroviders
-    const availableModels = provider ? PROVIDER_MODELS[provider] || [] : [];
+    const selectedPrivatechannelcron = useMemo(() => {
+        return privatechannel.find((p: any) => p.id === slackcron.roomId)?.name || "";
+    }, [slackcron.roomId, privatechannel])
+
+    const selectedimchannelcron = useMemo(() => {
+        return im.find((p: any) => p.id === slackcron.roomId)?.name || "";
+    }, [slackcron.roomId, im])
+
+    const selectedmpimchannelcron = useMemo(() => {
+        return mpim.find((p: any) => p.id === slackcron.roomId)?.name || "";
+    }, [slackcron.roomId, mpim])
+
+
+
+
 
     const apiWithLogos = Api ? Api.map((provider) => ({
         ...provider,
@@ -396,514 +814,119 @@ export const Slack = () => {
     return (
         <>
             <Toaster position="top-right" richColors />
+            <ToolApprovalDialog
+                open={pendingApproval !== null}
+                toolName={pendingApproval?.name || ""}
+                toolQuery={pendingApproval?.query || null}
+                onApprove={handleApprove}
+                onReject={handleReject}
+            />
             <div className="flex h-[92vh] w-full flex-col bg-background">
-                <div className="mx-auto w-full max-w-5xl flex justify-between gap-1">
-                    <div className="flex flex-col gap-1">
-                        <h1 className="text-2xl font-bold flex items-center gap-3"><img src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg" className="w-7 h-7" />SlackAgent</h1>
-                        <p className="text-muted-foreground">You can edit and send message with your slack agent.</p>
-                    </div>
-                    <div className="flex gap-2 items-center">
-                        {loadingslack ?
-                            <span className="flex items-center gap-2 px-1 py-1 rounded-full border border-transparent">
-                                <Skeleton className="w-4 h-4 rounded-sm bg-zinc-200 dark:bg-zinc-800 shrink-0" />
-                                <Skeleton className="w-20 h-4 rounded-md bg-zinc-200 dark:bg-zinc-800" />
-                            </span> :
-                            workspace &&
-                            <span className="text-[13px] flex items-center gap-2 px-2 py-1 rounded-full border bg-card">
-                                <img src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg" className="w-4 h-4" />{workspace.substring(0, 10) + "..."}
-                            </span>}
-                        {Api.length > 0 ? (
-                            <div className="flex gap-2">
-                                <Select onValueChange={(value) => setProvider(value ?? "")} value={provider}>
-                                    <SelectTrigger >
-                                        {provider ?
-                                            <>
-                                                <img src={BRAND_ASSETS[provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                                <span>{provider.charAt(0).toUpperCase() + provider.slice(1)}</span>
-                                            </> : "Select Provider"}
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {apiWithLogos.map((item) => (
-                                            <SelectItem key={item.provider} value={item.provider}>
-                                                <img src={item.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                                <span>{item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}</span>
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        ) : (
-                            <Button className="bg-cyan-500 dark:bg-white" onClick={() => navigate("/app/settings")}>Add Provider</Button>
-                        )}
-                    </div>
-                </div>
-                <div className="flex-1 overflow-y-auto mt-4" style={{ scrollbarWidth: "none" }}>
-                    <div className="mx-auto max-w-5xl py-5">
-                        {loadingfetch || loadingslack ? (
-                            <div className="mx-auto max-w-5xl py-5 space-y-8 animate-pulse">
-                                {[1, 2, 3].map((i) => (
-                                    <div key={i} className="flex flex-col gap-8">
-                                        <div className="flex w-full gap-4 flex-row-reverse">
-                                            <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-                                            <div className="flex flex-col gap-2 items-end w-full">
-                                                <Skeleton className="h-3 w-16" />
-                                                <Skeleton className="h-16 w-[60%] rounded-2xl rounded-tr-none" />
-                                            </div>
-                                        </div>
-
-                                        <div className="flex w-full gap-4 flex-row">
-                                            <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-                                            <div className="flex flex-col gap-2 items-start w-full">
-                                                <Skeleton className="h-3 w-24" />
-                                                <div className="space-y-2 w-[80%]">
-                                                    <Skeleton className="h-4 w-full" />
-                                                    <Skeleton className="h-4 w-[90%]" />
-                                                    <Skeleton className="h-4 w-[40%]" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) :
-                            (sessionmessage && sessionmessage.length > 0 ?
-                                (sessionmessage.map((msg, index) => {
-                                    const isUser = msg.role === "user";
-                                    const isLastMessage = index === sessionmessage.length - 1;
-                                    const username = userdata?.username;
-                                    return (
-                                        <div
-                                            className={`group mb-8 flex w-full gap-4 ${isUser ? "flex-row-reverse" : "flex-row"
-                                                }`}
-                                        >
-                                            <div className="flex h-8 w-8 items-center justify-center rounded-full mt-1">
-                                                {isUser ? (
-                                                    <Avatar className="h-8 w-8">
-                                                        <AvatarImage
-                                                            src={
-                                                                userdata?.profileurl
-                                                                    ? `${userdata.profileurl}?v=${userdata?.useremail}`
-                                                                    : undefined
-                                                            }
-                                                            alt={userdata?.username}
-                                                        />
-                                                        <AvatarFallback className="bg-cyan-500 dark:bg-white border text-white dark:text-black">
-                                                            {userdata?.username.substring(0, 1)}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                ) : (
-                                                    <div className="relative flex items-center justify-center">
-                                                        {sending && isLastMessage && <Dot className="h-15 w-15 text-cyan-500 dark:text-white relative animate-pulse" />}
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div
-                                                className={`flex flex-col gap-1 max-w-[80%] min-w-0 ${isUser ? "items-end text-left" : "items-start text-left"
-                                                    }`}
-                                            >
-                                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                                                    {isUser ? username : ""}
-                                                </span>
-
-                                                <div
-                                                    className={`rounded-2xl leading-relaxed text-[15px] whitespace-pre-wrap w-full overflow-hidden ${isUser
-                                                        ? "bg-muted text-foreground rounded-tr-none p-3"
-                                                        : "bg-transparent text-foreground rounded-tl-none"
-                                                        }`}
-                                                >
-                                                    <motion.div
-                                                        initial={{ opacity: 0, y: 5 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        transition={{ duration: 0.4 }}
-                                                        className="wrap-break-word p-1 w-full"
-                                                    >
-                                                        <div className="grid grid-cols-1 gap-2 mb-1 w-fit">
-                                                            {msg.toolsCall?.map((tool) => (
-                                                                <Collapsible key={tool.id} className="w-full space-y-2">
-                                                                    <CollapsibleTrigger asChild>
-                                                                        <Button className={`group flex items-center gap-2 px-3 py-1 rounded-full border text-[10px] font-bold transition-all hover:bg-zinc-50 active:scale-95 ${tool.status === "done"
-                                                                            ? "text-black dark:text-white border-zinc-100 dark:border-zinc-800 bg-white dark:bg-card shadow-sm"
-                                                                            : "bg-zinc-50 dark:text-white border-zinc-100 dark:border-zinc-800 dark:bg-card text-black"
-                                                                            }`}>
-                                                                            {tool.status === "loading" && (
-                                                                                <Spinner className="w-4 h-4 animate-spin text-cyan-500 dark:text-white" />
-                                                                            )}
-                                                                            {tool.status === "done" && (
-                                                                                <CheckCircle2 size={12} className="text-green-500" />
-                                                                            )}
-                                                                            {tool.status === "error" && (
-                                                                                <XCircle size={12} className="text-red-500" />
-                                                                            )}
-                                                                            {Slacktool[tool.name.toLowerCase()]}
-                                                                            <ChevronDown
-                                                                                size={15}
-                                                                                className="ml-1 text-black dark:text-white transition-transform duration-300 group-data-[state=open]:rotate-180"
-                                                                            />
-                                                                        </Button>
-                                                                    </CollapsibleTrigger>
-
-                                                                    <CollapsibleContent className="animate-in fade-in slide-in-from-top-1 duration-200">
-                                                                        <div className="flex flex-col rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-black overflow-hidden shadow-sm max-w-[95%]">
-
-                                                                            <div className="border-b dark:border-zinc-800">
-                                                                                <div className="px-3 py-1.5 flex items-center gap-2 bg-zinc-50/50 dark:bg-zinc-900/50">
-                                                                                    <Terminal size={10} className="text-blue-400" />
-                                                                                    <span className="text-[9px] font-medium text-muted-foreground uppercase">Arguments</span>
-                                                                                </div>
-                                                                                <div className="p-3 overflow-x-auto scrollbar-hide">
-                                                                                    <pre className="text-[10px] font-mono text-cyan-700 dark:text-cyan-500 whitespace-pre-wrap">
-                                                                                        {JSON.stringify(tool.query, null, 2)}
-                                                                                    </pre>
-                                                                                </div>
-                                                                            </div>
-
-                                                                            {tool.result && (
-                                                                                <div className="flex-1 overflow-hidden">
-                                                                                    <div className="px-3 py-1.5 flex items-center gap-2 bg-zinc-50/50 dark:bg-zinc-900/50 border-b dark:border-zinc-800">
-                                                                                        <Cpu size={10} className="text-emerald-400" />
-                                                                                        <span className="text-[9px] font-medium text-muted-foreground uppercase">Execution</span>
-                                                                                    </div>
-                                                                                    <div className="p-3 max-h-62.5 overflow-y-auto scrollbar-thin" style={{ scrollbarWidth: "none" }}>
-                                                                                        <pre className="text-[10px] font-mono text-green-700 dark:text-green-500 whitespace-pre-wrap">
-                                                                                            {typeof tool.result === 'string' ? tool.result : JSON.stringify(tool.result, null, 2)}
-                                                                                        </pre>
-                                                                                    </div>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                    </CollapsibleContent>
-                                                                </Collapsible>
-                                                            ))}
-                                                        </div>
-                                                        <AiContent content={msg.content} />
-                                                    </motion.div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })) : (
-                                    <div className="min-h-[50vh] flex flex-col gap-2 justify-center items-center">
-                                        <h1 className="text-3xl">Slack Agenting</h1>
-                                        <p className="text-sm text-muted-foreground">Send Message To Get Started Slack Agenting.</p>
-                                        {workspace ? "" : <Button disabled={isChecking} className="bg-cyan-500 dark:bg-white" onClick={() => connectSlack()}>{isChecking ? <Spinner /> : "Connect Slack"}</Button>}
-                                    </div>
-                                ))}
-                        <div ref={messagesEndRef} />
-                    </div>
-                </div>
-                <div className="flex w-full gap-2 justify-between mx-auto max-w-5xl mb-3 mt-3">
-                    <Button onClick={deleteslackmessage} disabled={sessionmessage.length === 0 || loadingslackdelmsg} className="bg-cyan-500 dark:bg-white">{loadingslackdelmsg ? <Spinner /> : <><RefreshCw />Reset Chat</>}</Button>
-                    <div className="flex gap-2 items-center">
-                        {workspace && (
-                            <>
-                                {(publichannel.length > 0 || privatechannel.length > 0 || im.length > 0 || mpim.length > 0) && (
-                                    <Select key="mode"
-                                        onValueChange={(val) => {
-                                            setmode(val ?? "");
-                                            setchannelid("");
-                                        }}
-                                        value={mode}
-                                        disabled={!provider}>
-                                        <SelectTrigger >
-                                            <span className="truncate">
-                                                {mode ? mode : "Select Channel"}
-                                            </span>
-                                        </SelectTrigger>
-                                        <SelectContent className="p-1 w-60 max-h-68 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
-                                            <SelectItem value="Public">
-                                                Public
-                                            </SelectItem>
-                                            <SelectItem value="Private">
-                                                Private
-                                            </SelectItem>
-                                            <SelectItem value="Direct message">
-                                                Direct Message
-                                            </SelectItem>
-                                            <SelectItem value="Group message">
-                                                Group Message
-                                            </SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                )}
-                                {mode === "Public" && publichannel.length > 0 &&
-                                    <Select
-                                        key={channelid}
-                                        onValueChange={(val) => setchannelid(val ?? "")}
-                                        value={channelid}
-                                        disabled={!provider}
-                                    >
-                                        <SelectTrigger >
-                                            <span className="truncate">
-                                                {channelid ? selectedPublicchannel?.substring(0, 15) + "..." : "Select Public Channel"}
-                                            </span>
-                                        </SelectTrigger>
-                                        <SelectContent className="p-1 w-60 max-h-68 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
-                                            {publichannel.map((m) => (
-                                                <SelectItem key={m.id} value={m.id}>
-                                                    {m.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>}
-                                {mode === "Private" && privatechannel.length > 0 &&
-                                    <Select
-                                        key={channelid}
-                                        onValueChange={(val) => setchannelid(val ?? "")}
-                                        value={channelid}
-                                        disabled={!provider}
-                                    >
-                                        <SelectTrigger >
-                                            <span className="truncate">
-                                                {channelid ? selectedPrivatechannel?.substring(0, 15) + "..." : "Select Private Channel"}
-                                            </span>
-                                        </SelectTrigger>
-                                        <SelectContent className="p-1 w-60 max-h-68 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
-                                            {privatechannel.map((m) => (
-                                                <SelectItem key={m.id} value={m.id}>
-                                                    {m.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>}
-                                {mode === "Direct message" && im.length > 0 &&
-                                    <Select
-                                        key={channelid}
-                                        onValueChange={(val) => setchannelid(val ?? "")}
-                                        value={channelid}
-                                        disabled={!provider}
-                                    >
-                                        <SelectTrigger >
-                                            <span className="truncate">
-                                                {channelid ? selectedimchannel?.substring(0, 15) + "..." : "Select Direct Message Channel"}
-                                            </span>
-                                        </SelectTrigger>
-                                        <SelectContent className="p-1 w-60 max-h-68 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
-                                            {im.map((m) => (
-                                                <SelectItem key={m.id} value={m.id}>
-                                                    {m.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>}
-                                {mode === "Group message" && mpim.length > 0 &&
-                                    <Select
-                                        key={channelid}
-                                        onValueChange={(val) => setchannelid(val ?? "")}
-                                        value={channelid}
-                                        disabled={!provider}
-                                    >
-                                        <SelectTrigger >
-                                            <span className="truncate">
-                                                {channelid ? selectedmpimchannel?.substring(0, 15) + "..." : "Select Direct Message Channel"}
-                                            </span>
-                                        </SelectTrigger>
-                                        <SelectContent className="p-1 w-60 max-h-68 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
-                                            {mpim.map((m) => (
-                                                <SelectItem key={m.id} value={m.id}>
-                                                    {m.name}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>}
-                            </>
-                        )}
-                    </div>
-                </div>
-                <div className="w-full bg-card mx-auto max-w-5xl rounded-2xl border p-3 shadow-lg">
-                    <Textarea
-                        disabled={Api.length === 0 || !workspace || !model || !provider || loadingrecord || recordstatus}
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder={recordstatus ? "Listening..." : loadingrecord ? "Transcribing..." : "Message..."}
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSend();
-                            }
-                        }}
-                        className="border-none max-h-50 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
-                    />
-
-                    <div className="flex items-center justify-between mt-2">
-                        <div className="flex gap-2">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger>
-                                    <Button variant="outline" className="flex gap-1 items-center cursor-pointer">
-                                        <ToolCaseIcon size={15} />
-                                        <span className="text-sm">Tools</span>
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="start" side="top" className="w-40">
-                                    <DropdownMenuItem onClick={() => settype("read")}>
-                                        <Box /> Read Message
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => settype("send")}>
-                                        <Box /> Send Message
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => settype("listconversation")}>
-                                        <Box /> List Channels
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => settype("getuser")}>
-                                        <Box /> Get Userinfo
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => settype("getteam")}>
-                                        <Box /> Get Teaminfo
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            {type === "send" &&
-                                <button
-                                    onClick={() => {
-                                        settype("text");
-                                        setHover(false);
-                                    }}
-                                    disabled={sending}
-                                    onMouseEnter={() => setHover(true)}
-                                    onMouseLeave={() => setHover(false)}
-                                    className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
-                                >
-                                    {hover ? (
-                                        <X size={17} className="text-blue-400" />
-                                    ) : (
-                                        <Box size={17} className="text-blue-400" />
-                                    )}
-                                    <span className="text-[13px] text-blue-400">
-                                        Send Message
-                                    </span>
-                                </button>}
-                            {type === "read" &&
-                                <button
-                                    onClick={() => {
-                                        settype("text");
-                                        setHover(false);
-                                    }}
-                                    disabled={sending}
-                                    onMouseEnter={() => setHover(true)}
-                                    onMouseLeave={() => setHover(false)}
-                                    className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
-                                >
-                                    {hover ? (
-                                        <X size={17} className="text-blue-400" />
-                                    ) : (
-                                        <Box size={17} className="text-blue-400" />
-                                    )}
-                                    <span className="text-[13px] text-blue-400">
-                                        Read Message
-                                    </span>
-                                </button>}
-                            {type === "listconversation" &&
-                                <button
-                                    onClick={() => {
-                                        settype("text");
-                                        setHover(false);
-                                    }}
-                                    disabled={sending}
-                                    onMouseEnter={() => setHover(true)}
-                                    onMouseLeave={() => setHover(false)}
-                                    className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
-                                >
-                                    {hover ? (
-                                        <X size={17} className="text-blue-400" />
-                                    ) : (
-                                        <Box size={17} className="text-blue-400" />
-                                    )}
-                                    <span className="text-[13px] text-blue-400">
-                                        List Channels
-                                    </span>
-                                </button>}
-                            {type === "getuser" &&
-                                <button
-                                    onClick={() => {
-                                        settype("text");
-                                        setHover(false);
-                                    }}
-                                    disabled={sending}
-                                    onMouseEnter={() => setHover(true)}
-                                    onMouseLeave={() => setHover(false)}
-                                    className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
-                                >
-                                    {hover ? (
-                                        <X size={17} className="text-blue-400" />
-                                    ) : (
-                                        <Box size={17} className="text-blue-400" />
-                                    )}
-                                    <span className="text-[13px] text-blue-400">
-                                        Get Userinfo
-                                    </span>
-                                </button>}
-                            {type === "getteam" &&
-                                <button
-                                    onClick={() => {
-                                        settype("text");
-                                        setHover(false);
-                                    }}
-                                    disabled={sending}
-                                    onMouseEnter={() => setHover(true)}
-                                    onMouseLeave={() => setHover(false)}
-                                    className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
-                                >
-                                    {hover ? (
-                                        <X size={17} className="text-blue-400" />
-                                    ) : (
-                                        <Box size={17} className="text-blue-400" />
-                                    )}
-                                    <span className="text-[13px] text-blue-400">
-                                        Get Teaminfo
-                                    </span>
-                                </button>}
-                        </div>
-                        <div className="flex gap-2">
-                            {Api.length > 0 && (
-                                <Select
-                                    key={`${provider}-${type}`}
-                                    onValueChange={(val) => setModel(val ?? "")}
-                                    value={model}
-                                    disabled={!provider}
-                                >
-                                    <SelectTrigger className="w-full">
-                                        <div className="flex items-center gap-2">
-                                            {model && (
-                                                <img
-                                                    src={availableModels.find((m: any) => m.model === model)?.imageUrl}
-                                                    className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
-                                                />
-                                            )}
-                                            <span className="truncate">
-                                                {model ? model.substring(0, 15) + "..." : "Select Model"}
-                                            </span>
-                                        </div>
-                                    </SelectTrigger>
-                                    <SelectContent className="p-1 w-64">
-                                        {availableModels.map((m: any) => (
-                                            <SelectItem key={m.model} value={m.model}>
-                                                <div className="flex items-center gap-3">
-                                                    <img src={m.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" alt="" />
-                                                    <span className="text-sm">{m.model.substring(0, 25) + "..."}</span>
-                                                </div>
-                                            </SelectItem>))}
-                                    </SelectContent>
-                                </Select>
-                            )}
-                            <Button
-                                disabled={loadingrecord || !workspace || !model || !provider}
-                                onClick={recordstatus ? stopRecording : startRecording}
-                                size="icon"
-                                className="bg-cyan-500 dark:bg-white rounded-full">
-                                {recordstatus ? <Square size={14} className="fill-current" /> :
-                                    loadingrecord ? <Spinner /> : <Mic size={14} />}
-                            </Button>
-                            <Button
-                                onClick={handleSend}
-                                disabled={sending || !workspace || !input.trim() || !model || !provider || loadingrecord || recordstatus}
-                                size="icon"
-                                className="bg-cyan-500 dark:bg-white rounded-full"
-                            >
-                                <ArrowUp size={16} className={sending ? "animate-pulse" : ""} />
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+                <SlackChatHeader
+                    loadingslack={loadingslack}
+                    workspace={workspace}
+                    Api={Api}
+                    provider={provider}
+                    setProvider={setProvider}
+                    apiWithLogos={apiWithLogos}
+                    navigate={navigate}
+                />
+                <SlackMessageList
+                    loadingfetch={loadingfetch}
+                    loadingslack={loadingslack}
+                    loadingerror={loadingerror}
+                    loadingMore={loadingMore}
+                    sessionmessage={sessionmessage}
+                    sending={sending}
+                    userdata={userdata}
+                    isChecking={isChecking}
+                    connectSlack={connectSlack}
+                    fetchMessages={fetchMessages}
+                    messagesEndRef={messagesEndRef}
+                    topSentinelRef={topSentinelRef}
+                    scrollContainerRef={scrollContainerRef}
+                    copiedIndex={copiedIndex}
+                    setCopiedIndex={setCopiedIndex}
+                    uploadingImageUrls={uploadingImageUrls}
+                    setLightboxImages={setLightboxImages}
+                    setLightboxIndex={setLightboxIndex}
+                    setLightboxOpen={setLightboxOpen}
+                    workspace={workspace}
+                />
+                <SlackInput
+                    sessionmessage={sessionmessage}
+                    pendingImages={pendingImages}
+                    setPendingImages={setPendingImages}
+                    uploadingImages={uploadingImages}
+                    input={input}
+                    setInput={setInput}
+                    Api={Api}
+                    workspace={workspace}
+                    model={model}
+                    provider={provider}
+                    loadingrecord={loadingrecord}
+                    recordstatus={recordstatus}
+                    handleSend={handleSend}
+                    sending={sending}
+                    abortControllerRef={abortControllerRef}
+                    startRecording={startRecording}
+                    stopRecording={stopRecording}
+                    type={type}
+                    settype={settype}
+                    hover={hover}
+                    setHover={setHover}
+                    opencron={opencron}
+                    setopencron={setopencron}
+                    modelList={modelList}
+                    modelsLoading={modelsLoading}
+                    setModel={setModel}
+                    reasoningLevel={reasoningLevel}
+                    setReasoningLevel={setReasoningLevel}
+                    publichannel={publichannel}
+                    privatechannel={privatechannel}
+                    im={im}
+                    mpim={mpim}
+                    mode={mode}
+                    setmode={setmode}
+                    channelid={channelid}
+                    setchannelid={setchannelid}
+                    selectedPublicchannel={selectedPublicchannel}
+                    selectedPrivatechannel={selectedPrivatechannel}
+                    selectedimchannel={selectedimchannel}
+                    selectedmpimchannel={selectedmpimchannel}
+                    deleteslackmessage={deleteslackmessage}
+                    loadingslackdelmsg={loadingslackdelmsg}
+                    loadingcroncreate={loadingcroncreate}
+                    cronsubmint={cronsubmint}
+                    slackcron={slackcron}
+                    setslackcron={setslackcron}
+                    handlechange={handlechange}
+                    apiWithLogos={apiWithLogos}
+                    navigate={navigate}
+                    cronModelList={cronModelList}
+                    modelOpen={modelOpen}
+                    setModelOpen={setModelOpen}
+                    customDayOfWeek={customDayOfWeek}
+                    customDayOfMonth={customDayOfMonth}
+                    customMonth={customMonth}
+                    toggleCustomDayOfWeek={toggleCustomDayOfWeek}
+                    toggleCustomDayOfMonth={toggleCustomDayOfMonth}
+                    toggleCustomMonth={toggleCustomMonth}
+                    DAY_NAMES={DAY_NAMES}
+                    MONTH_NAMES={MONTH_NAMES}
+                    maxDayOfMonth={maxDayOfMonth}
+                    selectedPublicchannelcron={selectedPublicchannelcron}
+                    selectedPrivatechannelcron={selectedPrivatechannelcron}
+                    selectedimchannelcron={selectedimchannelcron}
+                    selectedmpimchannelcron={selectedmpimchannelcron}
+                />
             </div>
+            <ImageLightbox
+                images={lightboxImages}
+                initialIndex={lightboxIndex}
+                open={lightboxOpen}
+                onOpenChange={setLightboxOpen}
+            />
         </>
     );
 }

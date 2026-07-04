@@ -1,60 +1,60 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import Gemini from "../../src/assets/gemini.png"
-import Anthropic from "../../src/assets/claude.png"
-import Groq from "../../src/assets/groq.png"
-import OpenAi from "../../src/assets/openai.png"
-import OpenRouter from "../../src/assets/openrouter.png"
-import Mistral from "../../src/assets/mistralai.png"
-import { Key, Save, ShieldCheck, Trash } from "lucide-react";
-import { authservicestore } from "@/store/serviceauthstore";
-import { useEffect, useState } from "react";
-import { Spinner } from "@/components/ui/spinner";
-import { Toaster } from "@/components/ui/sonner";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { Input } from "@/shared/components/ui/input";
+import { Label } from "@/shared/components/ui/label";
+import { Button } from "@/shared/components/ui/button";
+import Gemini from "@/shared/assets/gemini.png"
+import Anthropic from "@/shared/assets/claude.png"
+import Groq from "@/shared/assets/groq.png"
+import OpenAi from "@/shared/assets/openai.png"
+import OpenRouter from "@/shared/assets/openrouter.png"
+import Mistral from "@/shared/assets/mistralai.png"
+import Deepseek from "@/shared/assets/deepseek.png"
+import Ollama from "@/shared/assets/ollama.png"
+import { Key, Save, ShieldCheck, Trash, AlertTriangle } from "lucide-react";
+import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
+import { useAddServiceKey } from "@/features/services/hooks/useAddServiceKey";
+import { useDeleteServiceKey } from "@/features/services/hooks/useDeleteServiceKey";
+import { useState } from "react";
+import { Spinner } from "@/shared/components/ui/spinner";
+import { Toaster } from "@/shared/components/ui/sonner";
 import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
-import { telegramauthstore } from "@/store/telegramauthstore";
-import { useNavigate } from "react-router-dom";
-import { googleauthstore } from "@/store/googleauthstore";
-import { GoogleIcon } from "@/components/ui/googleicon";
-import { notionauthstore } from "@/store/notionauthstore";
-import { Badge } from "@/components/ui/badge";
-import { useslackstore } from "@/store/slackauthstore";
-import { BRAND_ASSETS } from "@/features/providermodels";
+import { useTelegramAccount } from "@/features/telegram/hooks/useTelegramAccount";
+import { telegramauth } from "@/features/telegram/api/api";
+import { useGoogleService } from "@/features/google/hooks/useGoogleService";
+import { googleauth } from "@/features/google/api/api";
+import { useNotionAccount } from "@/features/notion/hooks/useNotionAccount";
+import { notionauth } from "@/features/notion/api/api";
+import { useSlackAccount } from "@/features/slack/hooks/useSlackAccount";
+import { slackauth } from "@/features/slack/api/api";
+import { useN8nConfig } from "@/features/n8n/hooks/useN8nConfig";
+import { n8nauth } from "@/features/n8n/api/api";
+import { clearModelCache } from "@/shared/config/providermodels";
+import { ServiceApiKeyList } from "@/features/account/components/ServiceApiKeyList";
+import { ServiceIntegrationList } from "@/features/account/components/ServiceIntegrationList";
+import { ServiceDetailPanel } from "@/features/account/components/ServiceDetailPanel";
+import { ServiceCardData } from "@/features/account/components/ServiceCard";
 
 const ProviderUI = (
     {
         name,
         placeholder,
-        isconfigure
     }: {
         name: string,
         placeholder: string,
-        isconfigure: boolean
     }) => {
 
-    //Store
-    const {
-        addservicekey,
-        loading,
-        deleteservicekey,
-        loadingdelete,
-        Api
-    } = authservicestore();
+    const { data: Api } = useServiceKeys();
+    const addMutation = useAddServiceKey();
+    const deleteMutation = useDeleteServiceKey();
 
-
-    //States
     const [key, setkey] = useState<string>("");
 
-    //Functions
     const addkey = async () => {
         try {
-            const response = await addservicekey(name, key);
+            const response = await addMutation.mutateAsync({ provider: name, key });
             if (response.success) {
                 toast.success(response.message);
+                clearModelCache(name);
                 setkey("");
             }
         }
@@ -71,11 +71,12 @@ const ProviderUI = (
 
     const deletekey = async () => {
         try {
-            const key = Api.find(s => s.provider.toLowerCase() === name.toLowerCase());
-            const id = key?.id;
-            const response = await deleteservicekey(id!);
+            const entry = Api?.find(s => s.provider.toLowerCase() === name.toLowerCase());
+            const id = entry?.id;
+            const response = await deleteMutation.mutateAsync(id!);
             if (response.success) {
                 toast.success(response.message);
+                clearModelCache(name);
             }
         }
         catch (err: unknown) {
@@ -89,7 +90,7 @@ const ProviderUI = (
         }
     }
 
-    const isvalidkey = Api.find(s => s.provider.toLowerCase() === name.toLowerCase());
+    const isvalidkey = Api?.find(s => s.provider.toLowerCase() === name.toLowerCase());
 
     return (
         <>
@@ -106,10 +107,10 @@ const ProviderUI = (
                                 Configure your provider credential.
                             </CardDescription>
                         </div>
-                        {isconfigure && (
-                            <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
+                        {isvalidkey && (
+                            <span className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300 px-2 py-1 rounded text-xs font-medium">
                                 Active
-                            </Badge>
+                            </span>
                         )}
                     </div>
                 </CardHeader>
@@ -131,8 +132,8 @@ const ProviderUI = (
                             className="flex-1 h-12 rounded-xl focus-visible:ring-primary/30 text-base"
                         />
                         <div className="flex flex-row gap-3">
-                            <Button disabled={loading} onClick={addkey} className="h-12 px-8 rounded-xl font-semibold shadow-lg bg-cyan-500 dark:bg-white shadow-primary/10 hover:shadow-primary/20 transition-all">
-                                {loading ? <Spinner /> :
+                            <Button disabled={addMutation.isPending} onClick={addkey} className="h-12 px-8 rounded-xl font-semibold shadow-lg bg-cyan-500 dark:bg-white shadow-primary/10 hover:shadow-primary/20 transition-all">
+                                {addMutation.isPending ? <Spinner /> :
                                     isvalidkey ?
                                         (
                                             <>
@@ -147,8 +148,8 @@ const ProviderUI = (
                                         )
                                 }
                             </Button>
-                            {isvalidkey && <Button disabled={loadingdelete} variant="destructive" onClick={deletekey} className="h-12 px-8 rounded-xl font-semibold transition-all">
-                                {loadingdelete ? <Spinner /> :
+                            {isvalidkey && <Button disabled={deleteMutation.isPending} variant="destructive" onClick={deletekey} className="h-12 px-8 rounded-xl font-semibold transition-all">
+                                {deleteMutation.isPending ? <Spinner /> :
                                     <>
                                         <Trash className="w-4 h-4 mr-2" />
                                         Delete
@@ -172,83 +173,21 @@ const ProviderUI = (
 };
 
 
-export const Settings = () => {
-    //Store
-    const {
-        fetchservicekey,
-        loadingfetch,
-        Api,
-        hasfetch
-    } = authservicestore();
+const OllamaUI = () => {
+    const { data: Api } = useServiceKeys();
+    const addMutation = useAddServiceKey();
+    const deleteMutation = useDeleteServiceKey();
 
-    const {
-        telegramfetchdata,
-        loadingfetch: telegramfetch,
-        userdata,
-        telegramservicereset,
-        loadingdeleteservice,
-        hasfetch: telegramhasfetch
-    } = telegramauthstore();
+    const [host, setHost] = useState<string>("");
+    const [apiKey, setApiKey] = useState<string>("");
+    const savedConfig = Api?.find(s => s.provider.toLowerCase() === "ollama");
 
-    const {
-        fetchgoogleservice,
-        loadingfetch: googlefetch,
-        serviceemail,
-        deletegoogleservice,
-        loadinggoogleservicedelete,
-        hasfetch: googlehasfetch
-    } = googleauthstore();
-
-    const {
-        workspacename,
-        fetchnotionacc,
-        loadingnotion,
-        deletenotionservice,
-        loadingnotiondelete,
-        hasfetch: notionhasfetch
-    } = notionauthstore()
-
-    const {
-        workspace,
-        fetchslackacc,
-        loadingslack,
-        deleteslackservice,
-        loadingslackdelete,
-        hasfetch: slackhasfetch,
-    } = useslackstore()
-
-    useEffect(() => {
-        fetchnotionacc();
-    }, [notionhasfetch])
-
-    useEffect(() => {
-        fetchgoogleservice();
-    }, [googlehasfetch])
-
-    useEffect(() => {
-        telegramfetchdata();
-    }, [telegramhasfetch])
-
-    useEffect(() => {
-        fetchslackacc();
-    }, [slackhasfetch])
-
-    //Fetchtheservicekey
-    useEffect(() => {
-        fetchservicekey();
-    }, [hasfetch])
-
-    const navigate = useNavigate();
-
-    const getProviderData = (name: string) =>
-        Api.find(s => s.provider.toLowerCase() === name.toLowerCase());
-
-    //Telegram servicedelete
-    const deletetelegram = async () => {
+    const addkey = async () => {
         try {
-            const response = await telegramservicereset();
+            const response = await addMutation.mutateAsync({ provider: "ollama", key: apiKey, host: host || undefined });
             if (response.success) {
                 toast.success(response.message);
+                clearModelCache("ollama");
             }
         }
         catch (err: unknown) {
@@ -262,51 +201,16 @@ export const Settings = () => {
         }
     }
 
-    //Googleservicedelete
-    const deletegoogle = async () => {
+    const deletekey = async () => {
         try {
-            const response = await deletegoogleservice();
+            const entry = Api?.find(s => s.provider.toLowerCase() === "ollama");
+            const id = entry?.id;
+            const response = await deleteMutation.mutateAsync(id!);
             if (response.success) {
                 toast.success(response.message);
-            }
-        }
-        catch (err: unknown) {
-            if (err instanceof Error) {
-                const Error = err as any;
-                const error = Error.response?.data?.message || err.message;
-                toast.error(error);
-            } else {
-                toast.error("An unexpected error occurred.")
-            }
-        }
-    }
-
-    //Notionservicedelete
-    const deletenotion = async () => {
-        try {
-            const response = await deletenotionservice();
-            if (response.success) {
-                toast.success(response.message);
-            }
-        }
-        catch (err: unknown) {
-            if (err instanceof Error) {
-                const Error = err as any;
-                const error = Error.response?.data?.message || err.message;
-                toast.error(error);
-            } else {
-                toast.error("An unexpected error occurred.")
-            }
-        }
-    }
-
-
-    //Slackservicedelete
-    const deleteslack = async () => {
-        try {
-            const response = await deleteslackservice();
-            if (response.success) {
-                toast.success(response.message);
+                clearModelCache("ollama");
+                setHost("");
+                setApiKey("");
             }
         }
         catch (err: unknown) {
@@ -321,307 +225,398 @@ export const Settings = () => {
     }
 
     return (
-        <div className="flex h-screen w-full flex-col bg-background">
-            <div className="flex-1 flex-col">
-                <div className="mx-auto max-w-5xl">
-                    <div className="flex flex-col gap-1">
-                        <h1 className="text-2xl font-bold flex items-center gap-3">
-                            <Key className="w-6 h-6 text-cyan-500 dark:text-white "/> Service Providers</h1>
-                        <p className="text-muted-foreground">Configure your API providers and model preferences.</p>
+        <>
+            <Toaster position="top-right" richColors />
+            <Card className="border-none bg-card shadow-none mt-6 p-4 animate-in fade-in slide-in-from-bottom-2">
+                <CardHeader className="px-0 pt-0">
+                    <div className="flex items-center gap-3 mb-1">
+                        <div className="p-2 dark:bg-white rounded-lg">
+                            <img src={BRAND_ASSETS["ollama"]} className="h-5 w-5" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-xl font-bold">Ollama</CardTitle>
+                            <CardDescription className="text-muted-foreground">
+                                Connect to Ollama locally or via cloud.
+                            </CardDescription>
+                        </div>
+                        {savedConfig && (
+                            <span className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300 px-2 py-1 rounded text-xs font-medium">
+                                Active
+                            </span>
+                        )}
+                    </div>
+                </CardHeader>
+                <CardContent className="px-4 pt-4 space-y-6">
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                            <Label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+                                Ollama Host URL
+                            </Label>
+                        </div>
+                        <Input
+                            value={host}
+                            onChange={(e) => setHost(e.target.value)}
+                            type="url"
+                            placeholder="http://localhost:11434"
+                            className="flex-1 h-12 rounded-xl focus-visible:ring-primary/30 text-base"
+                        />
                     </div>
 
-                    {loadingfetch ? (
-                        <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground">
-                            <Spinner className="w-8 h-8 animate-spin text-cyan-500 dark:text-white" />
-                            <p className="text-sm animate-pulse">Fetching your credentials...</p>
+                    <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                            <Label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+                                API Key <span className="text-muted-foreground">(optional - for cloud)</span>
+                            </Label>
                         </div>
-                    ) : (
-                        <Tabs defaultValue="openai" className="mt-5">
-                            <TabsList className="bg-muted/50 p-2">
-                                <TabsTrigger value="openai" className="py-3 px-3"><img src={OpenAi} className="bg-white rounded-lg w-5 h-5 p-0.5 object-contain shrink-0" /><span className="mr-2">OpenAi</span></TabsTrigger>
-                                <TabsTrigger value="groq" className="py-3 px-3"><img src={Groq} className="bg-white p-0.5 rounded-lg w-5 h-5 object-contain shrink-0" /><span className="mr-2">Groq</span></TabsTrigger>
-                                <TabsTrigger value="anthropic" className="py-3 px-3"><img src={Anthropic} className="bg-white p-0.5 rounded-lg w-5 h-5 object-contain shrink-0" /><span className="mr-2">Anthropic</span></TabsTrigger>
-                                <TabsTrigger value="gemini" className="py-3 px-3"><img src={Gemini} className="bg-white p-0.5 rounded-lg w-5 h-5 object-contain shrink-0" /><span className="mr-2">Gemini</span></TabsTrigger>
-                                <TabsTrigger value="openrouter" className="py-3 px-3"><img src={OpenRouter} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" /><span className="mr-2">OpenRouter</span></TabsTrigger>
-                                <TabsTrigger value="mistral" className="py-3 px-3"><img src={Mistral} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" /><span className="mr-2">Mistral</span></TabsTrigger>
-                            </TabsList>
-
-                            {["OpenAI", "Groq", "Anthropic", "Gemini", "OpenRouter", "Mistral"].map((p) => (
-                                <TabsContent key={p} value={p.toLowerCase()}>
-                                    <ProviderUI
-                                        name={p.toLowerCase()}
-                                        placeholder={`${p} API Key...`}
-                                        isconfigure={!!getProviderData(p)}
-                                    />
-                                </TabsContent>
-                            ))}
-                        </Tabs>
-                    )}
-                </div>
-                <Separator className="mt-5" />
-                <div className="mx-auto max-w-5xl mt-5">
-                    <div className="flex flex-col gap-1">
-                        <div className="flex gap-2 items-center">
-                            <h1 className="text-2xl font-bold flex gap-2 items-center">
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg"
-                                    alt="icon"
-                                    className="w-6 h-6"
-                                />
-                                Telegram Service</h1>
-                            {userdata &&
-                                <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                                    Active
-                                </Badge>}
-                        </div>
-                        <p className="text-muted-foreground">Configure your Telegram Account.</p>
+                        <Input
+                            value={apiKey}
+                            onChange={(e) => setApiKey(e.target.value)}
+                            type="password"
+                            placeholder="Ollama API Key..."
+                            className="flex-1 h-12 rounded-xl focus-visible:ring-primary/30 text-base"
+                        />
                     </div>
-                    <Card className="border-none bg-card shadow-none mt-6 p-1 animate-in fade-in slide-in-from-bottom-2">
-                        <CardContent className="pt-2 pb-2">
-                            <div className="flex flex-col items-center justify-center text-center py-4">
-                                {telegramfetch ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Spinner className="w-8 h-8 animate-spin text-cyan-500 dark:text-white" />
-                                        <p className="text-sm text-muted-foreground animate-pulse">Loading Telegram...</p>
-                                    </div>
-                                ) : userdata ? (
-                                    <div className="flex items-center gap-4 w-full">
-                                        <div className="h-12 w-12 rounded-full flex items-center justify-center">
-                                            <img
-                                                src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg"
-                                                alt="icon"
-                                            />
-                                        </div>
-                                        <div className="flex flex-col text-left">
-                                            <p className="text-sm font-medium">Connected Account</p>
-                                            <h3 className="text-lg font-semibold">{userdata.firstName?.substring(0, 10) + "..."} {userdata.lastName?.substring(0, 10)}</h3>
-                                        </div>
-                                        <Button onClick={deletetelegram} disabled={loadingdeleteservice} variant="destructive" className="ml-auto">
-                                            {loadingdeleteservice ? <Spinner /> : "Disconnect"}
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
-                                            <img
-                                                src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg"
-                                                alt="icon"
-                                            />
-                                        </div>
 
-                                        <div className="space-y-1">
-                                            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">No Telegram Account Linked</h3>
-                                            <p className="text-xs text-muted-foreground max-w-62.5">
-                                                Connect to your Telegram account.
-                                            </p>
-                                        </div>
-
-                                        <Button onClick={() => navigate("/app/telegram")} className="h-12 px-8 rounded-xl font-semibold shadow-lg bg-cyan-500 dark:bg-white shadow-primary/10 hover:shadow-primary/20 transition-all">
-                                            Connect Telegram
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-                <Separator className="mt-5" />
-                <div className="mx-auto max-w-5xl mt-5">
-                    <div className="flex flex-col gap-1">
-                        <div className="flex gap-2 items-center">
-                            <h1 className="text-2xl font-bold flex gap-2 items-center">
-                                <GoogleIcon />
-                                Google Service
-                            </h1>
-                            {serviceemail &&
-                                <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                                    Active
-                                </Badge>}
-                        </div>
-                        <p className="text-muted-foreground">Configure your google service Account.</p>
+                    <div className="flex flex-row gap-3">
+                        <Button disabled={addMutation.isPending} onClick={addkey} className="h-12 px-8 rounded-xl font-semibold shadow-lg bg-cyan-500 dark:bg-white shadow-primary/10 hover:shadow-primary/20 transition-all">
+                            {addMutation.isPending ? <Spinner /> :
+                                savedConfig ?
+                                    (
+                                        <>
+                                            <Save className="w-4 h-4 mr-2" />
+                                            Change Key
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Save className="w-4 h-4 mr-2" />
+                                            Save
+                                        </>
+                                    )
+                            }
+                        </Button>
+                        {savedConfig && <Button disabled={deleteMutation.isPending} variant="destructive" onClick={deletekey} className="h-12 px-8 rounded-xl font-semibold transition-all">
+                            {deleteMutation.isPending ? <Spinner /> :
+                                <>
+                                    <Trash className="w-4 h-4 mr-2" />
+                                    Disconnect
+                                </>
+                            }
+                        </Button>
+                        }
                     </div>
-                    <Card className="border-none bg-card shadow-none mt-6 p-1 animate-in fade-in slide-in-from-bottom-2">
-                        <CardContent className="pt-2 pb-2">
-                            <div className="flex flex-col items-center justify-center text-center py-4">
-                                {googlefetch ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Spinner className="w-8 h-8 animate-spin text-cyan-500 dark:text-white" />
-                                        <p className="text-sm text-muted-foreground animate-pulse">Loading Google Service...</p>
-                                    </div>
-                                ) : serviceemail ? (
-                                    <div className="flex items-center gap-4 w-full">
-                                        <div className="h-12 w-12 rounded-full flex items-center justify-center">
-                                            <GoogleIcon />
-                                        </div>
-                                        <div className="flex flex-col text-left">
-                                            <p className="text-sm font-medium">Connected Service Account</p>
-                                            <h3 className="text-lg font-semibold">{serviceemail.substring(0, 20) + "..."}</h3>
-                                        </div>
-                                        <Button onClick={deletegoogle} variant="destructive" className="ml-auto">
-                                            {loadinggoogleservicedelete ? <Spinner /> : "Disconnect"}
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
-                                            <GoogleIcon />
-                                        </div>
 
-                                        <div className="space-y-1">
-                                            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">No google service account found!</h3>
-                                            <p className="text-xs text-muted-foreground max-w-62.5">
-                                                Connect to your google service account.
-                                            </p>
-                                        </div>
-
-                                        <Button onClick={() => navigate("/app/googlesheet")} className="h-12 px-8 rounded-xl font-semibold shadow-lg bg-cyan-500 dark:bg-white shadow-primary/10 hover:shadow-primary/20 transition-all">
-                                            Connect Google Service
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-                <Separator className="mt-5" />
-                <div className="mx-auto max-w-5xl mt-5">
-                    <div className="flex flex-col gap-1">
-                        <div className="flex gap-2 items-center">
-                            <h1 className="text-2xl font-bold flex gap-2 items-center">
-                                <img
-                                    src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png"
-                                    alt="icon"
-                                    className="w-6 h-6"
-                                />
-                                Notion Service
-                            </h1>
-                            {workspacename &&
-                                <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                                    Active
-                                </Badge>}
-                        </div>
-                        <p className="text-muted-foreground">Configure your notion workspace account.</p>
+                    <div className="p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/10">
+                        <p className="text-xs dark:text-muted-foreground text-cyan-500 leading-relaxed">
+                            <strong>Tip:</strong> For local Ollama, use <code className="bg-cyan-500/10 px-1 rounded">http://localhost:11434</code> and leave API key empty.
+                            For Ollama Cloud, use <code className="bg-cyan-500/10 px-1 rounded">https://ollama.com</code> and provide your API key from <a className="underline" href="https://ollama.com/settings/keys" target="_blank" rel="noreferrer">ollama.com/settings/keys</a>.
+                        </p>
                     </div>
-                    <Card className="border-none bg-card shadow-none mt-6 p-1 animate-in fade-in slide-in-from-bottom-2">
-                        <CardContent className="pt-2 pb-2">
-                            <div className="flex flex-col items-center justify-center text-center py-4">
-                                {loadingnotion ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Spinner className="w-8 h-8 animate-spin text-cyan-500 dark:text-white" />
-                                        <p className="text-sm text-muted-foreground animate-pulse">Loading Notion Service...</p>
-                                    </div>
-                                ) : workspacename ? (
-                                    <div className="flex items-center gap-4 w-full">
-                                        <div className="h-12 w-12 rounded-full flex items-center justify-center">
-                                            <img
-                                                src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png"
-                                                alt="icon"
-                                            />
-                                        </div>
-                                        <div className="flex flex-col text-left">
-                                            <p className="text-sm font-medium">Connected Notion Workspace Account</p>
-                                            <h3 className="text-lg font-semibold">{workspacename.substring(0, 20) + "..."}</h3>
-                                        </div>
-                                        <Button onClick={deletenotion} variant="destructive" className="ml-auto">
-                                            {loadingnotiondelete ? <Spinner /> : "Disconnect"}
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        <div className="mx-auto w-12 h-12 rounded-full  flex items-center justify-center">
-                                            <img
-                                                src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png"
-                                                alt="icon"
-                                            />
-                                        </div>
+                </CardContent>
+            </Card >
+        </>
+    )
+};
 
-                                        <div className="space-y-1">
-                                            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">No notion account found!</h3>
-                                            <p className="text-xs text-muted-foreground max-w-62.5">
-                                                Connect to your notion workspace account.
-                                            </p>
-                                        </div>
+const BRAND_ASSETS: Record<string, string> = {
+    openai: OpenAi,
+    groq: Groq,
+    anthropic: Anthropic,
+    gemini: Gemini,
+    openrouter: OpenRouter,
+    mistral: Mistral,
+    deepseek: Deepseek,
+    ollama: Ollama,
+};
 
-                                        <Button onClick={() => navigate("/app/notion")} className="h-12 px-8 rounded-xl font-semibold shadow-lg bg-cyan-500 dark:bg-white shadow-primary/10 hover:shadow-primary/20 transition-all">
-                                            Connect Notion
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
+const API_KEY_PROVIDERS = [
+    { name: "openai", displayName: "OpenAi", icon: OpenAi },
+    { name: "groq", displayName: "Groq", icon: Groq },
+    { name: "anthropic", displayName: "Anthropic", icon: Anthropic },
+    { name: "gemini", displayName: "Gemini", icon: Gemini },
+    { name: "openrouter", displayName: "OpenRouter", icon: OpenRouter },
+    { name: "mistral", displayName: "Mistral", icon: Mistral },
+    { name: "deepseek", displayName: "Deepseek", icon: Deepseek },
+    { name: "ollama", displayName: "Ollama", icon: Ollama },
+];
+
+export const Settings = () => {
+    const { isLoading: loadingfetch, refetch: providerRefetch, isError: providerError } = useServiceKeys();
+
+    const { data: telegramData, isLoading: telegramfetch, refetch: telegramRefetch, isError: telegramError } = useTelegramAccount();
+    const userdata = telegramData;
+
+    const { data: googleServiceData, isLoading: googlefetch, refetch: googleRefetch, isError: googleError } = useGoogleService();
+    const serviceemail = (googleServiceData as any)?.serviceemail ?? "";
+
+    const { data: notionAccount, isLoading: loadingnotion, refetch: notionRefetch, isError: notionError } = useNotionAccount();
+    const workspacename = (notionAccount as any)?.workspacename ?? "";
+
+    const { data: slackAccount, isLoading: loadingslack, refetch: slackRefetch, isError: slackError } = useSlackAccount();
+    const workspace = (slackAccount as any)?.workspace ?? "";
+
+    const { data: n8nConfig, isLoading: loadingn8n, refetch: n8nRefetch, isError: n8nError } = useN8nConfig();
+    const n8nConnected = !!((n8nConfig as any)?.connected ?? false);
+    const n8nUrl = (n8nConfig as any)?.n8nUrl ?? "";
+
+    const [deletingTelegram, setDeletingTelegram] = useState(false);
+    const [deletingGoogle, setDeletingGoogle] = useState(false);
+    const [deletingNotion, setDeletingNotion] = useState(false);
+    const [, setDeletingSlack] = useState(false);
+    const [, setDeletingN8n] = useState(false);
+
+    const [search, setSearch] = useState("");
+    const [dialogService, setDialogService] = useState<string | null>(null);
+
+    const deletetelegram = async () => {
+        setDeletingTelegram(true);
+        try {
+            const response = await telegramauth.telegramresetservice();
+            if (response.success) {
+                toast.success(response.message);
+                setDialogService(null);
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any;
+                toast.error(Error.response?.data?.message || err.message);
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            setDeletingTelegram(false);
+        }
+    }
+
+    const deletegoogle = async () => {
+        setDeletingGoogle(true);
+        try {
+            const response = await googleauth.deleteservice();
+            if (response.success) {
+                toast.success(response.message);
+                setDialogService(null);
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any;
+                toast.error(Error.response?.data?.message || err.message);
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            setDeletingGoogle(false);
+        }
+    }
+
+    const deletenotion = async () => {
+        setDeletingNotion(true);
+        try {
+            const response = await notionauth.notiondeleteservice();
+            if (response.success) {
+                toast.success(response.message);
+                setDialogService(null);
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any;
+                toast.error(Error.response?.data?.message || err.message);
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            setDeletingNotion(false);
+        }
+    }
+
+    const deleteslack = async () => {
+        setDeletingSlack(true);
+        try {
+            const response = await slackauth.deleteslackservice();
+            if (response.success) {
+                toast.success(response.message);
+                setDialogService(null);
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any;
+                toast.error(Error.response?.data?.message || err.message);
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            setDeletingSlack(false);
+        }
+    }
+
+    const deleten8n = async () => {
+        setDeletingN8n(true);
+        try {
+            const response = await n8nauth.n8ndeleteservice();
+            if (response.success) {
+                toast.success(response.message);
+                setDialogService(null);
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any;
+                toast.error(Error.response?.data?.message || err.message);
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            setDeletingN8n(false);
+        }
+    }
+
+    const connectedServices: ServiceCardData[] = [
+        { id: "telegram", name: "Telegram", icon: "https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg", description: "Configure your Telegram Account.", isActive: !!userdata },
+        { id: "google", name: "Google Service", icon: null, description: "Configure your Google service Account.", isActive: !!serviceemail },
+        { id: "notion", name: "Notion", icon: "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png", description: "Configure your Notion workspace account.", isActive: !!workspacename },
+        { id: "slack", name: "Slack", icon: "https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg", description: "Configure your Slack workspace account.", isActive: !!workspace },
+        { id: "n8n", name: "n8n", icon: "https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg", description: "Configure your n8n workflow automation.", isActive: n8nConnected },
+    ];
+
+    const filteredServices = connectedServices.filter(s =>
+        s.name.toLowerCase().includes(search.toLowerCase()) ||
+        s.description.toLowerCase().includes(search.toLowerCase())
+    );
+
+    if (loadingfetch) {
+        return (
+            <div className="mx-auto max-w-5xl px-4 py-6">
+                <div className="flex flex-col gap-1 mb-6">
+                    <div className="h-8 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-64 animate-pulse" />
+                    <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-80 animate-pulse mt-1" />
                 </div>
-                <Separator className="mt-5" />
-                <div className="mx-auto max-w-5xl mt-5">
-                    <div className="flex flex-col gap-1">
-                        <div className="flex gap-2 items-center">
-                            <h1 className="text-2xl font-bold flex gap-2 items-center">
-                                <img
-                                    src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg"
-                                    alt="icon"
-                                    className="w-6 h-6"
-                                />
-                                Slack Service
-                            </h1>
-                            {workspacename &&
-                                <Badge className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300">
-                                    Active
-                                </Badge>}
+
+                <div className="flex gap-2 mb-4">
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                        <div key={i} className="h-10 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-20 animate-pulse" />
+                    ))}
+                </div>
+
+                <Card>
+                    <CardHeader>
+                        <div className="h-5 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-40 animate-pulse" />
+                        <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-60 animate-pulse mt-1" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="h-10 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-full animate-pulse" />
+                        <div className="flex gap-3">
+                            <div className="h-10 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-32 animate-pulse" />
+                            <div className="h-10 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-24 animate-pulse" />
                         </div>
-                        <p className="text-muted-foreground">Configure your slack workspace account.</p>
-                    </div>
-                    <Card className="border-none bg-card shadow-none mt-6 p-1 animate-in fade-in slide-in-from-bottom-2">
-                        <CardContent className="pt-2 pb-2">
-                            <div className="flex flex-col items-center justify-center text-center py-4">
-                                {loadingslack ? (
-                                    <div className="flex flex-col items-center gap-2">
-                                        <Spinner className="w-8 h-8 animate-spin text-cyan-500 dark:text-white" />
-                                        <p className="text-sm text-muted-foreground animate-pulse">Loading Slack Service...</p>
-                                    </div>
-                                ) : workspace ? (
-                                    <div className="flex items-center gap-4 w-full">
-                                        <div className="h-12 w-12 rounded-full  flex items-center justify-center">
-                                            <img
-                                                src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg"
-                                                alt="icon"
-                                            />
-                                        </div>
-                                        <div className="flex flex-col text-left">
-                                            <p className="text-sm font-medium">Connected Slack Workspace Account</p>
-                                            <h3 className="text-lg font-semibold">{workspace.substring(0, 20) + "..."}</h3>
-                                        </div>
-                                        <Button onClick={deleteslack} variant="destructive" className="ml-auto">
-                                            {loadingslackdelete ? <Spinner /> : "Disconnect"}
-                                        </Button>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
-                                            <img
-                                                src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg"
-                                                alt="icon"
-                                            />
-                                        </div>
+                        <div className="bg-zinc-100 dark:bg-zinc-800/50 rounded-lg p-3">
+                            <div className="h-3 bg-zinc-200 dark:bg-zinc-700 rounded-lg w-96 animate-pulse" />
+                        </div>
+                    </CardContent>
+                </Card>
 
-                                        <div className="space-y-1">
-                                            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">No slack account found!</h3>
-                                            <p className="text-xs text-muted-foreground max-w-62.5">
-                                                Connect to your slack workspace account.
-                                            </p>
-                                        </div>
-
-                                        <Button onClick={() => navigate("/app/slack")} className="h-12 px-8 rounded-xl font-semibold shadow-lg bg-cyan-500 dark:bg-white shadow-primary/10 hover:shadow-primary/20 transition-all">
-                                            Connect Slack
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
+                <div className="flex flex-col gap-1 mt-8 mb-4">
+                    <div className="h-7 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-48 animate-pulse" />
+                    <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-72 animate-pulse mt-1" />
                 </div>
-                <Separator className="mt-5" />
+
+                <div className="h-11 bg-zinc-200 dark:bg-zinc-800 rounded-xl w-full animate-pulse mb-4" />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                        <Card key={i}>
+                            <CardHeader>
+                                <div className="flex items-center gap-3">
+                                    <div className="h-9 w-9 bg-zinc-200 dark:bg-zinc-800 rounded-lg animate-pulse" />
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-4 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-24 animate-pulse" />
+                                        <div className="h-3 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-40 animate-pulse" />
+                                    </div>
+                                </div>
+                            </CardHeader>
+                        </Card>
+                    ))}
+                </div>
             </div>
-        </div>
+        );
+    }
+
+    if (providerError) {
+        return (
+            <div className="flex h-[calc(100vh-40px)] w-full flex-col gap-2 items-center justify-center py-16">
+                <AlertTriangle className="w-10 h-10 text-red-500" />
+                <h2 className="text-xl font-semibold">Failed to load providers</h2>
+                <p className="text-sm text-muted-foreground">There was a problem connecting to the server.</p>
+                <Button onClick={() => providerRefetch()} className="bg-cyan-500 dark:bg-white">Retry</Button>
+            </div>
+        );
+    }
+
+    return (
+        <>
+            <Toaster position="top-right" richColors />
+            <div className="mx-auto max-w-5xl">
+                <div className="flex flex-col gap-1 mb-2">
+                    <h1 className="text-2xl font-bold flex items-center gap-3">
+                        <Key className="w-6 h-6 text-cyan-500 dark:text-white " /> Service Providers
+                    </h1>
+                    <p className="text-muted-foreground">Configure your API providers and model preferences.</p>
+                </div>
+
+                <ServiceApiKeyList
+                    providers={API_KEY_PROVIDERS}
+                    renderProviderUI={(provider) => {
+                        if (provider.name === "ollama") {
+                            return <OllamaUI />;
+                        }
+                        return (
+                            <ProviderUI
+                                name={provider.name}
+                                placeholder={`${provider.displayName} API Key...`}
+                            />
+                        );
+                    }}
+                />
+            </div>
+
+            <ServiceIntegrationList
+                search={search}
+                onSearchChange={setSearch}
+                services={filteredServices}
+                onServiceClick={setDialogService}
+            />
+
+            <ServiceDetailPanel
+                dialogService={dialogService}
+                onOpenChange={(open) => { if (!open) setDialogService(null); }}
+                connectedServices={connectedServices}
+                telegramfetch={telegramfetch}
+                telegramError={telegramError}
+                userdata={userdata}
+                telegramRefetch={telegramRefetch}
+                deletetelegram={deletetelegram}
+                deletingTelegram={deletingTelegram}
+                googlefetch={googlefetch}
+                googleError={googleError}
+                serviceemail={serviceemail}
+                googleRefetch={googleRefetch}
+                deletegoogle={deletegoogle}
+                deletingGoogle={deletingGoogle}
+                loadingnotion={loadingnotion}
+                notionError={notionError}
+                workspacename={workspacename}
+                notionRefetch={notionRefetch}
+                deletenotion={deletenotion}
+                deletingNotion={deletingNotion}
+                loadingslack={loadingslack}
+                slackError={slackError}
+                workspace={workspace}
+                slackRefetch={slackRefetch}
+                deleteslack={deleteslack}
+                loadingn8n={loadingn8n}
+                n8nError={n8nError}
+                n8nConnected={n8nConnected}
+                n8nUrl={n8nUrl}
+                n8nRefetch={n8nRefetch}
+                deleten8n={deleten8n}
+                onServiceConnected={() => { setDialogService(null); }}
+            />
+        </>
     )
 }
-

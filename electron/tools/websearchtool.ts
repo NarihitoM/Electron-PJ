@@ -1,4 +1,4 @@
-import { agentauth } from "../../src/api/agentauth";
+import { agentauth } from "../../src/features/agent/api/api";
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 

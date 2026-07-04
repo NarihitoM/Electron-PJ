@@ -22,6 +22,15 @@ export class BrowserManager {
 
         return undefined;
     }
+    private static async patchPage(page: any) {
+        await page.evaluateOnNewDocument(() => {
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            (window as any).chrome = { runtime: {} };
+            Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
+            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+        });
+    }
+
     private static async getBrowser() {
         if (!this.browser) {
             const path = this.getDynamicChromePath();
@@ -29,8 +38,14 @@ export class BrowserManager {
             this.browser = await puppeteer.launch({
                 headless: false,
                 executablePath: path || undefined,
-                defaultViewport: { width: 900, height: 800 },
-                args: ['--window-size=900,800', '--no-sandbox', '--disable-blink-features=AutomationControlled']
+                defaultViewport: { width: 1200, height: 900 },
+                args: [
+                    '--window-size=1200,900',
+                    '--disable-blink-features=AutomationControlled',
+                    '--disable-features=ChromeWhatsNewUI',
+                    '--disable-sync',
+                    '--no-first-run'
+                ]
             });
             this.browser.on('disconnected', () => {
                 this.browser = null;
@@ -40,6 +55,7 @@ export class BrowserManager {
                 if (target.type() === 'page') {
                     const page = await target.page();
                     if (page) {
+                        await this.patchPage(page);
                         this.activePage = page;
                         await page.bringToFront();
                     }
@@ -53,6 +69,7 @@ export class BrowserManager {
         const browser = await this.getBrowser();
 
         if (this.activePage && !this.activePage.isClosed()) {
+            await this.patchPage(this.activePage);
             return this.activePage;
         }
 
@@ -64,6 +81,7 @@ export class BrowserManager {
             this.activePage = await browser.newPage();
         }
 
+        await this.patchPage(this.activePage);
         await this.activePage.bringToFront();
 
         return this.activePage;
@@ -71,8 +89,7 @@ export class BrowserManager {
     static async getPageContent(page: any) {
         return await page.evaluate(() => ({
             title: document.title,
-            url: window.location.href,
-            text: document.body.innerText.slice(0, 3000)
+            text: document.body.innerText.slice(0, 1000)
         }));
     }
 }

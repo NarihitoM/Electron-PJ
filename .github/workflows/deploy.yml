@@ -1,0 +1,30 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+
+      - run: npm run deploy
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+          VITE_SUPABASE: ${{ secrets.VITE_SUPABASE }}
+          VITE_CLIENTID: ${{ secrets.VITE_CLIENTID }}
+          VITE_SLACK_CLIENT_ID: ${{ secrets.VITE_SLACK_CLIENT_ID }}
+          VITE_NOTION_CLIENT_ID: ${{ secrets.VITE_NOTION_CLIENT_ID }}
