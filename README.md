@@ -79,9 +79,11 @@ cd MultimateAi
 # Install dependencies
 npm install
 
-# Start development server
+# Start development server (Vite + Electron)
 npm run dev
 ```
+
+> **Note:** This is an Electron desktop application. `npm run dev` starts both the Vite dev server and the Electron window. The app runs as a native desktop window, not in the browser.
 
 ### Available Scripts
 
@@ -130,31 +132,6 @@ src/
 ├── App.tsx                    # Root component
 └── main.tsx                   # Entry point
 ```
-
-Each feature follows the same structure:
-
-```
-features/{name}/
-├── api/           # API calls
-├── components/    # UI components
-├── hooks/         # React Query hooks
-├── store/         # Zustand store (UI state only)
-├── types/         # TypeScript types
-└── index.ts       # Barrel export
-```
-
----
-
-## Configuration
-
-Create a `.env` file in the root:
-
-```env
-VITE_SUPABASE=your_supabase_url
-VITE_API_URL=your_backend_url
-```
-
-Add your AI provider API keys through the app's **Service Settings** page.
 
 ---
 
