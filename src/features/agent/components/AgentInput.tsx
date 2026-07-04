@@ -10,6 +10,7 @@ import { useServiceKeys } from "@/features/services/hooks/useServiceKeys"
 import { useAgentNodes } from "@/features/agent/hooks/useAgentNodes"
 import { useResetAgentMessages } from "@/features/agent/hooks/useResetAgentMessages"
 import { useagentstore } from "../store/store"
+import { agentauth } from "../api/api"
 import { voiceauth } from "@/features/voice/api/api"
 import { AgentChatArea } from "./AgentChatArea"
 import { useUser } from "@/features/auth/hooks/useUser"
@@ -25,6 +26,7 @@ export const AgentInput = () => {
 
     const [recordstatus, setRecordstatus] = useState(false)
     const [loadingrecord, setLoadingrecord] = useState(false)
+    const [historyOpen, setHistoryOpen] = useState(false)
     const mediaRecorderRef = useRef<MediaRecorder | null>(null)
     const streamRef = useRef<MediaStream | null>(null)
     const abortControllerRef = useRef<AbortController | null>(null)
@@ -42,12 +44,16 @@ export const AgentInput = () => {
         if (!store.input.trim() || store.messageloading) return
         const controller = new AbortController()
         abortControllerRef.current = controller
-        lastSentInputRef.current = store.input
+        const messageText = store.input
+        lastSentInputRef.current = messageText
         store.setWorkflowloading(true)
         store.setMessageloading(true)
         store.setHistory([])
         store.setNodes((prev) => prev.map((n: any) => ({ ...n, output: "", thinking: "", activeTool: null, status: "idle" as const })))
         store.workflowGenRef.current++
+
+        store.updateHistory((prev) => [...prev, { role: "user", content: messageText, name: "" }])
+        agentauth.storeagentmessage("user", messageText).catch(() => {})
 
         const selectedNode = agents.find((n) => n.name === store.selectnode)
         const runningNodes = selectedNode ? [selectedNode] : agents.length > 0 ? [agents[0]] : []
@@ -55,7 +61,7 @@ export const AgentInput = () => {
 
         window.ipcRenderer.send('cancel-workflow')
         window.ipcRenderer.send('run-workflow', {
-            input: store.input,
+            input: messageText,
             nodes: runningNodes,
             encryptkey: Api,
             useremail,
@@ -83,6 +89,25 @@ export const AgentInput = () => {
             toast.success("Chat history reset.")
         } catch {
             toast.error("Failed to reset history.")
+        }
+    }
+
+    const onHistoryOpenChange = async (open: boolean) => {
+        setHistoryOpen(open)
+        if (open) {
+            try {
+                store.setLoadingfetch(true)
+                const response = await agentauth.fetchagentmessages()
+                if (response.success && response.data) {
+                    store.setHistory((response.data.messages ?? []).reverse())
+                    store.setNextCursor(response.data.nextCursor)
+                    store.setHasMore(response.data.hasMore)
+                }
+            } catch {
+                toast.error("Failed to load history.")
+            } finally {
+                store.setLoadingfetch(false)
+            }
         }
     }
 
@@ -209,7 +234,7 @@ export const AgentInput = () => {
                                     </div>
                                 </SheetContent>
                             </Sheet>
-                            <Sheet>
+                            <Sheet open={historyOpen} onOpenChange={onHistoryOpenChange}>
                                 <SheetTrigger asChild>
                                     <Button className="bg-cyan-500 dark:bg-white rounded-full">History</Button>
                                 </SheetTrigger>
