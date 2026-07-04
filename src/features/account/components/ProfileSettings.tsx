@@ -5,30 +5,56 @@ import { Label } from "@/shared/components/ui/label"
 import { Button } from "@/shared/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar"
 import { Spinner } from "@/shared/components/ui/spinner"
+import { useUser } from "@/features/auth/hooks/useUser"
+import { userauthapi } from "@/features/auth/api/api"
+import { useEffect, useRef } from "react"
+import { toast } from "sonner"
+import { accountstore } from "../store/store"
 
-interface UserData { username: string; useremail: string; profileurl?: string; authtype: string }
+export const ProfileSettings = () => {
+    const { data: userdata, refetch } = useUser()
+    const { username, preview, loadingupdate, setUsername, setPreview, setLoadingupdate } = accountstore()
+    const fileRef = useRef<HTMLInputElement>(null)
 
-export const ProfileSettings = ({
-    userdata,
-    username,
-    setUsername,
-    preview,
-    setPreview,
-    loadingupdate,
-    onSave,
-    fileRef,
-    onFileChange,
-}: {
-    userdata: UserData | null | undefined;
-    username: string;
-    setUsername: (v: string) => void;
-    preview: string | null;
-    setPreview: (v: string | null) => void;
-    loadingupdate: boolean;
-    onSave: () => void;
-    fileRef: React.RefObject<HTMLInputElement>;
-    onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-}) => {
+    useEffect(() => {
+        if (userdata?.username) setUsername(userdata.username)
+    }, [userdata?.username])
+
+    useEffect(() => {
+        return () => { if (preview) URL.revokeObjectURL(preview) }
+    }, [preview])
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const filepreview = e.target.files?.[0]
+        if (!filepreview) return
+        setPreview(URL.createObjectURL(filepreview))
+        e.target.value = ""
+    }
+
+    const handleSave = async () => {
+        try {
+            setLoadingupdate(true)
+            const formdata = new FormData()
+            if (fileRef.current?.files?.[0]) formdata.append("file", fileRef.current.files[0])
+            formdata.append("username", username)
+            const response = await userauthapi.userupdate(formdata)
+            if (response.success) {
+                toast.success(response.message)
+                setPreview("")
+                refetch()
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const error = (err as any).response?.data?.message || err.message
+                toast.error(error)
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            setLoadingupdate(false)
+        }
+    }
+
     return (
         <Card className="border-none shadow-md bg-card/50 backdrop-blur-sm">
             <CardHeader>
@@ -58,7 +84,7 @@ export const ProfileSettings = ({
                             <div className="flex gap-2 w-full">
                                 <Button variant="outline" className="w-1/2" onClick={() => fileRef.current?.click()}><Upload /> Upload</Button>
                                 {preview && <Button variant="destructive" onClick={() => setPreview("")}><Trash />Remove</Button>}
-                                <input type="file" ref={fileRef} hidden accept="image/*" onChange={onFileChange} />
+                                <input type="file" ref={fileRef} hidden accept="image/*" onChange={handleFileChange} />
                             </div>
                         </div>
                     )}
@@ -78,11 +104,11 @@ export const ProfileSettings = ({
             </CardContent>
             <CardFooter>
                 {userdata?.authtype === "User" && (
-                    <Button onClick={onSave} disabled={(username === userdata?.username && !preview) || loadingupdate} className="bg-cyan-500 dark:bg-white">
+                    <Button onClick={handleSave} disabled={(username === userdata?.username && !preview) || loadingupdate} className="bg-cyan-500 dark:bg-white">
                         {loadingupdate ? <Spinner /> : "Save Changes"}
                     </Button>
                 )}
             </CardFooter>
         </Card>
-    );
-};
+    )
+}

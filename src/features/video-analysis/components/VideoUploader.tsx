@@ -1,13 +1,12 @@
 import { Video, UploadCloud } from "lucide-react";
+import { videoauthstore } from "@/features/video-analysis/store/store";
 
-interface VideoUploaderProps {
-    onContainerClick: () => void;
-}
+export const VideoUploader = () => {
+    const { handleContainerClick } = videoauthstore();
 
-export const VideoUploader = ({ onContainerClick }: VideoUploaderProps) => {
     return (
         <div
-            onClick={onContainerClick}
+            onClick={() => handleContainerClick?.()}
             className="w-full h-[50vh] border-2 border-dashed border-cyan-500 dark:border-muted-foreground rounded-xl flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all duration-200 group gap-4"
         >
             <div className="p-4 border border-cyan-500 dark:border-white rounded-full group-hover:scale-110 text-cyan-500 dark:text-white group-hover:text-blue-400 transition-all shadow-md">

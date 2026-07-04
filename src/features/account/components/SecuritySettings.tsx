@@ -5,30 +5,40 @@ import { Label } from "@/shared/components/ui/label"
 import { Button } from "@/shared/components/ui/button"
 import { Separator } from "@/shared/components/ui/separator"
 import { Spinner } from "@/shared/components/ui/spinner"
+import { toast } from "sonner"
+import { useState } from "react"
+import { userauthapi } from "@/features/auth/api/api"
+import { accountstore } from "../store/store"
 
-export const SecuritySettings = ({
-    currentpassword,
-    setCurrentpassword,
-    newpassword,
-    setNewpassword,
-    show,
-    setShow,
-    show1,
-    setShow1,
-    loadingpassword,
-    onUpdate,
-}: {
-    currentpassword: string;
-    setCurrentpassword: (v: string) => void;
-    newpassword: string;
-    setNewpassword: (v: string) => void;
-    show: boolean;
-    setShow: React.Dispatch<React.SetStateAction<boolean>>;
-    show1: boolean;
-    setShow1: React.Dispatch<React.SetStateAction<boolean>>;
-    loadingpassword: boolean;
-    onUpdate: () => void;
-}) => {
+export const SecuritySettings = () => {
+    const { currentpassword, newpassword, loadingpassword, setCurrentpassword, setNewpassword, setLoadingpassword, setOpenverify, setStateid } = accountstore()
+    const [show, setShow] = useState(false)
+    const [show1, setShow1] = useState(false)
+
+    const handlePasswordReset = async () => {
+        if (!currentpassword || !newpassword) { toast.error("Please fill in all password fields."); return }
+        if (newpassword.length < 6) { toast.error("New password must be at least 6 characters."); return }
+        if (currentpassword === newpassword) { toast.error("New password must be different from current password."); return }
+        try {
+            setLoadingpassword(true)
+            const response = await userauthapi.passwordreset(currentpassword, newpassword)
+            if (response.success) {
+                setOpenverify(true)
+                setStateid(response.stateid)
+                toast.success(response.message)
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const error = (err as any).response?.data?.message || err.message
+                toast.error(error)
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            setLoadingpassword(false)
+        }
+    }
+
     return (
         <Card className="border-none shadow-md bg-card/50 backdrop-blur-sm">
             <CardHeader>
@@ -74,10 +84,10 @@ export const SecuritySettings = ({
                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                     <Shield size={14} className="text-green-500" />Your account is protected
                 </div>
-                <Button onClick={onUpdate} disabled={loadingpassword || !currentpassword || !newpassword} className="bg-cyan-500 dark:bg-white">
+                <Button onClick={handlePasswordReset} disabled={loadingpassword || !currentpassword || !newpassword} className="bg-cyan-500 dark:bg-white">
                     {loadingpassword ? <Spinner /> : "Update"}
                 </Button>
             </CardFooter>
         </Card>
-    );
-};
+    )
+}

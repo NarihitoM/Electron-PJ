@@ -1,29 +1,28 @@
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
-import { Button } from "@/shared/components/ui/button";
-import { Skeleton } from "@/shared/components/ui/skeleton";
-import { GoogleIcon } from "@/shared/components/ui/googleicon";
-import { Plus } from "lucide-react";
-import { BRAND_ASSETS } from "@/shared/config/providermodels";
+import { Button } from "@/shared/components/ui/button"
+import { Skeleton } from "@/shared/components/ui/skeleton"
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select"
+import { GoogleIcon } from "@/shared/components/ui/googleicon"
+import { Plus } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { useServiceKeys } from "@/features/services/hooks/useServiceKeys"
+import { useGoogleService } from "@/features/google/hooks/useGoogleService"
+import { BRAND_ASSETS } from "@/shared/config/providermodels"
+import { googleauthstore } from "../store/store"
 
-interface GoogleDocsHeaderProps {
-    loadingfetch: boolean;
-    serviceemail: string;
-    Api: Array<{ provider: string }>;
-    apiWithLogos: Array<{ provider: string; imageUrl: string }>;
-    provider: string;
-    setProvider: (value: string) => void;
-    navigate: (path: string) => void;
-}
+export const GoogleDocsHeader = () => {
+    const { data: Api = [] } = useServiceKeys()
+    const { data: googleService } = useGoogleService()
+    const store = googleauthstore()
+    const navigate = useNavigate()
 
-export const GoogleDocsHeader = ({
-    loadingfetch,
-    serviceemail,
-    Api,
-    apiWithLogos,
-    provider,
-    setProvider,
-    navigate,
-}: GoogleDocsHeaderProps) => {
+    const serviceemail = (googleService as any)?.email ?? ""
+    const loadingfetch = !googleService
+
+    const apiWithLogos = Api.map((provider: any) => ({
+        ...provider,
+        imageUrl: BRAND_ASSETS[provider.provider.toLowerCase()]
+    }))
+
     return (
         <div className="mx-auto w-full max-w-5xl flex justify-between gap-1">
             <div className="flex flex-col gap-1">
@@ -43,18 +42,18 @@ export const GoogleDocsHeader = ({
                     <span className="text-[13px] flex items-center gap-2 px-2 py-1 rounded-full border bg-card">
                         <GoogleIcon />{serviceemail.substring(0, 10) + "..."}
                     </span>}
-                {Api.length > 0 ? (
+                {apiWithLogos.length > 0 ? (
                     <div className="flex gap-2">
-                        <Select onValueChange={(value) => { setProvider(value ?? "") }} value={provider}>
+                        <Select onValueChange={(value) => { store.setProvider(value ?? "") }} value={store.provider}>
                             <SelectTrigger>
-                                {provider ?
+                                {store.provider ?
                                     <>
-                                        <img src={BRAND_ASSETS[provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                        <span>{provider.charAt(0).toUpperCase() + provider.slice(1)}</span>
+                                        <img src={BRAND_ASSETS[store.provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
+                                        <span>{store.provider.charAt(0).toUpperCase() + store.provider.slice(1)}</span>
                                     </> : "Select Provider"}
                             </SelectTrigger>
                             <SelectContent>
-                                {apiWithLogos.map((item) => (
+                                {apiWithLogos.map((item: any) => (
                                     <SelectItem key={item.provider} value={item.provider}>
                                         <img src={item.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
                                         <span>{item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}</span>
@@ -71,5 +70,5 @@ export const GoogleDocsHeader = ({
                 )}
             </div>
         </div>
-    );
-};
+    )
+}

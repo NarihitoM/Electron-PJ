@@ -32,6 +32,7 @@ import { userauthapi } from "../../../features/auth/api/api";
 import { Toaster } from "../ui/sonner";
 import { toast } from "sonner";
 import { chatauthstore } from "../../../features/chat/store/store";
+import { chatauth } from "../../../features/chat/api/api";
 import { useChats } from "../../../features/chat/hooks/useChats";
 import { useCreateChat } from "../../../features/chat/hooks/useCreateChat";
 import { useDeleteChat } from "../../../features/chat/hooks/useDeleteChat";
@@ -78,7 +79,8 @@ export const Sidebarprovider = () => {
     const { data: Chat = [], refetch: fetchchat, isLoading: loadingchat } = useChats();
     const createChatMutation = useCreateChat();
     const deleteChatMutation = useDeleteChat();
-    const { resetchat, chatNextCursor, chatHasMore, chatLoadingMore, fetchMoreChats } = chatauthstore();
+    const store = chatauthstore();
+    const { resetchat, chatNextCursor, chatHasMore, chatLoadingMore, Chat: ChatFromStore } = store;
     const {
         resetservice
     } = authservicestore()
@@ -253,13 +255,29 @@ export const Sidebarprovider = () => {
         }));
     }, [Chat]);
 
-    const loadMoreChats = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const loadMoreChats = useCallback(async (e: React.UIEvent<HTMLDivElement>) => {
         const el = e.currentTarget;
         if (!chatHasMore || chatLoadingMore) return;
         if (el.scrollTop + el.clientHeight >= el.scrollHeight - 100) {
-            if (chatNextCursor) fetchMoreChats(chatNextCursor);
+            if (chatNextCursor) {
+                store.setChatLoadingMore(true);
+                try {
+                    const response = await chatauth.fetchchat(chatNextCursor);
+                    if (response.success && response.data) {
+                        const { messages, nextCursor, hasMore } = response.data;
+                        store.setChats([...ChatFromStore, ...messages], nextCursor, hasMore);
+                    }
+                } catch (err: unknown) {
+                    if (err instanceof Error) {
+                        const errorObj = err as any;
+                        toast.error(errorObj.response?.data?.message || err.message);
+                    }
+                } finally {
+                    store.setChatLoadingMore(false);
+                }
+            }
         }
-    }, [chatHasMore, chatLoadingMore, chatNextCursor, fetchMoreChats]);
+    }, [chatHasMore, chatLoadingMore, chatNextCursor, ChatFromStore]);
 
     const [chaterror, setchaterror] = useState<boolean>(false);
     const [deletingIds, setdeletingIds] = useState<Set<string>>(new Set());

@@ -1,287 +1,276 @@
-import React from "react";
-import { Button } from "@/shared/components/ui/button";
-import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Spinner } from "@/shared/components/ui/spinner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/components/ui/collapsible";
-import { motion } from "framer-motion";
-import { AlertTriangle, Bot, Check, CheckCircle2, ChevronDown, Copy, Cpu, Dot, Loader2, Terminal, XCircle } from "lucide-react";
-import { BRAND_ASSETS } from "@/shared/config/providermodels";
-import { N8ntool } from "@/shared/config/toolsselection";
-import { extractToolMessage } from "@/shared/utils/toolutils";
-import AiContent from "@/shared/components/layout/LayoutAiresponse";
-import type { chatsession } from "@/shared/types/globaltype";
-import type { User } from "@/features/auth/types";
+import { useEffect, useRef } from "react"
+import { Button } from "@/shared/components/ui/button"
+import { Skeleton } from "@/shared/components/ui/skeleton"
+import { Spinner } from "@/shared/components/ui/spinner"
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/components/ui/collapsible"
+import { motion } from "framer-motion"
+import { AlertTriangle, Bot, Check, ChevronDown, Copy, Cpu, Dot, Loader2, Terminal, XCircle } from "lucide-react"
+import { BRAND_ASSETS } from "@/shared/config/providermodels"
+import { extractToolMessage } from "@/shared/utils/toolutils"
+import AiContent from "@/shared/components/layout/LayoutAiresponse"
+import { useUser } from "@/features/auth/hooks/useUser"
+import { n8nauthstore } from "../store/store"
+import { n8nauth } from "../api/api"
+import { toast } from "sonner"
 
-interface N8nMessageListProps {
-    sessionmessage: chatsession[];
-    sending: boolean;
-    loadingfetch: boolean;
-    loadingn8n: boolean;
-    loadingerror: boolean;
-    loadingMore: boolean;
-    userdata: User | null | undefined;
-    connected: boolean;
-    authType: string;
-    topSentinelRef: React.Ref<HTMLDivElement>;
-    scrollContainerRef: React.Ref<HTMLDivElement>;
-    messagesEndRef: React.Ref<HTMLDivElement>;
-    uploadingImageUrls: Set<string>;
-    copiedIndex: number | null;
-    setCopiedIndex: (i: number | null) => void;
-    setLightboxImages: (urls: string[]) => void;
-    setLightboxIndex: (i: number) => void;
-    setLightboxOpen: (open: boolean) => void;
-    setSettingsOpen: (open: boolean) => void;
-    fetchMessages: () => void;
-}
+export const N8nMessageList = () => {
+    const { data: userdata } = useUser()
+    const store = n8nauthstore()
 
-export const N8nMessageList = ({
-    sessionmessage,
-    sending,
-    loadingfetch,
-    loadingn8n,
-    loadingerror,
-    loadingMore,
-    userdata,
-    connected,
-    authType,
-    topSentinelRef,
-    scrollContainerRef,
-    messagesEndRef,
-    uploadingImageUrls,
-    copiedIndex,
-    setCopiedIndex,
-    setLightboxImages,
-    setLightboxIndex,
-    setLightboxOpen,
-    setSettingsOpen,
-    fetchMessages,
-}: N8nMessageListProps) => {
-    return (
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto mt-4" style={{ scrollbarWidth: "none" }}>
-            <div className="mx-auto max-w-5xl py-5">
-                {loadingfetch || loadingn8n ? (
-                    <div className="mx-auto max-w-5xl py-5 space-y-8 animate-pulse">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="flex flex-col gap-8">
-                                <div className="flex w-full gap-4 flex-row-reverse">
-                                    <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-                                    <div className="flex flex-col gap-2 items-end w-full">
-                                        <Skeleton className="h-3 w-16" />
-                                        <Skeleton className="h-16 w-[60%] rounded-2xl rounded-tr-none" />
-                                    </div>
-                                </div>
-                                <div className="flex w-full gap-4 flex-row">
-                                    <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-                                    <div className="flex flex-col gap-2 items-start w-full">
-                                        <Skeleton className="h-3 w-24" />
-                                        <div className="space-y-2 w-[80%]">
-                                            <Skeleton className="h-4 w-full" />
-                                            <Skeleton className="h-4 w-[90%]" />
-                                            <Skeleton className="h-4 w-[40%]" />
-                                        </div>
-                                    </div>
-                                </div>
+    const topSentinelRef = useRef<HTMLDivElement | null>(null)
+    const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+    const messagesEndRef = useRef<HTMLDivElement | null>(null)
+    const prevMessageCountRef = useRef(store.sessionmessage.length)
+
+    useEffect(() => {
+        if (store.sessionmessage.length > prevMessageCountRef.current) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "auto" })
+        }
+        prevMessageCountRef.current = store.sessionmessage.length
+    }, [store.sessionmessage])
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" })
+    }, [store.sending])
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && store.hasMore && !store.loadingMore) {
+                loadMore()
+            }
+        }, { threshold: 0.1 })
+        const el = topSentinelRef.current
+        if (el) observer.observe(el)
+        return () => observer.disconnect()
+    }, [store.hasMore, store.loadingMore])
+
+    const loadMore = async () => {
+        if (!store.nextCursor || !store.hasMore || store.loadingMore) return
+        store.setLoadingMore(true)
+        try {
+            const prevScrollHeight = scrollContainerRef.current?.scrollHeight ?? 0
+            const response = await n8nauth.fetchn8nmsg(store.nextCursor)
+            if (response.success && response.data) {
+                const data = response.data
+                store.updateSessionMessages(prev => [...(data.messages ?? []), ...prev])
+                store.setNextCursor(data.nextCursor)
+                store.setHasMore(data.hasMore)
+                requestAnimationFrame(() => {
+                    const el = scrollContainerRef.current
+                    if (el) el.scrollTop = el.scrollHeight - prevScrollHeight
+                })
+            }
+        } catch { /* silence */ }
+        finally { store.setLoadingMore(false) }
+    }
+
+    const fetchMessages = async () => {
+        store.setloadingfetch(true)
+        store.setloadingerror(false)
+        store.setsessionmessage([])
+        store.setNextCursor(null)
+        store.setHasMore(false)
+        try {
+            const response = await n8nauth.fetchn8nmsg()
+            if (response.success && response.data) {
+                store.setsessionmessage(response.data.messages ?? [])
+                store.setNextCursor(response.data.nextCursor)
+                store.setHasMore(response.data.hasMore)
+            }
+        } catch (err: unknown) {
+            store.setloadingerror(true)
+            const errMsg = err instanceof Error ? (err as any).response?.data?.message || err.message : "An unexpected error occurred."
+            toast.error(errMsg)
+        } finally { store.setloadingfetch(false) }
+    }
+
+    useEffect(() => { fetchMessages() }, [])
+
+    const userperson =
+        <Avatar className="w-7 h-7 dark:border-2 border-black">
+            <AvatarImage src={userdata?.profileurl || undefined} />
+            <AvatarFallback className="dark:bg-neutral-700 dark:text-neutral-300">{userdata?.username?.charAt(0).toUpperCase() || "U"}</AvatarFallback>
+        </Avatar>
+
+    if (store.loadingfetch) {
+        return (
+            <div className="flex-1 overflow-y-auto p-4" ref={scrollContainerRef}>
+                <div className="mx-auto max-w-3xl space-y-6 mt-20">
+                    {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-start gap-3 justify-end">
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-[200px]" />
+                                <Skeleton className="h-4 w-[150px]" />
                             </div>
-                        ))}
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                        </div>
+                    ))}
+                </div>
+            </div>
+        )
+    }
+
+    if (store.loadingerror) {
+        return (
+            <div className="flex-1 overflow-y-auto p-4" ref={scrollContainerRef}>
+                <div className="mx-auto max-w-3xl text-center mt-20">
+                    <AlertTriangle className="h-12 w-12 mx-auto text-destructive mb-4" />
+                    <h2 className="text-2xl font-bold mb-2">Failed to load messages</h2>
+                    <p className="text-muted-foreground mb-6">There was an error loading your chat messages. Please try again.</p>
+                    <Button onClick={fetchMessages} variant="default" size="lg" className="cursor-pointer"><Loader2 className="mr-2 h-4 w-4 animate-spin" />Retry</Button>
+                </div>
+            </div>
+        )
+    }
+
+    const hasMessages = store.sessionmessage.length > 0
+
+    return (
+        <div
+            ref={scrollContainerRef}
+            className="flex-1 overflow-y-auto p-4"
+        >
+            <div ref={topSentinelRef} />
+            <div className="mx-auto max-w-3xl space-y-6">
+                {store.loadingMore && (
+                    <div className="flex justify-center py-4">
+                        <Spinner className="h-6 w-6" />
                     </div>
-                ) : loadingerror ? (
-                    <div className="min-h-[50vh] flex flex-col gap-3 justify-center items-center">
-                        <AlertTriangle className="w-10 h-10 text-red-500" />
-                        <h1 className="text-2xl font-semibold">Failed To Load</h1>
-                        <p className="text-sm text-muted-foreground">There was a problem connecting to the server.</p>
-                        <Button onClick={fetchMessages} className="bg-cyan-500 dark:bg-white">Retry</Button>
+                )}
+                {!hasMessages && !store.loadingfetch ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center mt-20">
+                        <Bot className="h-12 w-12 text-muted-foreground mb-4" />
+                        <h2 className="text-2xl font-bold mb-2">Start a conversation</h2>
+                        <p className="text-muted-foreground">Ask your AI agent to manage n8n workflows.</p>
                     </div>
-                ) :
-                    (sessionmessage && sessionmessage.length > 0 ?
-                        (<>
-                            <div ref={topSentinelRef} className="h-1" />
-                            {loadingMore && (
-                                <div className="flex justify-center py-4">
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Spinner className="h-5 w-5 text-cyan-500 dark:text-white" />
-                                        Loading...
-                                    </div>
-                                </div>
-                            )}
-                            {sessionmessage.map((msg, index) => {
-                                const isUser = msg.role === "user";
-                                const isLastMessage = index === sessionmessage.length - 1;
-                                const username = userdata?.username;
-                                return (
-                                    <div
-                                        key={index}
-                                        className={`group mb-8 flex w-full gap-4 ${isUser ? "flex-row-reverse" : "flex-row"}`}
-                                    >
-                                        <div className="flex h-8 w-8 items-center justify-center rounded-full mt-1">
-                                            {isUser ? (
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarImage
-                                                        src={userdata?.profileurl ? `${userdata.profileurl}?v=${userdata?.useremail}` : undefined}
-                                                        alt={userdata?.username}
-                                                    />
-                                                    <AvatarFallback className="bg-cyan-500 dark:bg-white border text-white dark:text-black">
-                                                        {userdata?.username.substring(0, 1)}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                            ) : (
-                                                <div className="relative flex items-center justify-center">
-                                                    {sending && isLastMessage && !msg.content && (!msg.toolsCall || msg.toolsCall.length === 0 || msg.toolsCall.some((t: any) => t.status === "loading")) ? (
-                                                        <Dot className="h-15 w-15 text-cyan-500 dark:text-white relative animate-pulse" />
-                                                    ) : msg.provider && BRAND_ASSETS[msg.provider] ? (
-                                                        <img src={BRAND_ASSETS[msg.provider]} className="w-7 h-7 rounded bg-white dark:bg-card" />
-                                                    ) : (
-                                                        <Bot className="w-7 h-7 text-muted-foreground" />
-                                                    )}
-                                                </div>
-                                            )}
+                ) : <></>}
+                {store.sessionmessage.map((mes, index) => (
+                    <motion.div
+                        key={`${index}-message`}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className={`flex items-start gap-3 ${mes.role === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                        {mes.role === "assistant" && (
+                            <Avatar className="w-7 h-7 dark:border-2 border-black shrink-0">
+                                <AvatarImage src={BRAND_ASSETS[mes.provider?.toLowerCase() || ""]} />
+                                <AvatarFallback className="dark:bg-neutral-700 dark:text-neutral-300"><Cpu className="h-4 w-4" /></AvatarFallback>
+                            </Avatar>
+                        )}
+                        <div className={`max-w-[80%] ${mes.role === "user" ? "order-1" : "order-2"}`}>
+                            {mes.role === "user" ? (
+                                <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-2.5 shadow-sm">
+                                    {mes.images && mes.images.length > 0 && (
+                                        <div className="flex flex-wrap gap-2 mb-2">
+                                            {mes.images.map((img, i) => (
+                                                <img
+                                                    key={i}
+                                                    src={store.uploadingImageUrls?.has(img) ? img : img}
+                                                    alt={`Uploaded ${i}`}
+                                                    className="w-20 h-20 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                                    onClick={() => { store.setLightboxImages(mes.images!); store.setLightboxIndex(i); store.setLightboxOpen(true) }}
+                                                />
+                                            ))}
                                         </div>
-                                        <div className={`flex flex-col gap-1 max-w-[80%] min-w-0 ${isUser ? "items-end text-left" : "items-start text-left"}`}>
-                                            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
-                                                {isUser ? username : ""}
-                                            </span>
-                                            {!isUser && msg.model && (
-                                                <span className="text-[10px] font-mono text-muted-foreground/70">
-                                                    {msg.model}
-                                                </span>
-                                            )}
-                                            {isUser && msg.images && msg.images.length > 0 && (
-                                                <div className="flex flex-wrap gap-1 mb-1">
-                                                    {msg.images.map((url, i) => (
-                                                        <div
-                                                            key={i}
-                                                            className="relative w-20 h-20 rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
-                                                            onClick={() => {
-                                                                setLightboxImages(msg.images!);
-                                                                setLightboxIndex(i);
-                                                                setLightboxOpen(true);
-                                                            }}
-                                                        >
-                                                            <img src={url} alt="attached" className="w-full h-full object-cover" />
-                                                            {uploadingImageUrls.has(url) && (
-                                                                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                                                    <Loader2 size={20} className="text-white animate-spin" />
-                                                                </div>
+                                    )}
+                                    <div className="text-sm whitespace-pre-wrap break-words"><AiContent content={mes.content} /></div>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {(mes.content || mes.toolsCall?.length) && (
+                                        <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+                                            {mes.content && (() => {
+                                                const extracted = extractToolMessage(mes.content)
+                                                if (extracted && !mes.toolsCall?.length) {
+                                                    return <div className="text-sm whitespace-pre-wrap break-words"><AiContent content={extracted} /></div>
+                                                }
+                                                return (
+                                                    <div className="text-sm whitespace-pre-wrap break-words">
+                                                        <AiContent content={mes.content} />
+                                                    </div>
+                                                )
+                                            })()}
+                                            {mes.toolsCall && mes.toolsCall.length > 0 && (
+                                                <div className="flex flex-col gap-1.5 mt-2 border-t pt-2">
+                                                    {mes.toolsCall.map((tool, i) => (
+                                                        <div key={i} className="flex items-center gap-2 text-xs">
+                                                            <div className="flex items-center gap-1 flex-1 min-w-0">
+                                                                <Terminal className="h-3 w-3 shrink-0 text-muted-foreground" />
+                                                                <span className="font-medium truncate">{tool.name}</span>
+                                                                {tool.query && (
+                                                                    <Collapsible className="flex-1 min-w-0">
+                                                                        <CollapsibleTrigger className="text-muted-foreground hover:text-foreground text-xs cursor-pointer">
+                                                                            <ChevronDown className="h-3 w-3 inline" />
+                                                                        </CollapsibleTrigger>
+                                                                        <CollapsibleContent>
+                                                                            <pre className="text-xs bg-background p-2 rounded mt-1 overflow-x-auto">{JSON.stringify(tool.query, null, 2)}</pre>
+                                                                        </CollapsibleContent>
+                                                                    </Collapsible>
+                                                                )}
+                                                            </div>
+                                                            {tool.status === "loading" ? (
+                                                                <Dot className="h-4 w-4 animate-pulse text-blue-500 shrink-0" />
+                                                            ) : tool.status === "done" ? (
+                                                                <Check className="h-3 w-3 text-green-500 shrink-0" />
+                                                            ) : tool.status === "rejected" ? (
+                                                                <XCircle className="h-3 w-3 text-red-500 shrink-0" />
+                                                            ) : (
+                                                                <AlertTriangle className="h-3 w-3 text-red-500 shrink-0" />
                                                             )}
                                                         </div>
                                                     ))}
                                                 </div>
                                             )}
-                                            {!isUser && msg.generatedImages && msg.generatedImages.length > 0 && (
-                                                <div className="flex flex-wrap gap-2 mb-2">
-                                                    {msg.generatedImages.map((url, i) => (
-                                                        <div
-                                                            key={i}
-                                                            className="relative rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity max-w-[300px]"
-                                                            onClick={() => {
-                                                                setLightboxImages(msg.generatedImages!);
-                                                                setLightboxIndex(i);
-                                                                setLightboxOpen(true);
-                                                            }}
-                                                        >
-                                                            <img src={url} alt="generated" className="w-full h-auto object-cover" />
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                            <div className={`rounded-2xl leading-relaxed text-[15px] whitespace-pre-wrap w-full overflow-hidden ${isUser ? "bg-muted text-foreground rounded-tr-none p-3" : "bg-transparent text-foreground rounded-tl-none"}`}>
-                                                <motion.div
-                                                    initial={{ opacity: 0, y: 5 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ duration: 0.4 }}
-                                                    className="wrap-break-word p-1 w-full"
-                                                >
-                                                    {msg.toolsCall?.filter(t => !t.isChain).map((tool) => (
-                                                        <Collapsible key={tool.id} className="w-full space-y-2">
-                                                            <CollapsibleTrigger asChild>
-                                                                <Button variant="ghost" className={`group flex items-center gap-2 px-3 py-1 rounded-full  text-[10px] font-bold transition-all active:scale-95 ${tool.status === "done" ? "text-black dark:text-white  shadow-sm" : "dark:text-white  text-black"}`}>
-                                                                    {tool.status === "loading" && <Spinner className="w-4 h-4 animate-spin text-cyan-500 dark:text-white" />}
-                                                                    {tool.status === "done" && <CheckCircle2 size={12} className="text-green-500" />}
-                                                                    {tool.status === "error" && <XCircle size={12} className="text-red-500" />}
-                                                                    {tool.status === "rejected" && <XCircle size={12} className="text-red-500" />}
-                                                                    {tool.status === "loading" ? <motion.span
-                                                                        animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
-                                                                        transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                                                                        style={{
-                                                                            backgroundImage: "linear-gradient(90deg, #6b7280 0%, #f3f4f6 50%, #6b7280 100%)",
-                                                                            backgroundSize: "200% 100%",
-                                                                            WebkitBackgroundClip: "text",
-                                                                            WebkitTextFillColor: "transparent",
-                                                                        }}>{N8ntool[tool.name.toLowerCase()] || tool.name}
-                                                                    </motion.span> :
-                                                                        <span>{N8ntool[tool.name.toLowerCase()] || tool.name}</span>}
-                                                                    {tool.status !== "loading" && <ChevronDown size={15} className="ml-1 text-black dark:text-white transition-transform duration-300 group-data-[state=open]:rotate-180" />}
-                                                                </Button>
-                                                            </CollapsibleTrigger>
-                                                            <CollapsibleContent className="animate-in fade-in slide-in-from-top-1 duration-200">
-                                                                <div className="flex flex-col rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-black overflow-hidden shadow-sm max-w-[95%]">
-                                                                    <div className="border-b dark:border-zinc-800">
-                                                                        <div className="px-3 py-1.5 flex items-center gap-2 bg-zinc-50/50 dark:bg-zinc-900/50">
-                                                                            <Terminal size={10} className="text-blue-400" />
-                                                                            <span className="text-[9px] font-medium text-muted-foreground uppercase">Arguments</span>
-                                                                        </div>
-                                                                        <div className="p-3 overflow-x-auto scrollbar-hide">
-                                                                            <pre className="text-[10px] font-mono text-cyan-700 dark:text-cyan-500 whitespace-pre-wrap">
-                                                                                {extractToolMessage(tool.query) || JSON.stringify(tool.query, null, 2)}
-                                                                            </pre>
-                                                                        </div>
-                                                                    </div>
-                                                                    {tool.result && (
-                                                                        <div className="flex-1 overflow-hidden">
-                                                                            <div className="px-3 py-1.5 flex items-center gap-2 bg-zinc-50/50 dark:bg-zinc-900/50 border-b dark:border-zinc-800">
-                                                                                <Cpu size={10} className="text-emerald-400" />
-                                                                                <span className="text-[9px] font-medium text-muted-foreground uppercase">Execution</span>
-                                                                            </div>
-                                                                            <div className="p-3 max-h-62.5 overflow-y-auto scrollbar-thin" style={{ scrollbarWidth: "none" }}>
-                                                                                <pre className="text-[10px] font-mono text-green-700 dark:text-green-500 whitespace-pre-wrap">
-                                                                                    {typeof tool.result === 'string' ? tool.result : JSON.stringify(tool.result, null, 2)}
-                                                                                </pre>
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </CollapsibleContent>
-                                                        </Collapsible>
-                                                    ))}
-                                                </motion.div>
-                                                <AiContent content={msg.content} />
-                                            </div>
-                                            {msg.content && (
-                                                <button
-                                                    onClick={() => {
-                                                        navigator.clipboard.writeText(msg.content);
-                                                        setCopiedIndex(index);
-                                                        setTimeout(() => setCopiedIndex(null), 1500);
-                                                    }}
-                                                    className={`${copiedIndex === index ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity p-1 rounded self-end -mt-1`}
-                                                >
-                                                    {copiedIndex === index ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
-                                                </button>
-                                            )}
                                         </div>
-                                    </div>
-                                );
-                            })}
-                        </>)
-                        : (
-                            <div className="min-h-[50vh] flex flex-col gap-2 justify-center items-center">
-                                <h1 className="text-3xl">n8n Agenting</h1>
-                                <p className="text-sm text-muted-foreground">
-                                    {connected
-                                        ? authType === "none"
-                                            ? "Webhook mode — trigger existing webhook workflows. Send a message to get started."
-                                            : "REST API mode — full workflow control. Send a message to get started."
-                                        : "Connect your n8n instance to get started."}
-                                </p>
-                                {connected && authType === "none" && (
-                                    <p className="text-xs text-muted-foreground">Tip: You can only trigger webhooks. Workflow CRUD requires REST API (self-hosted or Cloud Pro).</p>
-                                )}
-                                {!connected && <Button className="bg-cyan-500 dark:bg-white" onClick={() => setSettingsOpen(true)}>Connect n8n</Button>}
+                                    )}
+                                    {mes.generatedImages && mes.generatedImages.length > 0 && (
+                                        <div className="flex flex-wrap gap-2">
+                                            {mes.generatedImages.map((url, i) => (
+                                                <div key={i} className="relative group cursor-pointer" onClick={() => { store.setLightboxImages(mes.generatedImages!); store.setLightboxIndex(i); store.setLightboxOpen(true) }}>
+                                                    <img src={url} alt={`Generated ${i}`} className="w-40 h-40 object-cover rounded-lg" />
+                                                    <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(url); store.setCopiedIndex(i); setTimeout(() => store.setCopiedIndex(null), 2000) }}
+                                                    >
+                                                        <Button size="icon" variant="secondary" className="h-6 w-6">
+                                                            {store.copiedIndex === i ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                        {mes.role === "user" && userperson}
+                    </motion.div>
+                ))}
+                {store.sending && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-start gap-3 justify-start"
+                    >
+                        <Avatar className="w-7 h-7 dark:border-2 border-black shrink-0">
+                            <AvatarFallback className="dark:bg-neutral-700 dark:text-neutral-300"><Cpu className="h-4 w-4" /></AvatarFallback>
+                        </Avatar>
+                        <div className="bg-muted rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm">
+                            <div className="flex items-center gap-2">
+                                <Dot className="h-5 w-5 animate-pulse text-blue-500" />
+                                <span className="text-xs text-muted-foreground">Thinking</span>
+                                <span className="flex gap-0.5">
+                                    <span className="w-1 h-1 rounded-full bg-foreground animate-bounce" style={{ animationDelay: "0ms" }} />
+                                    <span className="w-1 h-1 rounded-full bg-foreground animate-bounce" style={{ animationDelay: "150ms" }} />
+                                    <span className="w-1 h-1 rounded-full bg-foreground animate-bounce" style={{ animationDelay: "300ms" }} />
+                                </span>
                             </div>
-                        ))}
-                <div ref={messagesEndRef} />
+                        </div>
+                    </motion.div>
+                )}
             </div>
+            <div ref={messagesEndRef} />
         </div>
-    );
-};
+    )
+}

@@ -1,36 +1,28 @@
-import { Button } from "@/shared/components/ui/button";
-import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
-import { BRAND_ASSETS } from "@/shared/config/providermodels";
-import { Globe, Unlink, Wifi, Plus } from "lucide-react";
-import type { NavigateFunction } from "react-router-dom";
+import { Button } from "@/shared/components/ui/button"
+import { Skeleton } from "@/shared/components/ui/skeleton"
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select"
+import { BRAND_ASSETS } from "@/shared/config/providermodels"
+import { Globe, Unlink, Wifi, Plus } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import { useServiceKeys } from "@/features/services/hooks/useServiceKeys"
+import { useN8nConfig } from "@/features/n8n/hooks/useN8nConfig"
+import { n8nauthstore } from "../store/store"
 
-interface ApiProvider {
-    provider: string;
-    imageUrl?: string;
-}
+export const N8nChatHeader = () => {
+    const { data: Api = [] } = useServiceKeys()
+    const { data: n8nConfig } = useN8nConfig()
+    const store = n8nauthstore()
+    const navigate = useNavigate()
 
-interface N8nChatHeaderProps {
-    connected: boolean;
-    authType: string;
-    loadingn8n: boolean;
-    setSettingsOpen: (open: boolean) => void;
-    provider: string;
-    setProvider: (provider: string) => void;
-    apiWithLogos: ApiProvider[];
-    navigate: NavigateFunction;
-}
+    const connected = !!(n8nConfig as any)?.connected
+    const authType = (n8nConfig as any)?.authType ?? ""
+    const loadingn8n = !n8nConfig
 
-export const N8nChatHeader = ({
-    connected,
-    authType,
-    loadingn8n,
-    setSettingsOpen,
-    provider,
-    setProvider,
-    apiWithLogos,
-    navigate,
-}: N8nChatHeaderProps) => {
+    const apiWithLogos = Api.map((provider: any) => ({
+        ...provider,
+        imageUrl: BRAND_ASSETS[provider.provider.toLowerCase()]
+    }))
+
     return (
         <div className="mx-auto w-full max-w-5xl flex justify-between gap-1">
             <div className="flex flex-col gap-1">
@@ -46,7 +38,7 @@ export const N8nChatHeader = ({
                         <Skeleton className="w-4 h-4 rounded-sm bg-zinc-200 dark:bg-zinc-800 shrink-0" />
                         <Skeleton className="w-20 h-4 rounded-md bg-zinc-200 dark:bg-zinc-800" />
                     </span> :
-                    <Button variant="outline" size="sm" onClick={() => setSettingsOpen(true)}>
+                    <Button variant="outline" size="sm" onClick={() => store.setSettingsOpen(true)}>
                         {connected ? (
                             <>{authType === "none" ? <Globe className="mr-2 h-3 w-3" /> : <Wifi className="mr-2 h-3 w-3" />}{authType === "none" ? "Webhook" : "Connected"}</>
                         ) : <><Unlink className="mr-2 h-3 w-3" />Not Connected</>}
@@ -54,16 +46,16 @@ export const N8nChatHeader = ({
                 }
                 {apiWithLogos.length > 0 ? (
                     <div className="flex gap-2">
-                        <Select onValueChange={(value) => setProvider(value ?? "")} value={provider}>
+                        <Select onValueChange={(value) => store.setProvider(value ?? "")} value={store.provider}>
                             <SelectTrigger>
-                                {provider ?
+                                {store.provider ?
                                     <>
-                                        <img src={BRAND_ASSETS[provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                        <span>{provider.charAt(0).toUpperCase() + provider.slice(1)}</span>
+                                        <img src={BRAND_ASSETS[store.provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
+                                        <span>{store.provider.charAt(0).toUpperCase() + store.provider.slice(1)}</span>
                                     </> : "Select Provider"}
                             </SelectTrigger>
                             <SelectContent>
-                                {apiWithLogos.map((item) => (
+                                {apiWithLogos.map((item: any) => (
                                     <SelectItem key={item.provider} value={item.provider}>
                                         <img src={item.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
                                         <span>{item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}</span>
@@ -80,5 +72,5 @@ export const N8nChatHeader = ({
                 )}
             </div>
         </div>
-    );
-};
+    )
+}

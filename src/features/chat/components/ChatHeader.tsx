@@ -1,26 +1,26 @@
-import { Bot, Plus } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { BRAND_ASSETS } from "@/shared/config/providermodels";
+import { Bot, Plus } from "lucide-react"
+import { Button } from "@/shared/components/ui/button"
+import { useNavigate } from "react-router-dom"
+import { useServiceKeys } from "@/features/services/hooks/useServiceKeys"
+import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-} from "@/shared/components/ui/select";
+} from "@/shared/components/ui/select"
+import { chatauthstore } from "../store/store"
 
-interface ProviderLogo {
-    provider: string;
-    imageUrl: string;
-}
+export const ChatHeader = () => {
+    const { data: Api = [] } = useServiceKeys()
+    const store = chatauthstore()
+    const navigate = useNavigate()
 
-interface ChatHeaderProps {
-    apiWithLogos: ProviderLogo[];
-    provider: string | null;
-    onProviderChange: (value: string) => void;
-    onAddProvider: () => void;
-}
+    const apiWithLogos = Api.map((provider: any) => ({
+        ...provider,
+        imageUrl: BRAND_ASSETS[provider.provider.toLowerCase()]
+    }))
 
-export function ChatHeader({ apiWithLogos, provider, onProviderChange, onAddProvider }: ChatHeaderProps) {
     return (
         <div className="mx-auto w-full max-w-5xl flex justify-between gap-1">
             <div className="flex flex-col gap-1">
@@ -31,16 +31,16 @@ export function ChatHeader({ apiWithLogos, provider, onProviderChange, onAddProv
             </div>
             {apiWithLogos.length > 0 ? (
                 <div className="flex gap-2">
-                    <Select onValueChange={(value) => onProviderChange(value ?? "")} value={provider ?? undefined}>
-                        <SelectTrigger >
-                            {provider ?
+                    <Select onValueChange={(value) => store.setProvider(value ?? "")} value={store.provider}>
+                        <SelectTrigger>
+                            {store.provider ?
                                 <>
-                                    <img src={BRAND_ASSETS[provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                    <span>{provider.charAt(0).toUpperCase() + provider.slice(1)}</span>
+                                    <img src={BRAND_ASSETS[store.provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
+                                    <span>{store.provider.charAt(0).toUpperCase() + store.provider.slice(1)}</span>
                                 </> : "Select Provider"}
                         </SelectTrigger>
                         <SelectContent>
-                            {apiWithLogos.map((item) => (
+                            {apiWithLogos.map((item: any) => (
                                 <SelectItem key={item.provider} value={item.provider}>
                                     <img src={item.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
                                     <span>{item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}</span>
@@ -48,13 +48,13 @@ export function ChatHeader({ apiWithLogos, provider, onProviderChange, onAddProv
                             ))}
                         </SelectContent>
                     </Select>
-                    <Button variant="outline" size="icon" onClick={onAddProvider} title="Add Provider">
+                    <Button variant="outline" size="icon" onClick={() => navigate("/app/settings")} title="Add Provider">
                         <Plus className="h-4 w-4" />
                     </Button>
                 </div>
             ) : (
-                <Button className="bg-cyan-500 dark:bg-white" onClick={onAddProvider}>Add Provider</Button>
+                <Button className="bg-cyan-500 dark:bg-white" onClick={() => navigate("/app/settings")}>Add Provider</Button>
             )}
         </div>
-    );
+    )
 }

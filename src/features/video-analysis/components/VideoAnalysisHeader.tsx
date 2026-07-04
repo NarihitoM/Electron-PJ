@@ -3,15 +3,11 @@ import { Select, SelectTrigger, SelectContent, SelectItem } from "@/shared/compo
 import { Video, Plus } from "lucide-react";
 import { BRAND_ASSETS } from "@/shared/config/providermodels";
 import { useNavigate } from "react-router-dom";
+import { videoauthstore } from "@/features/video-analysis/store/store";
 
-interface VideoAnalysisHeaderProps {
-    Api: any[];
-    provider: string;
-    setProvider: (provider: string) => void;
-}
-
-export const VideoAnalysisHeader = ({ Api, provider, setProvider }: VideoAnalysisHeaderProps) => {
+export const VideoAnalysisHeader = () => {
     const navigate = useNavigate();
+    const { Api, provider, setProvider } = videoauthstore();
 
     const apiWithLogos = Api ? Api.map((p: any) => ({
         ...p,

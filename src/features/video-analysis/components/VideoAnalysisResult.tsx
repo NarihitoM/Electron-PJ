@@ -3,37 +3,11 @@ import { Separator } from "@/shared/components/ui/separator";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 import { Sparkles, TimerReset, Text, AlertTriangle } from "lucide-react";
 import DOMPurify from "dompurify";
+import { videoauthstore } from "@/features/video-analysis/store/store";
 
-interface TimestampSegment {
-    id: string | number;
-    start: number;
-    end: number;
-    text: string;
-}
+export const VideoAnalysisResult = () => {
+    const { summary, timestamps, isPending, loadingupload, analysisError, generateTranscript } = videoauthstore();
 
-interface SummaryData {
-    title: string;
-    summary: string;
-    category?: string;
-}
-
-interface VideoAnalysisResultProps {
-    summary: SummaryData | null;
-    timestamps: TimestampSegment[];
-    isPending: boolean;
-    loadingupload: boolean;
-    analysisError: boolean;
-    onRetry: () => void;
-}
-
-export const VideoAnalysisResult = ({
-    summary,
-    timestamps,
-    isPending,
-    loadingupload,
-    analysisError,
-    onRetry,
-}: VideoAnalysisResultProps) => {
     if (summary || timestamps.length > 0) {
         return (
             <>
@@ -123,7 +97,7 @@ export const VideoAnalysisResult = ({
                 <AlertTriangle className="w-8 h-8 text-red-500" />
                 <h1 className="text-xl font-semibold">Failed To Analyze</h1>
                 <p className="text-sm text-muted-foreground">An error occurred during video analysis.</p>
-                <Button onClick={onRetry} className="bg-cyan-500 dark:bg-white mt-2">Retry</Button>
+                <Button onClick={() => generateTranscript?.()} className="bg-cyan-500 dark:bg-white mt-2">Retry</Button>
             </div>
         );
     }

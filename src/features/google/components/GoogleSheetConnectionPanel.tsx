@@ -1,145 +1,165 @@
-import { RefreshCw } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
-import { Label } from "@/shared/components/ui/label";
-import { Input } from "@/shared/components/ui/input";
-import { Spinner } from "@/shared/components/ui/spinner";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
+import { RefreshCw } from "lucide-react"
+import { Button } from "@/shared/components/ui/button"
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog"
+import { Label } from "@/shared/components/ui/label"
+import { Input } from "@/shared/components/ui/input"
+import { Spinner } from "@/shared/components/ui/spinner"
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select"
+import { toast } from "sonner"
+import { useGoogleService } from "@/features/google/hooks/useGoogleService"
+import { googleauthstore } from "../store/store"
+import { googleauth } from "../api/api"
+import { useMemo } from "react"
 
-interface GoogleSheetConnectionPanelProps {
-    opensheet: boolean;
-    setopensheet: (open: boolean) => void;
-    sheetinput: string;
-    setsheetinput: (input: string) => void;
-    loadingsheet: boolean;
-    addsheetsheeturl: () => void;
-    openservice: boolean;
-    setopenservice: (open: boolean) => void;
-    useremail: string;
-    setuseremail: (email: string) => void;
-    key: string;
-    setkey: (key: string) => void;
-    loading: boolean;
-    addservice: () => void;
-    serviceemail: string;
-    sheet: Array<{ id: string; url: string; name: string }>;
-    sheeturl: string;
-    setsheeturl: (url: string) => void;
-    provider: string;
-    loadingfetch: boolean;
-    selectedsheetTitle: string;
-    sessionmessage: Array<unknown>;
-    loadingsheetdelete: boolean;
-    sheetmsgdelete: () => void;
-    type: string | null;
-}
+export const GoogleSheetConnectionPanel = () => {
+    const { data: googleService } = useGoogleService()
+    const store = googleauthstore()
 
-export const GoogleSheetConnectionPanel = ({
-    opensheet,
-    setopensheet,
-    sheetinput,
-    setsheetinput,
-    loadingsheet,
-    addsheetsheeturl,
-    openservice,
-    setopenservice,
-    useremail,
-    setuseremail,
-    key,
-    setkey,
-    loading,
-    addservice,
-    serviceemail,
-    sheet,
-    sheeturl,
-    setsheeturl,
-    provider,
-    loadingfetch,
-    selectedsheetTitle,
-    sessionmessage,
-    loadingsheetdelete,
-    sheetmsgdelete,
-    type,
-}: GoogleSheetConnectionPanelProps) => {
+    const serviceemail = (googleService as any)?.email ?? ""
+    const sheet = (googleService as any)?.googlesheet ?? []
+
+    const selectedsheetTitle = useMemo(() => {
+        return sheet.find((g: any) => g.url === store.sheeturl)?.name || ""
+    }, [store.sheeturl, sheet])
+
+    const addsheetsheeturl = async () => {
+        try {
+            const response = await googleauth.addgooglesheeturl(store.sheetinput)
+            if (response.success) {
+                toast.success(response.message)
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any
+                toast.error(Error.response?.data?.message || err.message)
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            store.setOpensheet(false)
+            store.setsheetinput("")
+        }
+    }
+
+    const addservice = async () => {
+        try {
+            const response = await googleauth.addservice(store.useremail_sheet, store.key_sheet)
+            if (response.success) {
+                toast.success(response.message)
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any
+                toast.error(Error.response?.data?.message || err.message)
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            store.setOpenservice(false)
+            store.setuseremail_sheet("")
+            store.setsheetinput("")
+            store.setkey_sheet("")
+        }
+    }
+
+    const sheetmsgdelete = async () => {
+        try {
+            const response = await googleauth.deletesheetmsg()
+            if (response.success) {
+                toast.success(response.message)
+                store.setsessionmessage_sheet([])
+                store.setNextCursor_sheet(null)
+                store.setHasMore_sheet(false)
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any
+                toast.error(Error.response?.data?.message || err.message)
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        }
+    }
+
     return (
         <>
-            <Dialog open={opensheet} onOpenChange={setopensheet} modal={false}>
+            <Dialog open={store.opensheet} onOpenChange={store.setOpensheet} modal={false}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="text-2xl">Add GoogleSheetUrl</DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col gap-2">
                         <Label htmlFor="sheet">sheeturl</Label>
-                        <Input id="sheet" placeholder="Enter GoogleSheetUrl" value={sheetinput} onChange={(e) => setsheetinput(e.target.value)} />
+                        <Input id="sheet" placeholder="Enter GoogleSheetUrl" value={store.sheetinput} onChange={(e) => store.setsheetinput(e.target.value)} />
                     </div>
                     <DialogFooter>
                         <Button onClick={addsheetsheeturl}
-                            disabled={loadingsheet}
+                            disabled={store.loadingfetch_sheet}
                             className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
-                        > {loadingsheet ? <Spinner /> : "Add"}
+                        > {store.loadingfetch_sheet ? <Spinner /> : "Add"}
                         </Button>
-                        <Button variant="destructive" onClick={() => setopensheet(false)}
+                        <Button variant="destructive" onClick={() => store.setOpensheet(false)}
                         > Cancel
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-            <Dialog open={openservice} onOpenChange={setopenservice} modal={false}>
+            <Dialog open={store.openservice} onOpenChange={store.setOpenservice} modal={false}>
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="text-2xl">Add Service Account</DialogTitle>
                     </DialogHeader>
                     <div className="flex flex-col gap-2">
                         <Label htmlFor="email">Service Email</Label>
-                        <Input id="email" placeholder="Enter Service Email" value={useremail} onChange={(e) => setuseremail(e.target.value)} />
+                        <Input id="email" placeholder="Enter Service Email" value={store.useremail_sheet} onChange={(e) => store.setuseremail_sheet(e.target.value)} />
                     </div>
                     <div className="flex flex-col gap-2">
                         <Label htmlFor="key">Service Key</Label>
-                        <Input id="key" type="password" placeholder="Enter Service Key" value={key} onChange={(e) => setkey(e.target.value)} />
+                        <Input id="key" type="password" placeholder="Enter Service Key" value={store.key_sheet} onChange={(e) => store.setkey_sheet(e.target.value)} />
                     </div>
                     <DialogFooter>
                         <Button onClick={addservice}
-                            disabled={loading}
+                            disabled={store.loadingfetch_sheet}
                             className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
-                        > {loading ? <Spinner /> : "Create"}
+                        > {store.loadingfetch_sheet ? <Spinner /> : "Create"}
                         </Button>
-                        <Button variant="destructive" onClick={() => setopenservice(false)}
+                        <Button variant="destructive" onClick={() => store.setOpenservice(false)}
                         > Cancel
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
             <div className="flex w-full gap-2 justify-between mx-auto max-w-5xl mb-3 mt-3">
-                <Button onClick={sheetmsgdelete} disabled={sessionmessage.length === 0 || loadingsheetdelete} className="bg-cyan-500 dark:bg-white">{loadingsheetdelete ? <Spinner /> : <><RefreshCw />Reset Chat</>}</Button>
+                <Button onClick={sheetmsgdelete} disabled={store.sessionmessage_sheet.length === 0 || store.loadingfetch_sheet} className="bg-cyan-500 dark:bg-white">{store.loadingfetch_sheet ? <Spinner /> : <><RefreshCw />Reset Chat</>}</Button>
                 <div className="flex gap-2 items-center">
                     {serviceemail && (
                         <>
                             {sheet.length > 0 ? (
                                 <Select
-                                    key={`${provider}-${type}`}
-                                    onValueChange={(val) => setsheeturl(val ?? "")}
-                                    value={sheeturl}
-                                    disabled={!provider || loadingfetch}
+                                    key={`${store.provider}-${store.type_sheet}`}
+                                    onValueChange={(val) => store.setsheeturl(val ?? "")}
+                                    value={store.sheeturl}
+                                    disabled={!store.provider || store.loadingfetch_sheet}
                                 >
                                     <SelectTrigger>
                                         <span className="truncate">
-                                            {sheeturl ? selectedsheetTitle : "Select sheeturl"}
+                                            {store.sheeturl ? selectedsheetTitle : "Select sheeturl"}
                                         </span>
                                     </SelectTrigger>
                                     <SelectContent className="p-1 w-60">
-                                        {sheet.map((m) => (
+                                        {sheet.map((m: any) => (
                                             <SelectItem key={m.id} value={m.url}>
                                                 {m.name}
                                             </SelectItem>
                                         ))}
-                                        <SelectItem onClick={() => setopensheet(true)}>
+                                        <SelectItem onClick={() => store.setOpensheet(true)}>
                                             Add Sheeturl
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
                             ) : (
                                 <Button
-                                    onClick={() => setopensheet(true)}
+                                    onClick={() => store.setOpensheet(true)}
                                     className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
                                 >
                                     Add Sheeturl
@@ -150,5 +170,5 @@ export const GoogleSheetConnectionPanel = ({
                 </div>
             </div>
         </>
-    );
-};
+    )
+}

@@ -1,41 +1,31 @@
-import React from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Skeleton } from "@/shared/components/ui/skeleton";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-} from "@/shared/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
 import { BRAND_ASSETS } from "@/shared/config/providermodels";
-import type { NavigateFunction } from "react-router-dom";
-import type { Servicefetch } from "@/features/services/types";
+import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
+import { useSlackAccount } from "../hooks/useSlackAccount";
+import { slackauthstore } from "../store/store";
+import { useNavigate } from "react-router-dom";
 
-interface SlackChatHeaderProps {
-    loadingslack: boolean;
-    workspace: string;
-    Api: Servicefetch[];
-    provider: string;
-    setProvider: (value: string) => void;
-    apiWithLogos: (Servicefetch & { imageUrl: string })[];
-    navigate: NavigateFunction;
-}
+export const SlackChatHeader = () => {
+    const { provider, setProvider } = slackauthstore();
+    const { data: Api = [] } = useServiceKeys();
+    const { data: slackAccount, isLoading: loadingslack } = useSlackAccount();
+    const navigate = useNavigate();
 
-export const SlackChatHeader: React.FC<SlackChatHeaderProps> = ({
-    loadingslack,
-    workspace,
-    Api,
-    provider,
-    setProvider,
-    apiWithLogos,
-    navigate,
-}) => {
+    const workspace = (slackAccount as any)?.workspace ?? "";
+
+    const apiWithLogos = Api.map((item: any) => ({
+        ...item,
+        imageUrl: BRAND_ASSETS[item.provider.toLowerCase()] || "",
+    }));
+
     return (
-        <div className="mx-auto w-full max-w-5xl flex justify-between gap-1">
+        <div className="mx-auto w-full max-w-5xl flex justify-between gap-1 pt-4">
             <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-bold flex items-center gap-3">
-                    <img src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg" className="w-7 h-7" />
+                    <img src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg" className="w-7 h-7" alt="" />
                     SlackAgent
                 </h1>
                 <p className="text-muted-foreground">You can edit and send message with your slack agent.</p>
@@ -49,7 +39,7 @@ export const SlackChatHeader: React.FC<SlackChatHeaderProps> = ({
                 ) : (
                     workspace && (
                         <span className="text-[13px] flex items-center gap-2 px-2 py-1 rounded-full border bg-card">
-                            <img src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg" className="w-4 h-4" />
+                            <img src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg" className="w-4 h-4" alt="" />
                             {workspace.substring(0, 10) + "..."}
                         </span>
                     )
@@ -63,6 +53,7 @@ export const SlackChatHeader: React.FC<SlackChatHeaderProps> = ({
                                         <img
                                             src={BRAND_ASSETS[provider.toLowerCase()]}
                                             className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
+                                            alt=""
                                         />
                                         <span>{provider.charAt(0).toUpperCase() + provider.slice(1)}</span>
                                     </>
@@ -71,11 +62,12 @@ export const SlackChatHeader: React.FC<SlackChatHeaderProps> = ({
                                 )}
                             </SelectTrigger>
                             <SelectContent>
-                                {apiWithLogos.map((item) => (
+                                {apiWithLogos.map((item: any) => (
                                     <SelectItem key={item.provider} value={item.provider}>
                                         <img
                                             src={item.imageUrl}
                                             className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
+                                            alt=""
                                         />
                                         <span>{item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}</span>
                                     </SelectItem>

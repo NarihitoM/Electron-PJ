@@ -1,62 +1,125 @@
-import { CheckCircle2, ChevronDown, Terminal, Cpu, Dot, Bot, Copy, Check, AlertTriangle, Loader2, XCircle } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { Skeleton } from "@/shared/components/ui/skeleton";
-import { Spinner } from "@/shared/components/ui/spinner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/components/ui/collapsible";
-import { motion } from "framer-motion";
-import { BRAND_ASSETS } from "@/shared/config/providermodels";
-import AiContent from "@/shared/components/layout/LayoutAiresponse";
-import { extractToolMessage } from "@/shared/utils/toolutils";
-import { Googlesheettool } from "@/shared/config/toolsselection";
-import type { chatsession } from "@/shared/types/globaltype";
-import type { User } from "@/features/auth/types";
+import { useEffect, useRef } from "react"
+import { CheckCircle2, ChevronDown, Terminal, Cpu, Dot, Bot, Copy, Check, AlertTriangle, Loader2, XCircle } from "lucide-react"
+import { Button } from "@/shared/components/ui/button"
+import { Skeleton } from "@/shared/components/ui/skeleton"
+import { Spinner } from "@/shared/components/ui/spinner"
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/components/ui/collapsible"
+import { motion } from "framer-motion"
+import { BRAND_ASSETS } from "@/shared/config/providermodels"
+import AiContent from "@/shared/components/layout/LayoutAiresponse"
+import { extractToolMessage } from "@/shared/utils/toolutils"
+import { Googlesheettool } from "@/shared/config/toolsselection"
+import { useUser } from "@/features/auth/hooks/useUser"
+import { useGoogleService } from "@/features/google/hooks/useGoogleService"
+import { googleauthstore } from "../store/store"
+import { googleauth } from "../api/api"
+import { toast } from "sonner"
 
-interface GoogleSheetMessageListProps {
-    loadingfetch: boolean;
-    loadingerror: boolean;
-    sessionmessage: chatsession[];
-    sending: boolean;
-    userdata: User | null | undefined;
-    uploadingImageUrls: Set<string>;
-    messagesEndRef: React.RefObject<HTMLDivElement>;
-    topSentinelRef: React.RefObject<HTMLDivElement>;
-    scrollContainerRef: React.RefObject<HTMLDivElement>;
-    loadingMore: boolean;
-    copiedIndex: number | null;
-    setCopiedIndex: (index: number | null) => void;
-    setLightboxImages: (images: string[]) => void;
-    setLightboxIndex: (index: number) => void;
-    setLightboxOpen: (open: boolean) => void;
-    setopenservice: (open: boolean) => void;
-    serviceemail: string;
-    fetchMessages: () => void;
-}
+export const GoogleSheetMessageList = () => {
+    const { data: userdata } = useUser()
+    const { data: googleService } = useGoogleService()
+    const store = googleauthstore()
 
-export const GoogleSheetMessageList = ({
-    loadingfetch,
-    loadingerror,
-    sessionmessage,
-    sending,
-    userdata,
-    uploadingImageUrls,
-    messagesEndRef,
-    topSentinelRef,
-    scrollContainerRef,
-    loadingMore,
-    copiedIndex,
-    setCopiedIndex,
-    setLightboxImages,
-    setLightboxIndex,
-    setLightboxOpen,
-    setopenservice,
-    serviceemail,
-    fetchMessages,
-}: GoogleSheetMessageListProps) => {
+    const serviceemail = (googleService as any)?.email ?? ""
+
+    const messagesEndRef = useRef<HTMLDivElement | null>(null)
+    const topSentinelRef = useRef<HTMLDivElement | null>(null)
+    const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+    const prevMessageCountRef = useRef(store.sessionmessage_sheet.length)
+
+    useEffect(() => {
+        if (store.sessionmessage_sheet.length > prevMessageCountRef.current) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "auto" })
+        }
+        prevMessageCountRef.current = store.sessionmessage_sheet.length
+    }, [store.sessionmessage_sheet])
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" })
+    }, [store.sending_sheet])
+
+    const loadMore = async () => {
+        if (!store.nextCursor_sheet || !store.hasMore_sheet || store.loadingMore_sheet) return
+        store.setLoadingMore_sheet(true)
+        try {
+            const container = scrollContainerRef.current
+            const prevScrollHeight = container?.scrollHeight ?? 0
+
+            const response = await googleauth.fetchsheetmessage(store.nextCursor_sheet)
+            if (response.success && response.data) {
+                const data = response.data
+                store.updateSessionMessages_sheet(prev => [...(data.messages ?? []), ...prev])
+                store.setNextCursor_sheet(data.nextCursor)
+                store.setHasMore_sheet(data.hasMore)
+
+                requestAnimationFrame(() => {
+                    if (container) {
+                        container.scrollTop = container.scrollHeight - prevScrollHeight
+                    }
+                })
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any
+                toast.error(Error.response?.data?.message || err.message)
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            store.setLoadingMore_sheet(false)
+        }
+    }
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && store.hasMore_sheet && !store.loadingMore_sheet) {
+                loadMore()
+            }
+        }, { threshold: 0.1 })
+
+        const el = topSentinelRef.current
+        if (el) observer.observe(el)
+
+        return () => observer.disconnect()
+    }, [store.hasMore_sheet, store.loadingMore_sheet])
+
+    const fetchMessages = async () => {
+        try {
+            store.setloadingfetch_sheet(true)
+            store.setloadingerror_sheet(false)
+            store.setSending_sheet(false)
+
+            store.setsessionmessage_sheet([])
+            store.setNextCursor_sheet(null)
+            store.setHasMore_sheet(false)
+            const response = await googleauth.fetchsheetmessage()
+            if (response.success && response.data) {
+                store.setsessionmessage_sheet(response.data.messages ?? [])
+                store.setNextCursor_sheet(response.data.nextCursor)
+                store.setHasMore_sheet(response.data.hasMore)
+            }
+        } catch (err: unknown) {
+            store.setloadingerror_sheet(true)
+            if (err instanceof Error) {
+                const Error = err as any
+                toast.error(Error.response?.data?.message || err.message)
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            store.setloadingfetch_sheet(false)
+        }
+    }
+
+    useEffect(() => {
+        fetchMessages()
+    }, [])
+
     return (
         <div ref={scrollContainerRef} className="flex-1 overflow-y-auto mt-4" style={{ scrollbarWidth: "none" }}>
             <div className="mx-auto max-w-5xl py-5">
-                {(loadingfetch) ? (
+                {(store.loadingfetch_sheet) ? (
                     <div className="mx-auto max-w-5xl py-5 space-y-8 animate-pulse">
                         {[1, 2, 3].map((i) => (
                             <div key={i} className="flex flex-col gap-8">
@@ -82,7 +145,7 @@ export const GoogleSheetMessageList = ({
                             </div>
                         ))}
                     </div>
-                ) : loadingerror ? (
+                ) : store.loadingerror_sheet ? (
                     <div className="min-h-[50vh] flex flex-col gap-3 justify-center items-center">
                         <AlertTriangle className="w-10 h-10 text-red-500" />
                         <h1 className="text-2xl font-semibold">Failed To Load</h1>
@@ -90,17 +153,17 @@ export const GoogleSheetMessageList = ({
                         <Button onClick={fetchMessages} className="bg-cyan-500 dark:bg-white">Retry</Button>
                     </div>
                 ) :
-                    (sessionmessage && sessionmessage.length > 0 ?
+                    (store.sessionmessage_sheet && store.sessionmessage_sheet.length > 0 ?
                         (<><div ref={topSentinelRef} />
-                            {loadingMore && <div className="flex justify-center py-4"><div className="flex items-center gap-2 text-sm text-muted-foreground"><Spinner className="h-5 w-5 text-cyan-500 dark:text-white" />Loading...</div></div>}
-                            {sessionmessage.map((msg, index) => {
-                                const isUser = msg.role === "user";
-                                const isLastMessage = index === sessionmessage.length - 1;
-                                const username = userdata?.username;
+                            {store.loadingMore_sheet && <div className="flex justify-center py-4"><div className="flex items-center gap-2 text-sm text-muted-foreground"><Spinner className="h-5 w-5 text-cyan-500 dark:text-white" />Loading...</div></div>}
+                            {store.sessionmessage_sheet.map((msg, index) => {
+                                const isUser = msg.role === "user"
+                                const isLastMessage = index === store.sessionmessage_sheet.length - 1
+                                const username = userdata?.username
                                 return (
                                     <div
-                                        className={`group mb-8 flex w-full gap-4 ${isUser ? "flex-row-reverse" : "flex-row"
-                                            }`}
+                                        key={`${index}-msg`}
+                                        className={`group mb-8 flex w-full gap-4 ${isUser ? "flex-row-reverse" : "flex-row"}`}
                                     >
                                         <div className="flex h-8 w-8 items-center justify-center rounded-full mt-1">
                                             {isUser ? (
@@ -119,7 +182,7 @@ export const GoogleSheetMessageList = ({
                                                 </Avatar>
                                             ) : (
                                                 <div className="relative flex items-center justify-center">
-                                                    {sending && isLastMessage && !msg.content && (!msg.toolsCall || msg.toolsCall.length === 0 || msg.toolsCall.some((t: any) => t.status === "loading")) ? (
+                                                    {store.sending_sheet && isLastMessage && !msg.content && (!msg.toolsCall || msg.toolsCall.length === 0 || msg.toolsCall.some((t: any) => t.status === "loading")) ? (
                                                         <Dot className="h-15 w-15 text-cyan-500 dark:text-white relative animate-pulse" />
                                                     ) : msg.provider && BRAND_ASSETS[msg.provider] ? (
                                                         <img src={BRAND_ASSETS[msg.provider]} className="w-7 h-7 rounded bg-white dark:bg-card" />
@@ -130,8 +193,7 @@ export const GoogleSheetMessageList = ({
                                             )}
                                         </div>
                                         <div
-                                            className={`flex flex-col gap-1 max-w-[80%] min-w-0 ${isUser ? "items-end text-left" : "items-start text-left"
-                                                }`}
+                                            className={`flex flex-col gap-1 max-w-[80%] min-w-0 ${isUser ? "items-end text-left" : "items-start text-left"}`}
                                         >
                                             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">
                                                 {isUser ? username : ""}
@@ -147,13 +209,13 @@ export const GoogleSheetMessageList = ({
                                                             key={i}
                                                             className="relative w-20 h-20 rounded-lg border border-zinc-200 dark:border-zinc-700 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
                                                             onClick={() => {
-                                                                setLightboxImages(msg.images!);
-                                                                setLightboxIndex(i);
-                                                                setLightboxOpen(true);
+                                                                store.setLightboxImages_sheet(msg.images!)
+                                                                store.setLightboxIndex_sheet(i)
+                                                                store.setLightboxOpen_sheet(true)
                                                             }}
                                                         >
                                                             <img src={url} alt="attached" className="w-full h-full object-cover" />
-                                                            {uploadingImageUrls.has(url) && (
+                                                            {store.uploadingImageUrls_sheet.has(url) && (
                                                                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                                                                     <Loader2 size={20} className="text-white animate-spin" />
                                                                 </div>
@@ -170,9 +232,9 @@ export const GoogleSheetMessageList = ({
                                                             key={i}
                                                             className="relative rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity max-w-[300px]"
                                                             onClick={() => {
-                                                                setLightboxImages(msg.generatedImages!);
-                                                                setLightboxIndex(i);
-                                                                setLightboxOpen(true);
+                                                                store.setLightboxImages_sheet(msg.generatedImages!)
+                                                                store.setLightboxIndex_sheet(i)
+                                                                store.setLightboxOpen_sheet(true)
                                                             }}
                                                         >
                                                             <img src={url} alt="generated" className="w-full h-auto object-cover" />
@@ -193,7 +255,7 @@ export const GoogleSheetMessageList = ({
                                                     transition={{ duration: 0.4 }}
                                                     className="wrap-break-word p-1 w-full"
                                                 >
-                                                    {msg.toolsCall?.filter(t => !t.isChain).map((tool) => (
+                                                    {msg.toolsCall?.filter((t: any) => !t.isChain).map((tool: any) => (
                                                         <Collapsible key={tool.id} className="w-full space-y-2">
                                                             <CollapsibleTrigger asChild>
                                                                 <Button variant="ghost" className={`group flex items-center gap-2 px-3 py-1 rounded-full  text-[10px] font-bold transition-all active:scale-95 ${tool.status === "done"
@@ -268,14 +330,14 @@ export const GoogleSheetMessageList = ({
                                                 <AiContent content={msg.content} />
                                             </div>
                                             {msg.content && (
-                                                <button onClick={() => { navigator.clipboard.writeText(msg.content); setCopiedIndex(index); setTimeout(() => setCopiedIndex(null), 1500); }}
-                                                    className={`${copiedIndex === index ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity p-1 rounded self-end -mt-1`}>
-                                                    {copiedIndex === index ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
+                                                <button onClick={() => { navigator.clipboard.writeText(msg.content); store.setCopiedIndex_sheet(index); setTimeout(() => store.setCopiedIndex_sheet(null), 1500) }}
+                                                    className={`${store.copiedIndex_sheet === index ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity p-1 rounded self-end -mt-1`}>
+                                                    {store.copiedIndex_sheet === index ? <Check className="h-3.5 w-3.5 text-green-500" /> : <Copy className="h-3.5 w-3.5 text-muted-foreground" />}
                                                 </button>
                                             )}
                                         </div>
                                     </div>
-                                );
+                                )
                             })}
                         </>)
                         : (
@@ -283,12 +345,12 @@ export const GoogleSheetMessageList = ({
                                 <h1 className="text-3xl">GoogleSheet Agenting</h1>
                                 <p className="text-sm text-muted-foreground">Send Message And Agent Will Handle Everything.</p>
                                 <div className="flex gap-2">
-                                    {!serviceemail && <Button className="bg-cyan-500 dark:bg-white" onClick={() => setopenservice(true)}>Add Service</Button>}
+                                    {!serviceemail && <Button className="bg-cyan-500 dark:bg-white" onClick={() => store.setOpenservice(true)}>Add Service</Button>}
                                 </div>
                             </div>
                         ))}
                 <div ref={messagesEndRef} />
             </div>
         </div>
-    );
-};
+    )
+}

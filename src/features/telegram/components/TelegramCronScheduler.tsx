@@ -1,17 +1,17 @@
-import { useMemo } from "react";
-import { Plus, ChevronsUpDown } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { Textarea } from "@/shared/components/ui/textarea";
-import { Label } from "@/shared/components/ui/label";
-import { Input } from "@/shared/components/ui/input";
-import { Spinner } from "@/shared/components/ui/spinner";
-import { Switch } from "@/shared/components/ui/switch";
+import { useEffect, useMemo, useState } from "react"
+import { Plus, ChevronsUpDown } from "lucide-react"
+import { Button } from "@/shared/components/ui/button"
+import { Textarea } from "@/shared/components/ui/textarea"
+import { Label } from "@/shared/components/ui/label"
+import { Input } from "@/shared/components/ui/input"
+import { Spinner } from "@/shared/components/ui/spinner"
+import { Switch } from "@/shared/components/ui/switch"
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-} from "@/shared/components/ui/select";
+} from "@/shared/components/ui/select"
 import {
     Command,
     CommandEmpty,
@@ -19,80 +19,160 @@ import {
     CommandInput,
     CommandItem,
     CommandList,
-} from "@/shared/components/ui/command";
+} from "@/shared/components/ui/command"
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/shared/components/ui/popover";
-import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogFooter, DialogDescription } from "@/shared/components/ui/dialog";
-import { useNavigate } from "react-router-dom";
-import { BRAND_ASSETS, getProviderImage } from "@/shared/config/providermodels";
-import type { ModelEntry } from "@/shared/lib/modelsapi";
-import type { telegramcrondata, TelegramChatEntity, TelegramContactEntity } from "@/features/telegram/types";
-import type { Servicefetch } from "@/features/services/types";
+} from "@/shared/components/ui/popover"
+import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogFooter, DialogDescription } from "@/shared/components/ui/dialog"
+import { useNavigate } from "react-router-dom"
+import { toast } from "sonner"
+import { BRAND_ASSETS, getProviderImage, getProviderModels } from "@/shared/config/providermodels"
+import { useServiceKeys } from "@/features/services/hooks/useServiceKeys"
+import { useTelegramAccount } from "@/features/telegram/hooks/useTelegramAccount"
+import { telegramauth } from "@/features/telegram/api/api"
+import { telegramauthstore } from "@/features/telegram/store/store"
+import type { ModelEntry } from "@/shared/lib/modelsapi"
 
-const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 const getDaysInMonth = (monthIndex: number): number => {
-    return new Date(new Date().getFullYear(), monthIndex + 1, 0).getDate();
-};
-
-interface TelegramCronSchedulerProps {
-    open: boolean;
-    onOpenChange: (val: boolean) => void;
-    telegramcron: telegramcrondata;
-    settelegramcron: React.Dispatch<React.SetStateAction<telegramcrondata>>;
-    loadingcroncreate: boolean;
-    cronsubmint: () => void;
-    apiWithLogos: (Servicefetch & { imageUrl: string })[];
-    cronModelList: ModelEntry[];
-    setModelOpen: (val: boolean) => void;
-    modelOpen: boolean;
-    customDayOfWeek: number[];
-    customDayOfMonth: number[];
-    customMonth: number[];
-    toggleCustomDayOfWeek: (day: number) => void;
-    toggleCustomDayOfMonth: (day: number) => void;
-    toggleCustomMonth: (month: number) => void;
-    handlecronchange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-    telegramuserdata: boolean;
-    groups: TelegramChatEntity[];
-    contacts: TelegramContactEntity[];
+    return new Date(new Date().getFullYear(), monthIndex + 1, 0).getDate()
 }
 
-export const TelegramCronScheduler = ({
-    open,
-    onOpenChange,
-    telegramcron,
-    settelegramcron,
-    loadingcroncreate,
-    cronsubmint,
-    apiWithLogos,
-    cronModelList,
-    setModelOpen,
-    modelOpen,
-    customDayOfWeek,
-    customDayOfMonth,
-    customMonth,
-    toggleCustomDayOfWeek,
-    toggleCustomDayOfMonth,
-    toggleCustomMonth,
-    handlecronchange,
-    telegramuserdata,
-    groups,
-    contacts,
-}: TelegramCronSchedulerProps) => {
-    const navigate = useNavigate();
+const initialTelegramCron = {
+    isActive: false,
+    channel: "",
+    chatId: "",
+    model: "",
+    provider: "",
+    message: "",
+    crontype: "",
+    triggerAt: "",
+    timezone: "",
+    customSchedule: ""
+}
+
+export const TelegramCronScheduler = () => {
+    const { data: Api = [] } = useServiceKeys()
+    const { data: accountData } = useTelegramAccount()
+    const store = telegramauthstore()
+    const navigate = useNavigate()
+
+    const [modelOpen, setModelOpen] = useState(false)
+    const [cronModelList, setCronModelList] = useState<ModelEntry[]>([])
+
+    const connected = !!accountData
+    const groups = accountData?.groups ?? []
+    const contacts = accountData?.contacts ?? []
+
+    const apiWithLogos = Api.map((provider) => ({
+        ...provider,
+        imageUrl: BRAND_ASSETS[provider.provider.toLowerCase()]
+    }))
+
+    useEffect(() => {
+        const fetchCron = async () => {
+            try {
+                const response = await telegramauth.telegramcronget()
+                if (response.success && response.data) {
+                    store.setTelegramcron(response.data)
+                } else {
+                    store.setTelegramcron({ ...initialTelegramCron })
+                }
+            } catch {
+                store.setTelegramcron({ ...initialTelegramCron })
+            }
+        }
+        fetchCron()
+    }, [])
+
+    useEffect(() => {
+        if (store.telegramcron.customSchedule) {
+            try {
+                const schedule = JSON.parse(store.telegramcron.customSchedule)
+                store.setCustomDayOfWeek(schedule.dayOfWeek || [])
+                store.setCustomDayOfMonth(schedule.dayOfMonth || [])
+                store.setCustomMonth(schedule.month || [])
+            } catch {
+                store.setCustomDayOfWeek([])
+                store.setCustomDayOfMonth([])
+                store.setCustomMonth([])
+            }
+        }
+    }, [store.telegramcron.customSchedule])
+
+    useEffect(() => {
+        if (!store.telegramcron.provider) { setCronModelList([]); return }
+        getProviderModels(store.telegramcron.provider).then(models => {
+            setCronModelList(models)
+        })
+    }, [store.telegramcron.provider])
+
+    const handlecronchange = (
+        e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    ) => {
+        const { name, value } = e.target
+        store.setTelegramcron({ ...store.telegramcron, [name]: value })
+    }
+
+    const toggleCustomDayOfWeek = (day: number) => {
+        const prev = store.customDayOfWeek
+        store.setCustomDayOfWeek(prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])
+    }
+
+    const toggleCustomDayOfMonth = (day: number) => {
+        const prev = store.customDayOfMonth
+        store.setCustomDayOfMonth(prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day])
+    }
+
+    const toggleCustomMonth = (month: number) => {
+        const prev = store.customMonth
+        const next = prev.includes(month) ? prev.filter(m => m !== month) : [...prev, month]
+        store.setCustomMonth(next)
+        if (next.length > 0) {
+            const maxDays = Math.min(...next.map(m => getDaysInMonth(m)))
+            store.setCustomDayOfMonth(store.customDayOfMonth.filter(d => d <= maxDays))
+        }
+    }
+
+    const cronsubmint = async () => {
+        try {
+            store.setLoadingcroncreate(true)
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+            const payload = {
+                ...store.telegramcron,
+                timezone: userTimezone,
+                customSchedule: store.telegramcron.crontype === "custom"
+                    ? JSON.stringify({ dayOfWeek: store.customDayOfWeek, dayOfMonth: store.customDayOfMonth, month: store.customMonth })
+                    : ""
+            }
+            const response = await telegramauth.telegramcroncreate(payload)
+            if (response.success) {
+                toast.success(response.message)
+                store.setOpencron(false)
+            }
+        } catch (err) {
+            if (err instanceof Error) {
+                const Error = err as any
+                toast.error(Error.response?.data?.message || err.message)
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            store.setLoadingcroncreate(false)
+        }
+    }
 
     const maxDayOfMonth = useMemo(() => {
-        if (customMonth.length === 0) return 31;
-        return Math.min(...customMonth.map(m => getDaysInMonth(m)));
-    }, [customMonth]);
+        if (store.customMonth.length === 0) return 31
+        return Math.min(...store.customMonth.map(m => getDaysInMonth(m)))
+    }, [store.customMonth])
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
+        <Dialog open={store.opencron} onOpenChange={store.setOpencron} modal={false}>
             <DialogContent className="max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Create Telegram Cron Task</DialogTitle>
@@ -104,26 +184,26 @@ export const TelegramCronScheduler = ({
                 <div className="space-y-4 pt-2">
                     <div className="space-y-1">
                         <Label>Channel</Label>
-                        {telegramuserdata && (
+                        {connected && (
                             <div className="flex gap-5">
                                 {(groups.length > 0 || contacts.length > 0) && (
-                                    <Select value={telegramcron.channel} disabled={!telegramcron.provider || !telegramcron.isActive} onValueChange={(val) => {
-                                        settelegramcron((prev) => ({ ...prev, chatId: "" }));
-                                        settelegramcron((prev) => ({ ...prev, channel: val ?? "" }));
+                                    <Select value={store.telegramcron.channel} disabled={!store.telegramcron.provider || !store.telegramcron.isActive} onValueChange={(val) => {
+                                        store.setTelegramcron({ ...store.telegramcron, chatId: "", channel: val ?? "" })
                                     }}>
                                         <SelectTrigger>
-                                            <span className="truncate">{telegramcron.channel ? telegramcron.channel : "Select"}</span>
+                                            <span className="truncate">{store.telegramcron.channel ? store.telegramcron.channel : "Select"}</span>
                                         </SelectTrigger>
                                         <SelectContent className="p-1 w-60 max-h-68 overflow-y-auto">
                                             <SelectItem value="group">Group</SelectItem>
                                             <SelectItem value="contact">Contact</SelectItem>
                                         </SelectContent>
-                                    </Select>)}
+                                    </Select>
+                                )}
 
-                                {telegramcron.channel === "group" && groups.length > 0 && (
-                                    <Select disabled={!telegramcron.provider || !telegramcron.isActive} value={telegramcron.chatId || undefined} onValueChange={(val) => settelegramcron((prev) => ({ ...prev, chatId: val ?? "" }))}>
+                                {store.telegramcron.channel === "group" && groups.length > 0 && (
+                                    <Select disabled={!store.telegramcron.provider || !store.telegramcron.isActive} value={store.telegramcron.chatId || undefined} onValueChange={(val) => store.setTelegramcron({ ...store.telegramcron, chatId: val ?? "" })}>
                                         <SelectTrigger>
-                                            <span className="truncate">{telegramcron.chatId ? groups.find(g => g.id === telegramcron.chatId)?.title?.substring(0, 15) + "..." : "Select Group"}</span>
+                                            <span className="truncate">{store.telegramcron.chatId ? groups.find(g => g.id === store.telegramcron.chatId)?.title?.substring(0, 15) + "..." : "Select Group"}</span>
                                         </SelectTrigger>
                                         <SelectContent className="p-1 w-60 max-h-68 overflow-y-auto">
                                             {groups.map((g) => (
@@ -133,10 +213,10 @@ export const TelegramCronScheduler = ({
                                     </Select>
                                 )}
 
-                                {telegramcron.channel === "contact" && contacts.length > 0 && (
-                                    <Select disabled={!telegramcron.provider || !telegramcron.isActive} value={telegramcron.chatId || undefined} onValueChange={(val) => settelegramcron((prev) => ({ ...prev, chatId: val ?? "" }))}>
+                                {store.telegramcron.channel === "contact" && contacts.length > 0 && (
+                                    <Select disabled={!store.telegramcron.provider || !store.telegramcron.isActive} value={store.telegramcron.chatId || undefined} onValueChange={(val) => store.setTelegramcron({ ...store.telegramcron, chatId: val ?? "" })}>
                                         <SelectTrigger>
-                                            <span className="truncate">{telegramcron.chatId ? contacts.find(c => c.id === telegramcron.chatId)?.name?.substring(0, 15) + "..." : "Select Contact"}</span>
+                                            <span className="truncate">{store.telegramcron.chatId ? contacts.find(c => c.id === store.telegramcron.chatId)?.name?.substring(0, 15) + "..." : "Select Contact"}</span>
                                         </SelectTrigger>
                                         <SelectContent className="p-1 w-60 max-h-68 overflow-y-auto">
                                             {contacts.map((c) => (
@@ -145,7 +225,8 @@ export const TelegramCronScheduler = ({
                                         </SelectContent>
                                     </Select>
                                 )}
-                            </div>)}
+                            </div>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -154,21 +235,21 @@ export const TelegramCronScheduler = ({
                             {apiWithLogos.length > 0 ? (
                                 <div className="flex gap-2">
                                     <Select
-                                        value={telegramcron.provider || undefined}
-                                        disabled={!telegramcron.isActive}
+                                        value={store.telegramcron.provider || undefined}
+                                        disabled={!store.telegramcron.isActive}
                                         onValueChange={(value) => {
-                                            settelegramcron((prev) => ({ ...prev, provider: value ?? "" }));
+                                            store.setTelegramcron({ ...store.telegramcron, provider: value ?? "" })
                                         }}
                                     >
                                         <SelectTrigger className="w-full flex items-center gap-2">
-                                            {telegramcron.provider ? (
+                                            {store.telegramcron.provider ? (
                                                 <div className="flex items-center gap-2">
                                                     <img
-                                                        src={BRAND_ASSETS[telegramcron.provider.toLowerCase()]}
+                                                        src={BRAND_ASSETS[store.telegramcron.provider.toLowerCase()]}
                                                         className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
                                                         alt=""
                                                     />
-                                                    <span>{telegramcron.provider.charAt(0).toUpperCase() + telegramcron.provider.slice(1)}</span>
+                                                    <span>{store.telegramcron.provider.charAt(0).toUpperCase() + store.telegramcron.provider.slice(1)}</span>
                                                 </div>
                                             ) : (
                                                 "Select Provider"
@@ -199,11 +280,11 @@ export const TelegramCronScheduler = ({
                             <Label htmlFor="model">Model</Label>
                             {apiWithLogos.length > 0 && (
                                 <Popover open={modelOpen} onOpenChange={setModelOpen}>
-                                    <PopoverTrigger render={<Button variant="outline" role="combobox" aria-expanded={modelOpen} className="justify-between" disabled={!telegramcron.provider || !telegramcron.isActive} />}>
-                                        {telegramcron.model ? (
+                                    <PopoverTrigger render={<Button variant="outline" role="combobox" aria-expanded={modelOpen} className="justify-between" disabled={!store.telegramcron.provider || !store.telegramcron.isActive} />}>
+                                        {store.telegramcron.model ? (
                                             <div className="flex items-center gap-2">
-                                                <img src={getProviderImage(telegramcron.provider || "")} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                                <span className="truncate">{telegramcron.model}</span>
+                                                <img src={getProviderImage(store.telegramcron.provider || "")} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
+                                                <span className="truncate">{store.telegramcron.model}</span>
                                             </div>
                                         ) : (
                                             <span className="text-muted-foreground">Select Model</span>
@@ -220,8 +301,8 @@ export const TelegramCronScheduler = ({
                                                         <div className="px-3 py-2 text-sm text-muted-foreground">No models available.</div>
                                                     )}
                                                     {cronModelList.map((entry) => (
-                                                        <CommandItem key={entry.model} value={entry.model} onSelect={() => { settelegramcron((prev) => ({ ...prev, model: entry.model })); setModelOpen(false); }}>
-                                                            <img src={getProviderImage(telegramcron.provider || "")} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
+                                                        <CommandItem key={entry.model} value={entry.model} onSelect={() => { store.setTelegramcron({ ...store.telegramcron, model: entry.model }); setModelOpen(false) }}>
+                                                            <img src={getProviderImage(store.telegramcron.provider || "")} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
                                                             <span className="text-sm ml-3">{entry.model}</span>
                                                         </CommandItem>
                                                     ))}
@@ -247,10 +328,10 @@ export const TelegramCronScheduler = ({
                                 <Button
                                     key={opt.value}
                                     type="button"
-                                    variant={telegramcron.crontype === opt.value ? "default" : "outline"}
-                                    onClick={() => settelegramcron((prev) => ({ ...prev, crontype: opt.value }))}
-                                    disabled={!telegramcron.isActive}
-                                    className={telegramcron.crontype === opt.value ? "bg-cyan-500 dark:bg-white text-white dark:text-black" : ""}
+                                    variant={store.telegramcron.crontype === opt.value ? "default" : "outline"}
+                                    onClick={() => store.setTelegramcron({ ...store.telegramcron, crontype: opt.value })}
+                                    disabled={!store.telegramcron.isActive}
+                                    className={store.telegramcron.crontype === opt.value ? "bg-cyan-500 dark:bg-white text-white dark:text-black" : ""}
                                 >
                                     {opt.label}
                                 </Button>
@@ -258,7 +339,7 @@ export const TelegramCronScheduler = ({
                         </div>
                     </div>
 
-                    {telegramcron.crontype === "custom" && telegramcron.isActive && (
+                    {store.telegramcron.crontype === "custom" && store.telegramcron.isActive && (
                         <div className="space-y-3 p-3 rounded-xl border bg-muted/30">
                             <div className="space-y-2">
                                 <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Day of Week</Label>
@@ -268,9 +349,9 @@ export const TelegramCronScheduler = ({
                                             key={index}
                                             type="button"
                                             size="sm"
-                                            variant={customDayOfWeek.includes(index) ? "default" : "outline"}
+                                            variant={store.customDayOfWeek.includes(index) ? "default" : "outline"}
                                             onClick={() => toggleCustomDayOfWeek(index)}
-                                            className={customDayOfWeek.includes(index) ? "bg-cyan-500 dark:bg-white text-white dark:text-black h-8 px-3" : "h-8 px-3"}
+                                            className={store.customDayOfWeek.includes(index) ? "bg-cyan-500 dark:bg-white text-white dark:text-black h-8 px-3" : "h-8 px-3"}
                                         >
                                             {name}
                                         </Button>
@@ -286,9 +367,9 @@ export const TelegramCronScheduler = ({
                                             type="button"
                                             size="sm"
                                             disabled={day > maxDayOfMonth}
-                                            variant={customDayOfMonth.includes(day) ? "default" : "outline"}
+                                            variant={store.customDayOfMonth.includes(day) ? "default" : "outline"}
                                             onClick={() => toggleCustomDayOfMonth(day)}
-                                            className={day > maxDayOfMonth ? "opacity-30 cursor-not-allowed h-8 w-9 p-0" : customDayOfMonth.includes(day) ? "bg-cyan-500 dark:bg-white text-white dark:text-black h-8 w-9 p-0" : "h-8 w-9 p-0"}
+                                            className={day > maxDayOfMonth ? "opacity-30 cursor-not-allowed h-8 w-9 p-0" : store.customDayOfMonth.includes(day) ? "bg-cyan-500 dark:bg-white text-white dark:text-black h-8 w-9 p-0" : "h-8 w-9 p-0"}
                                         >
                                             {day}
                                         </Button>
@@ -303,9 +384,9 @@ export const TelegramCronScheduler = ({
                                             key={index}
                                             type="button"
                                             size="sm"
-                                            variant={customMonth.includes(index) ? "default" : "outline"}
+                                            variant={store.customMonth.includes(index) ? "default" : "outline"}
                                             onClick={() => toggleCustomMonth(index)}
-                                            className={customMonth.includes(index) ? "bg-cyan-500 dark:bg-white text-white dark:text-black h-8 px-3" : "h-8 px-3"}
+                                            className={store.customMonth.includes(index) ? "bg-cyan-500 dark:bg-white text-white dark:text-black h-8 px-3" : "h-8 px-3"}
                                         >
                                             {name}
                                         </Button>
@@ -320,35 +401,31 @@ export const TelegramCronScheduler = ({
 
                     <div className="space-y-1">
                         <Label htmlFor="triggerAt">Execution Time</Label>
-                        <Input id="triggerAt" name="triggerAt" type="time" value={telegramcron.triggerAt} onChange={handlecronchange} disabled={!telegramcron.isActive} required className="time-input" />
+                        <Input id="triggerAt" name="triggerAt" type="time" value={store.telegramcron.triggerAt} onChange={handlecronchange} disabled={!store.telegramcron.isActive} required className="time-input" />
                     </div>
 
                     <div className="space-y-1">
                         <Label htmlFor="message">Agent Prompt Message</Label>
-                        <Textarea id="message" name="message" value={telegramcron.message} onChange={handlecronchange} disabled={!telegramcron.isActive} placeholder="What should the agent generate and post?" className="min-h-20" required />
+                        <Textarea id="message" name="message" value={store.telegramcron.message} onChange={handlecronchange} disabled={!store.telegramcron.isActive} placeholder="What should the agent generate and post?" className="min-h-20" required />
                     </div>
 
                     <DialogFooter className="flex items-center pt-2">
                         <div className="flex">
                             <Label htmlFor="isActive" className="mr-1">Active Schedule</Label>
-                            <Switch checked={telegramcron.isActive}
+                            <Switch checked={store.telegramcron.isActive}
                                 onCheckedChange={(checked) => {
-                                    settelegramcron((prev) => ({
-                                        ...prev,
-                                        isActive: checked
-                                    }));
+                                    store.setTelegramcron({ ...store.telegramcron, isActive: checked })
                                 }}
                                 className="data-checked:bg-green-500 data-checked:border-green-500 dark:data-checked:bg-primary dark:data-checked:border-primary"
                                 id="isActive"
                                 name="isActive"
-                            >
-                            </Switch>
+                            />
                         </div>
-                        <Button type="button" variant="destructive" onClick={() => onOpenChange(false)}>Cancel</Button>
-                        <Button onClick={(e) => { e.preventDefault(); cronsubmint(); }} className="bg-cyan-500 dark:bg-white" disabled={loadingcroncreate}>{loadingcroncreate ? <Spinner /> : "Save Schedule"}</Button>
+                        <Button type="button" variant="destructive" onClick={() => store.setOpencron(false)}>Cancel</Button>
+                        <Button onClick={(e) => { e.preventDefault(); cronsubmint() }} className="bg-cyan-500 dark:bg-white" disabled={store.loadingcroncreate}>{store.loadingcroncreate ? <Spinner /> : "Save Schedule"}</Button>
                     </DialogFooter>
                 </div>
             </DialogContent>
         </Dialog>
-    );
-};
+    )
+}

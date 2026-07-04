@@ -1,3 +1,4 @@
+export { ChatChat } from './components/ChatChat'
 export * from './api/api'
 export * from './store/store'
 export * from './types'

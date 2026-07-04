@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { Send, Eye, EyeOff, ChevronsUpDown } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogFooter, DialogDescription } from "@/shared/components/ui/dialog";
-import { Label } from "@/shared/components/ui/label";
-import { Input } from "@/shared/components/ui/input";
-import { Spinner } from "@/shared/components/ui/spinner";
+import { useState } from "react"
+import { Send, Eye, EyeOff, ChevronsUpDown } from "lucide-react"
+import { Button } from "@/shared/components/ui/button"
+import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogFooter, DialogDescription } from "@/shared/components/ui/dialog"
+import { Label } from "@/shared/components/ui/label"
+import { Input } from "@/shared/components/ui/input"
+import { Spinner } from "@/shared/components/ui/spinner"
 import {
     Command,
     CommandEmpty,
@@ -12,12 +12,16 @@ import {
     CommandInput,
     CommandItem,
     CommandList,
-} from "@/shared/components/ui/command";
+} from "@/shared/components/ui/command"
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
-} from "@/shared/components/ui/popover";
+} from "@/shared/components/ui/popover"
+import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
+import { telegramauth } from "@/features/telegram/api/api"
+import { telegramauthstore } from "@/features/telegram/store/store"
 
 const countries = [
     { label: "MM (+95)", value: "+95", code: "MM" },
@@ -26,55 +30,77 @@ const countries = [
     { label: "SG (+65)", value: "+65", code: "SG" },
     { label: "TH (+66)", value: "+66", code: "TH" },
     { label: "JP (+81)", value: "+81", code: "JP" },
-];
+]
 
-interface TelegramConnectionPanelProps {
-    opencreate: boolean;
-    setopencreate: (val: boolean) => void;
-    openverify: boolean;
-    setopenverify: (val: boolean) => void;
-    loading: boolean;
-    loadingverify: boolean;
-    phonenumber: string;
-    setphonenumber: (val: string) => void;
-    countryCode: string;
-    setCountryCode: (val: string) => void;
-    phonecode: string;
-    setphonecode: (val: string) => void;
-    password: string;
-    setpassword: (val: string) => void;
-    handlecodesend: () => void;
-    handleverifycode: () => void;
-}
+export const TelegramConnectionPanel = () => {
+    const store = telegramauthstore()
+    const queryClient = useQueryClient()
+    const [showPassword, setShowPassword] = useState(false)
+    const [open, setOpen] = useState(false)
 
-export const TelegramConnectionPanel = ({
-    opencreate,
-    setopencreate,
-    openverify,
-    setopenverify,
-    loading,
-    loadingverify,
-    phonenumber,
-    setphonenumber,
-    countryCode,
-    setCountryCode,
-    phonecode,
-    setphonecode,
-    password,
-    setpassword,
-    handlecodesend,
-    handleverifycode,
-}: TelegramConnectionPanelProps) => {
-    const [showPassword, setShowPassword] = useState(false);
-    const [open, setOpen] = useState(false);
+    const handlecodesend = async () => {
+        try {
+            store.setLoading(true)
+            const Country = store.countryCode.replace(/\D/g, "")
+            let Local = store.phonenumber
+            if (Local.startsWith("0")) {
+                Local = Local.substring(1)
+            }
+            const formattedPhoneNumber = `${Country}${Local}`
+            const response = await telegramauth.telegramservicecreate(formattedPhoneNumber, store.password)
+            if (response.success) {
+                toast.success(response.message || "Verification Code Has Been Send!")
+                store.setOpenverify(true)
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any
+                toast.error(Error.response?.data?.message || err.message)
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            store.setLoading(false)
+        }
+    }
+
+    const handleverifycode = async () => {
+        try {
+            store.setLoadingverify(true)
+            const response = await telegramauth.telegramverify(store.phonecode)
+            if (response.success) {
+                toast.success(response.message || "Verification Successful!")
+                store.setOpencreate(false)
+                store.setOpenverify(false)
+                store.setPhonenumber("")
+                store.setPassword("")
+                store.setPhonecode("")
+                queryClient.invalidateQueries({ queryKey: ["telegram"] })
+            }
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                const Error = err as any
+                toast.error(Error.response?.data?.message || err.message)
+                store.setOpencreate(false)
+                store.setOpenverify(false)
+                store.setPhonenumber("")
+                store.setPassword("")
+                store.setPhonecode("")
+            } else {
+                toast.error("An unexpected error occurred.")
+            }
+        } finally {
+            store.setLoadingverify(false)
+        }
+    }
 
     return (
-        <Dialog open={opencreate} onOpenChange={setopencreate} modal={false}>
+        <Dialog open={store.opencreate} onOpenChange={store.setOpencreate} modal={false}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2 text-2xl"><Send size={30} className="text-cyan-500 dark:text-white" /> Set Up Telegram Account</DialogTitle>
                 </DialogHeader>
-                {!openverify ? (
+                {!store.openverify ? (
                     <>
                         <DialogDescription className="font-semibold">Note: You need to have 2FA enable to continue the service.</DialogDescription>
                         <div className="flex flex-col gap-2">
@@ -82,7 +108,7 @@ export const TelegramConnectionPanel = ({
                             <div className="flex items-center space-x-2 w-full">
                                 <Popover open={open} onOpenChange={setOpen}>
                                     <PopoverTrigger className="w-27.5 justify-between shrink-0 inline-flex items-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2" role="combobox" aria-expanded={open}>
-                                        {countryCode}
+                                        {store.countryCode}
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </PopoverTrigger>
                                     <PopoverContent className="w-50 p-1" align="start">
@@ -96,8 +122,8 @@ export const TelegramConnectionPanel = ({
                                                             key={country.value}
                                                             value={country.label}
                                                             onSelect={() => {
-                                                                setCountryCode(country.value);
-                                                                setOpen(false);
+                                                                store.setCountryCode(country.value)
+                                                                setOpen(false)
                                                             }}
                                                             className="cursor-pointer"
                                                         >
@@ -114,10 +140,10 @@ export const TelegramConnectionPanel = ({
                                     id="phone"
                                     type="tel"
                                     placeholder="Phone number"
-                                    value={phonenumber}
+                                    value={store.phonenumber}
                                     onChange={(e) => {
-                                        const cleaned = e.target.value.replace(/\D/g, "");
-                                        setphonenumber(cleaned);
+                                        const cleaned = e.target.value.replace(/\D/g, "")
+                                        store.setPhonenumber(cleaned)
                                     }}
                                 />
                             </div>
@@ -130,8 +156,8 @@ export const TelegramConnectionPanel = ({
                                     id="password"
                                     type={showPassword ? "text" : "password"}
                                     placeholder="Enter your 2FA account password"
-                                    value={password}
-                                    onChange={(e) => setpassword(e.target.value)}
+                                    value={store.password}
+                                    onChange={(e) => store.setPassword(e.target.value)}
                                     className="pr-10"
                                 />
                                 <button
@@ -151,37 +177,37 @@ export const TelegramConnectionPanel = ({
                             id="code"
                             type="text"
                             placeholder="12345"
-                            value={phonecode}
-                            onChange={(e) => setphonecode(e.target.value)}
+                            value={store.phonecode}
+                            onChange={(e) => store.setPhonecode(e.target.value)}
                         />
                         <p className="text-xs text-muted-foreground">Enter the code sent to your Telegram app.</p>
                     </div>
                 )}
 
                 <DialogFooter>
-                    {openverify ? (
+                    {store.openverify ? (
                         <Button
                             onClick={handleverifycode}
-                            disabled={loadingverify}
+                            disabled={store.loadingverify}
                             className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
                         >
-                            {loadingverify ? <Spinner /> : "Verify & Login"}
+                            {store.loadingverify ? <Spinner /> : "Verify & Login"}
                         </Button>
                     ) : (
                         <Button
                             onClick={handlecodesend}
-                            disabled={loading}
+                            disabled={store.loading}
                             className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
                         >
-                            {loading ? <Spinner /> : "Send Code"}
+                            {store.loading ? <Spinner /> : "Send Code"}
                         </Button>
                     )}
                     <Button onClick={() => {
-                        setopencreate(false);
-                        setopenverify(false);
+                        store.setOpencreate(false)
+                        store.setOpenverify(false)
                     }} variant="destructive">Cancel</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
-    );
-};
+    )
+}

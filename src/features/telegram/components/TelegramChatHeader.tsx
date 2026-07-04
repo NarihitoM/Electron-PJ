@@ -1,35 +1,28 @@
-import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
-import { Button } from "@/shared/components/ui/button";
-import { Skeleton } from "@/shared/components/ui/skeleton";
+import { useNavigate } from "react-router-dom"
+import { Plus } from "lucide-react"
+import { Button } from "@/shared/components/ui/button"
+import { Skeleton } from "@/shared/components/ui/skeleton"
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
-} from "@/shared/components/ui/select";
-import { BRAND_ASSETS } from "@/shared/config/providermodels";
-import type { Servicefetch } from "@/features/services/types";
-import type { TelegramUserData } from "@/features/telegram/types";
+} from "@/shared/components/ui/select"
+import { BRAND_ASSETS } from "@/shared/config/providermodels"
+import { useServiceKeys } from "@/features/services/hooks/useServiceKeys"
+import { useTelegramAccount } from "@/features/telegram/hooks/useTelegramAccount"
+import { telegramauthstore } from "@/features/telegram/store/store"
 
-interface TelegramChatHeaderProps {
-    loadingfetch: boolean;
-    Telegramuserdata: TelegramUserData | null;
-    Api: Servicefetch[];
-    provider: string;
-    setProvider: (val: string) => void;
-    apiWithLogos: (Servicefetch & { imageUrl: string })[];
-}
+export const TelegramChatHeader = () => {
+    const { data: Api = [] } = useServiceKeys()
+    const { data: accountData, isLoading: accountLoading } = useTelegramAccount()
+    const store = telegramauthstore()
+    const navigate = useNavigate()
 
-export const TelegramChatHeader = ({
-    loadingfetch,
-    Telegramuserdata,
-    Api,
-    provider,
-    setProvider,
-    apiWithLogos,
-}: TelegramChatHeaderProps) => {
-    const navigate = useNavigate();
+    const apiWithLogos = Api.map((provider) => ({
+        ...provider,
+        imageUrl: BRAND_ASSETS[provider.provider.toLowerCase()]
+    }))
 
     return (
         <div className="mx-auto w-full max-w-5xl flex justify-between gap-1">
@@ -39,23 +32,23 @@ export const TelegramChatHeader = ({
             </div>
 
             <div className="flex gap-2 items-center">
-                {loadingfetch ?
+                {accountLoading ?
                     <span className="flex items-center gap-2 px-2 py-1 rounded-full border border-transparent">
                         <Skeleton className="w-4 h-4 rounded-sm bg-zinc-200 dark:bg-zinc-800 shrink-0" />
                         <Skeleton className="w-20 h-4 rounded-md bg-zinc-200 dark:bg-zinc-800" />
                     </span> :
-                    Telegramuserdata &&
+                    accountData &&
                     <span className="text-[13px] flex items-center gap-2 px-1 py-1 rounded-full border bg-card">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" className="w-4 h-4" /> {Telegramuserdata.firstName?.substring(0, 10) + "..."}
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" className="w-4 h-4" /> {accountData.firstName?.substring(0, 10) + "..."}
                     </span>}
-                {Api.length > 0 ? (
+                {apiWithLogos.length > 0 ? (
                     <div className="flex gap-2">
-                        <Select onValueChange={(value) => setProvider(value ?? "")} value={provider}>
+                        <Select onValueChange={(value) => store.setProvider(value ?? "")} value={store.provider}>
                             <SelectTrigger>
-                                {provider ?
+                                {store.provider ?
                                     <>
-                                        <img src={BRAND_ASSETS[provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                        <span>{provider.charAt(0).toUpperCase() + provider.slice(1)}</span>
+                                        <img src={BRAND_ASSETS[store.provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
+                                        <span>{store.provider.charAt(0).toUpperCase() + store.provider.slice(1)}</span>
                                     </> : "Select Provider"}
                             </SelectTrigger>
                             <SelectContent>
@@ -76,5 +69,5 @@ export const TelegramChatHeader = ({
                 )}
             </div>
         </div>
-    );
-};
+    )
+}
