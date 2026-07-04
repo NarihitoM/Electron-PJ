@@ -17,31 +17,32 @@ export interface NodeUsage {
 function extractTokenUsage(finalState: any): { inputTokens: number; outputTokens: number } {
     const messages = finalState?.values?.messages;
     if (!messages?.length) return { inputTokens: 0, outputTokens: 0 };
-    const lastMsg = messages[messages.length - 1] as any;
-    if (!lastMsg) return { inputTokens: 0, outputTokens: 0 };
 
-    const meta = lastMsg?.usage_metadata;
-    if (meta) {
-        return {
-            inputTokens: meta.input_tokens ?? 0,
-            outputTokens: meta.output_tokens ?? 0,
-        };
+    let inputTokens = 0;
+    let outputTokens = 0;
+
+    for (const msg of messages) {
+        const m = msg as any;
+        const meta = m?.usage_metadata;
+        if (meta) {
+            inputTokens += meta.input_tokens ?? 0;
+            outputTokens += meta.output_tokens ?? 0;
+            continue;
+        }
+        const lc = m?.response_metadata?.tokenUsage;
+        if (lc) {
+            inputTokens += lc.promptTokens ?? 0;
+            outputTokens += lc.completionTokens ?? 0;
+            continue;
+        }
+        const usage = m?.response_metadata?.usage;
+        if (usage) {
+            inputTokens += usage.input_tokens ?? 0;
+            outputTokens += usage.output_tokens ?? 0;
+        }
     }
-    const lc = lastMsg?.response_metadata?.tokenUsage;
-    if (lc) {
-        return {
-            inputTokens: lc.promptTokens ?? 0,
-            outputTokens: lc.completionTokens ?? 0,
-        };
-    }
-    const usage = lastMsg?.response_metadata?.usage;
-    if (usage) {
-        return {
-            inputTokens: usage.input_tokens ?? 0,
-            outputTokens: usage.output_tokens ?? 0,
-        };
-    }
-    return { inputTokens: 0, outputTokens: 0 };
+
+    return { inputTokens, outputTokens };
 }
 
 const runDeepAgentWithEvents = async (
@@ -205,17 +206,15 @@ export const runAgentOrchestration = async (
                 messages = messages.concat(finalState.values.messages);
             }
             const { inputTokens, outputTokens } = extractTokenUsage(finalState);
-            if (inputTokens || outputTokens) {
-                usageData.push({
-                    nodeName: activenode[i].name,
-                    agent: activenode[i].name,
-                    provider: activenode[i].provider,
-                    model: activenode[i].model,
-                    inputTokens,
-                    outputTokens,
-                    latencyMs: 0,
-                });
-            }
+            usageData.push({
+                nodeName: activenode[i].name,
+                agent: activenode[i].name,
+                provider: activenode[i].provider,
+                model: activenode[i].model,
+                inputTokens,
+                outputTokens,
+                latencyMs: 0,
+            });
         }
     } else {
         for (let i = 0; i < agents.length; i++) {
@@ -229,17 +228,15 @@ export const runAgentOrchestration = async (
                     messages = finalState.values.messages;
                 }
                 const { inputTokens, outputTokens } = extractTokenUsage(finalState);
-                if (inputTokens || outputTokens) {
-                    usageData.push({
-                        nodeName: activenode[i].name,
-                        agent: activenode[i].name,
-                        provider: activenode[i].provider,
-                        model: activenode[i].model,
-                        inputTokens,
-                        outputTokens,
-                        latencyMs: Date.now() - nodeStart,
-                    });
-                }
+                usageData.push({
+                    nodeName: activenode[i].name,
+                    agent: activenode[i].name,
+                    provider: activenode[i].provider,
+                    model: activenode[i].model,
+                    inputTokens,
+                    outputTokens,
+                    latencyMs: Date.now() - nodeStart,
+                });
             } catch (err) {
                 const msg = err instanceof Error ? err.message : String(err);
                 console.error(`Node "${activenode[i].name}" failed:`, msg);
