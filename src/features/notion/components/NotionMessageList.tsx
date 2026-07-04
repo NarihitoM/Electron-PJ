@@ -185,7 +185,7 @@ export const NotionMessageList = () => {
                                     ) : (
                                         <div className="relative flex items-center justify-center">
                                             {store.sending && isLastMessage && !msg.content && (!msg.toolsCall || msg.toolsCall.length === 0 || msg.toolsCall.some((t: any) => t.status === "loading")) ? (
-                                                <Dot className="h-15 w-15 text-cyan-500 dark:text-white relative animate-pulse" />
+                                                <Dot className="h-15 w-15 ml-2 text-cyan-500 dark:text-white relative animate-pulse" />
                                             ) : msg.provider && BRAND_ASSETS[msg.provider] ? (
                                                 <img src={BRAND_ASSETS[msg.provider]} className="w-7 h-7 rounded bg-white dark:bg-card" />
                                             ) : (

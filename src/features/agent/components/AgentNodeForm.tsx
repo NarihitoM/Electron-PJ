@@ -122,9 +122,9 @@ export const AgentNodeForm = () => {
                             <Label htmlFor="role">Role</Label>
                             <Input
                                 id="role"
-                                placeholder="Agent Name..."
+                                placeholder="e.g. Researcher, Coder, Writer..."
                                 value={store.actor}
-                                disabled
+                                onChange={(e) => store.setActor(e.target.value)}
                             />
                         </div>
                         <div className="flex flex-col gap-2">

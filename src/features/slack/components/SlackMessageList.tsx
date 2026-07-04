@@ -215,7 +215,7 @@ export const SlackMessageList = () => {
                                 ) : (
                                     <div className="relative flex items-center justify-center">
                                         {sending && isLastMessage && !msg.content && (!msg.toolsCall || msg.toolsCall.length === 0 || msg.toolsCall.some((t: any) => t.status === "loading")) ? (
-                                            <Dot className="h-15 w-15 text-cyan-500 dark:text-white relative animate-pulse" />
+                                            <Dot className="h-15 w-15 ml-2 text-cyan-500 dark:text-white relative animate-pulse" />
                                         ) : msg.provider && BRAND_ASSETS[msg.provider] ? (
                                             <img src={BRAND_ASSETS[msg.provider]} className="w-7 h-7 rounded bg-white dark:bg-card" alt="" />
                                         ) : (
@@ -326,13 +326,13 @@ export const SlackMessageList = () => {
                                                         {tool.status !== "loading" && (
                                                             <ChevronDown
                                                                 size={15}
-                                                                className="ml-1 text-black dark:text-white transition-transform duration-300 group-data-[state=open]:rotate-180"
+                                                                className="ml-1 text-foreground transition-transform duration-300 group-data-[state=open]:rotate-180"
                                                             />
                                                         )}
                                                     </Button>
                                                 </CollapsibleTrigger>
                                                 <CollapsibleContent className="animate-in fade-in slide-in-from-top-1 duration-200">
-                                                    <div className="flex flex-col rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-black overflow-hidden shadow-sm max-w-[95%]">
+                                                    <div className="flex flex-col rounded-xl border border-zinc-100 dark:border-zinc-800 bg-background overflow-hidden shadow-sm max-w-[95%]">
                                                         <div className="border-b dark:border-zinc-800">
                                                             <div className="px-3 py-1.5 flex items-center gap-2 bg-zinc-50/50 dark:bg-zinc-900/50">
                                                                 <Terminal size={10} className="text-blue-400" />

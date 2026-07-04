@@ -11,6 +11,7 @@ import { useAgentNodes } from "@/features/agent/hooks/useAgentNodes"
 import { useResetAgentMessages } from "@/features/agent/hooks/useResetAgentMessages"
 import { useagentstore } from "../store/store"
 import { voiceauth } from "@/features/voice/api/api"
+import { AgentChatArea } from "./AgentChatArea"
 
 export const AgentInput = () => {
     const { data: Api = [] } = useServiceKeys()
@@ -201,7 +202,7 @@ export const AgentInput = () => {
                                 <SheetTrigger asChild>
                                     <Button className="bg-cyan-500 dark:bg-white rounded-full">History</Button>
                                 </SheetTrigger>
-                                <SheetContent side="right">
+                                <SheetContent side="right" className="w-full sm:w-[500px]">
                                     <SheetHeader>
                                         <SheetTitle>
                                             <div className="flex items-center gap-2">
@@ -213,17 +214,8 @@ export const AgentInput = () => {
                                         </SheetTitle>
                                         <SheetDescription>View your previous interactions with the agents.</SheetDescription>
                                     </SheetHeader>
-                                    <div className="mt-4 space-y-4">
-                                        {store.history.length === 0 ? (
-                                            <p className="text-sm text-muted-foreground">No history yet.</p>
-                                        ) : (
-                                            store.history.map((msg, i) => (
-                                                <div key={i} className={`text-sm p-2 rounded-lg ${msg.role === "user" ? "bg-primary/10 text-right" : "bg-muted"}`}>
-                                                    <strong>{msg.role === "user" ? "You" : msg.name || "Agent"}:</strong>
-                                                    <p className="whitespace-pre-wrap">{msg.content}</p>
-                                                </div>
-                                            ))
-                                        )}
+                                    <div className="mt-4">
+                                        <AgentChatArea />
                                     </div>
                                 </SheetContent>
                             </Sheet>

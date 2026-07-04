@@ -183,7 +183,7 @@ export const GoogleSheetMessageList = () => {
                                             ) : (
                                                 <div className="relative flex items-center justify-center">
                                                     {store.sending_sheet && isLastMessage && !msg.content && (!msg.toolsCall || msg.toolsCall.length === 0 || msg.toolsCall.some((t: any) => t.status === "loading")) ? (
-                                                        <Dot className="h-15 w-15 text-cyan-500 dark:text-white relative animate-pulse" />
+                                                        <Dot className="h-15 w-15 ml-2 text-cyan-500 dark:text-white relative animate-pulse" />
                                                     ) : msg.provider && BRAND_ASSETS[msg.provider] ? (
                                                         <img src={BRAND_ASSETS[msg.provider]} className="w-7 h-7 rounded bg-white dark:bg-card" />
                                                     ) : (
@@ -259,8 +259,8 @@ export const GoogleSheetMessageList = () => {
                                                         <Collapsible key={tool.id} className="w-full space-y-2">
                                                             <CollapsibleTrigger asChild>
                                                                 <Button variant="ghost" className={`group flex items-center gap-2 px-3 py-1 rounded-full  text-[10px] font-bold transition-all active:scale-95 ${tool.status === "done"
-                                                                    ? "text-black dark:text-white  shadow-sm"
-                                                                    : "dark:text-white  text-black"
+                                                                    ? "text-foreground shadow-sm"
+                                                                    : "text-foreground"
                                                                     }`}>
                                                                     {tool.status === "loading" && (
                                                                         <Spinner className="w-4 h-4 animate-spin text-cyan-500 dark:text-white" />
@@ -289,13 +289,13 @@ export const GoogleSheetMessageList = () => {
                                                                         </span>}
                                                                     {tool.status !== "loading" && <ChevronDown
                                                                         size={15}
-                                                                        className="ml-1 text-black dark:text-white transition-transform duration-300 group-data-[state=open]:rotate-180"
+                                                                        className="ml-1 text-foreground transition-transform duration-300 group-data-[state=open]:rotate-180"
                                                                     />}
                                                                 </Button>
                                                             </CollapsibleTrigger>
 
                                                             <CollapsibleContent className="animate-in fade-in slide-in-from-top-1 duration-200">
-                                                                <div className="flex flex-col rounded-xl border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-black overflow-hidden shadow-sm max-w-[95%]">
+                                                                <div className="flex flex-col rounded-xl border border-zinc-100 dark:border-zinc-800 bg-background overflow-hidden shadow-sm max-w-[95%]">
 
                                                                     <div className="border-b dark:border-zinc-800">
                                                                         <div className="px-3 py-1.5 flex items-center gap-2 bg-zinc-50/50 dark:bg-zinc-900/50">

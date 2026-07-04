@@ -1,10 +1,9 @@
 import { useEffect, useRef } from "react"
-import { Button } from "@/shared/components/ui/button"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { Spinner } from "@/shared/components/ui/spinner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar"
 import { motion } from "framer-motion"
-import { AlertTriangle, Bot, Check, Copy, Loader2 } from "lucide-react"
+import { Bot, Check, Copy } from "lucide-react"
 import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import AiContent from "@/shared/components/layout/LayoutAiresponse"
 import { useUser } from "@/features/auth/hooks/useUser"
@@ -25,10 +24,6 @@ export const AgentChatArea = () => {
     }, [store.history])
 
     useEffect(() => {
-        fetchMessages()
-    }, [])
-
-    useEffect(() => {
         const observer = new IntersectionObserver(entries => {
             if (entries[0].isIntersecting && store.hasMore && !store.loadingMore) {
                 loadMoreHistory()
@@ -39,42 +34,18 @@ export const AgentChatArea = () => {
         return () => observer.disconnect()
     }, [store.hasMore, store.loadingMore])
 
-    const fetchMessages = async () => {
-        store.setLoadingfetch(true)
-        store.setLoadingerror(false)
-        store.setHistory([])
-        store.setNextCursor(null)
-        store.setHasMore(false)
-        try {
-            const response = await agentauth.fetchagentmessages()
-            if (response.success && response.data) {
-                store.setHistory((response.data.messages ?? []).reverse())
-                store.setNextCursor(response.data.nextCursor)
-                store.setHasMore(response.data.hasMore)
-            }
-        } catch (err: unknown) {
-            store.setLoadingerror(true)
-            const errMsg = err instanceof Error ? (err as any).response?.data?.message || err.message : "An unexpected error occurred."
-            toast.error(errMsg)
-        } finally {
-            store.setLoadingfetch(false)
-        }
-    }
-
     const loadMoreHistory = async () => {
         if (!store.nextCursor || !store.hasMore || store.loadingMore) return
         store.setLoadingMore(true)
         try {
             const container = store.scrollContainerRef.current
             const prevScrollHeight = container?.scrollHeight ?? 0
-
             const response = await agentauth.fetchagentmessages(store.nextCursor)
             if (response.success && response.data) {
                 const data = response.data
                 store.updateHistory(prev => [...(data.messages ?? []).reverse(), ...prev])
                 store.setNextCursor(data.nextCursor)
                 store.setHasMore(data.hasMore)
-
                 requestAnimationFrame(() => {
                     if (container) {
                         container.scrollTop = container.scrollHeight - prevScrollHeight
@@ -95,33 +66,25 @@ export const AgentChatArea = () => {
 
     if (store.loadingfetch) {
         return (
-            <div className="h-[calc(100vh-180px)] overflow-y-auto px-4 pb-4">
-                <div className="flex flex-col gap-4">
-                    {[1, 2, 3].map((i) => (
-                        <div key={i} className="flex items-start gap-3 justify-end">
-                            <div className="space-y-2">
-                                <Skeleton className="h-4 w-[200px]" />
-                                <Skeleton className="h-4 w-[150px]" />
-                            </div>
-                            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className="flex flex-col gap-4 p-4">
+                {[1, 2, 3].map((i) => (
+                    <div key={i} className={`flex items-start gap-3 ${i % 2 === 0 ? "flex-row-reverse" : "flex-row"}`}>
+                        <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                        <div className="space-y-2">
+                            <Skeleton className="h-3 w-20" />
+                            <Skeleton className="h-4 w-[180px]" />
+                            <Skeleton className="h-4 w-[120px]" />
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ))}
             </div>
         )
     }
 
     if (store.loadingerror) {
         return (
-            <div className="h-[calc(100vh-180px)] overflow-y-auto px-4 pb-4">
-                <div className="flex flex-col gap-3 justify-center items-center py-10">
-                    <AlertTriangle className="w-8 h-8 text-red-500" />
-                    <h2 className="text-lg font-semibold">Failed To Load</h2>
-                    <p className="text-sm text-muted-foreground">There was a problem connecting to the server.</p>
-                    <Button onClick={fetchMessages} size="sm" className="bg-cyan-500 dark:bg-white cursor-pointer">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />Retry
-                    </Button>
-                </div>
+            <div className="flex flex-col gap-3 justify-center items-center py-10">
+                <p className="text-sm text-muted-foreground">Failed to load history.</p>
             </div>
         )
     }
@@ -129,7 +92,7 @@ export const AgentChatArea = () => {
     return (
         <div
             ref={store.scrollContainerRef}
-            className="h-[calc(100vh-180px)] overflow-y-auto px-4 pb-4"
+            className="flex-1 overflow-y-auto px-4 pb-4"
             style={{ scrollbarWidth: "none" }}
         >
             <div className="flex flex-col gap-4">

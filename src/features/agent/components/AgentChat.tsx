@@ -7,7 +7,6 @@ import { Toaster } from "@/shared/components/ui/sonner"
 import { toast } from "sonner"
 import { AgentChatHeader } from "./AgentChatHeader"
 import { AgentNodeList } from "./AgentNodeList"
-import { AgentChatArea } from "./AgentChatArea"
 import { AgentInput } from "./AgentInput"
 import { AgentNodeForm } from "./AgentNodeForm"
 
@@ -18,6 +17,31 @@ export const AgentChat = () => {
         return () => {
             window.ipcRenderer.send('cancel-workflow');
         };
+    }, [])
+
+    useEffect(() => {
+        const fetchMessages = async () => {
+            store.setLoadingfetch(true)
+            store.setLoadingerror(false)
+            store.setHistory([])
+            store.setNextCursor(null)
+            store.setHasMore(false)
+            try {
+                const response = await agentauth.fetchagentmessages()
+                if (response.success && response.data) {
+                    store.setHistory((response.data.messages ?? []).reverse())
+                    store.setNextCursor(response.data.nextCursor)
+                    store.setHasMore(response.data.hasMore)
+                }
+            } catch (err: unknown) {
+                store.setLoadingerror(true)
+                const errMsg = err instanceof Error ? (err as any).response?.data?.message || err.message : "An unexpected error occurred."
+                toast.error(errMsg)
+            } finally {
+                store.setLoadingfetch(false)
+            }
+        }
+        fetchMessages()
     }, [])
 
     useEffect(() => {
@@ -176,7 +200,6 @@ export const AgentChat = () => {
                 <div className="flex-1 px-3 overflow-y-auto mt-4" style={{ scrollbarWidth: "none" }}>
                     <div className="mx-auto max-w-5xl py-5">
                         <AgentNodeList />
-                        {store.nodes.length > 0 && <AgentChatArea />}
                     </div>
                 </div>
                 {store.nodes.length > 0 && <AgentInput />}

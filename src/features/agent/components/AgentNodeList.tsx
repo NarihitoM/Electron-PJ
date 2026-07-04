@@ -1,3 +1,4 @@
+import { useEffect } from "react"
 import { Card } from "@/shared/components/ui/card"
 import { Button } from "@/shared/components/ui/button"
 import { Skeleton } from "@/shared/components/ui/skeleton"
@@ -14,7 +15,14 @@ import { useagentstore } from "../store/store"
 export const AgentNodeList = () => {
     const store = useagentstore()
     const { data: Api = [] } = useServiceKeys()
-    const { isLoading: loadingfetch } = useAgentNodes()
+    const { data: fetchedNodes = [], isLoading: loadingfetch } = useAgentNodes()
+
+    useEffect(() => {
+        if (fetchedNodes.length > 0) {
+            store.setNodes(fetchedNodes as any)
+        }
+    }, [fetchedNodes])
+
     const nodes = store.nodes
 
     const onUpdate = (idx: number) => {
