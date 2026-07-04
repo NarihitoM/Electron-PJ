@@ -72,8 +72,8 @@ MultimateAi is a desktop application that orchestrates AI agents across multiple
 ### Steps
 
 ```bash
-# Clone the repository
-git clone https://github.com/NarihitoM/MultimateAi.git
+# Clone the repository (release tag)
+git clone --branch v1.0.0 https://github.com/NarihitoM/MultimateAi.git
 cd MultimateAi
 
 # Install dependencies
