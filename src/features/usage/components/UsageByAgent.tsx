@@ -1,8 +1,19 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui/card"
 import { Skeleton } from "@/shared/components/ui/skeleton"
-import { AGENT_COLORS, formatNumber, formatCost } from "./usageHelpers"
+import { AGENT_COLORS, AGENT_LABELS, formatNumber, formatCost } from "./usageHelpers"
+import { useUsageStats } from "../hooks/useUsageStats"
 
-export const UsageByAgent = ({ agentData, loading }: { agentData: { name: string; tokens: number; cost: number }[]; loading: boolean }) => {
+export const UsageByAgent = () => {
+    const { data: stats, isLoading } = useUsageStats()
+
+    const agentData = stats?.byAgent.map((a) => ({
+        name: AGENT_LABELS[a.agent] || a.agent,
+        tokens: a.tokens,
+        cost: a.cost,
+    })) ?? []
+
+    const loading = isLoading
+
     return (
         <div className="mx-auto w-full max-w-5xl mt-4">
             <Card>

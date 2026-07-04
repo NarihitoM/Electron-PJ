@@ -5,6 +5,7 @@ import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import { BRAND_SERVICE } from "@/shared/config/service"
 import { Bot, Key, MessageCircle, SettingsIcon, AlertTriangle } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
+import { useDashboardStats } from "../hooks/useDashboardStats"
 
 const ServiceIcon = ({ provider }: { provider: string }) => {
     const Icon = BRAND_SERVICE[provider];
@@ -16,18 +17,10 @@ const ServiceIcon = ({ provider }: { provider: string }) => {
     return <IconComponent />;
 };
 
-export const StatCards = ({
-    stats,
-    loading,
-    error,
-    onRetry,
-}: {
-    stats: { totalAgentNodes?: number; totalChats?: number; activeProviders?: string[]; connectedServices?: string[] } | null;
-    loading: boolean;
-    error: boolean;
-    onRetry: () => void;
-}) => {
-    if (loading) {
+export const StatCards = () => {
+    const { data: stats, isLoading, isError, refetch } = useDashboardStats()
+
+    if (isLoading) {
         return (
             <>
                 {[1, 2, 3, 4].map((i) => (
@@ -48,13 +41,13 @@ export const StatCards = ({
         );
     }
 
-    if (error) {
+    if (isError) {
         return (
             <div className="col-span-2 flex flex-col gap-3 justify-center items-center py-16">
                 <AlertTriangle className="w-10 h-10 text-red-500" />
                 <h1 className="text-2xl font-semibold">Failed To Load Dashboard</h1>
                 <p className="text-sm text-muted-foreground">There was a problem connecting to the server.</p>
-                <Button onClick={onRetry} className="bg-cyan-500 dark:bg-white">Retry</Button>
+                <Button onClick={() => refetch()} className="bg-cyan-500 dark:bg-white">Retry</Button>
             </div>
         );
     }
@@ -97,7 +90,7 @@ export const StatCards = ({
                                 </Avatar>
                             ))}
                             {(stats?.activeProviders ?? []).length > 3 && (
-                                <AvatarGroupCount className="w-6 h-6 text-black dark:text-white border">
+                                <AvatarGroupCount className="w-6 h-6 text-foreground border">
                                     +{(stats?.activeProviders ?? []).length - 3}
                                 </AvatarGroupCount>
                             )}
@@ -121,7 +114,7 @@ export const StatCards = ({
                                 </Avatar>
                             ))}
                             {(stats?.connectedServices ?? []).length > 3 && (
-                                <AvatarGroupCount className="w-6 h-6 text-black dark:text-white border">
+                                <AvatarGroupCount className="w-6 h-6 text-foreground border">
                                     +{(stats?.connectedServices ?? []).length - 3}
                                 </AvatarGroupCount>
                             )}

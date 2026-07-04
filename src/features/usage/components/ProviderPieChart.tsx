@@ -2,9 +2,22 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/components/ui
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/shared/components/ui/chart"
 import { PieChart, Pie, Cell } from "recharts"
+import { useUsageStats } from "../hooks/useUsageStats"
+import { PROVIDER_LABELS, AGENT_COLORS } from "./usageHelpers"
+
 const pieChartConfig = { tokens: { label: "Tokens" } } satisfies ChartConfig;
 
-export const ProviderPieChart = ({ pieData, loading }: { pieData: { name: string; value: number; fill: string }[]; loading: boolean }) => {
+export const ProviderPieChart = () => {
+    const { data: stats, isLoading } = useUsageStats()
+
+    const pieData = stats?.byProvider.map((p, i) => ({
+        name: PROVIDER_LABELS[p.provider] || p.provider,
+        value: p.tokens,
+        fill: AGENT_COLORS[i % AGENT_COLORS.length],
+    })) ?? []
+
+    const loading = isLoading
+
     return (
         <Card>
             <CardHeader>

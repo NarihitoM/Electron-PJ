@@ -4,27 +4,21 @@ import { Badge } from "@/shared/components/ui/badge"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import { PROVIDER_LABELS, AGENT_LABELS, formatNumber, formatCost, formatLatency } from "./usageHelpers"
-import type { UsageRecent } from "@/features/usage/types"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
+import { useUsageStats } from "../hooks/useUsageStats"
+import { usagestore } from "../store/store"
 
 const recentLimit = 20;
 
-export const RecentActivity = ({
-    recent,
-    loading,
-    pageLoading,
-    recentPage,
-    recentTotal,
-    onPageChange,
-}: {
-    recent: UsageRecent[];
-    loading: boolean;
-    pageLoading: boolean;
-    recentPage: number;
-    recentTotal: number;
-    onPageChange: (page: number) => void;
-}) => {
+export const RecentActivity = () => {
+    const { data: stats, isLoading, isFetching } = useUsageStats()
+    const { recentPage, setRecentPage } = usagestore()
+
+    const recent = stats?.recent ?? []
+    const loading = isLoading
+    const pageLoading = isFetching && !isLoading
+    const recentTotal = stats?.recentTotal ?? 0
     const totalPages = Math.ceil(recentTotal / recentLimit);
 
     const getPageNumbers = () => {
@@ -109,7 +103,7 @@ export const RecentActivity = ({
                                         Showing {(recentPage - 1) * recentLimit + 1}–{Math.min(recentPage * recentLimit, recentTotal)} of {recentTotal}
                                     </p>
                                     <div className="flex items-center gap-1">
-                                        <Button size="icon" variant="outline" onClick={() => onPageChange(Math.max(1, recentPage - 1))} disabled={recentPage === 1}>
+                                        <Button size="icon" variant="outline" onClick={() => setRecentPage(Math.max(1, recentPage - 1))} disabled={recentPage === 1}>
                                             <ChevronLeft className="h-4 w-4" />
                                         </Button>
                                         {getPageNumbers().map((p, i) =>
@@ -121,13 +115,13 @@ export const RecentActivity = ({
                                                     size="icon"
                                                     variant={recentPage === p ? "default" : "outline"}
                                                     className={recentPage === p ? "bg-cyan-500 text-white dark:bg-white dark:text-black" : ""}
-                                                    onClick={() => onPageChange(p as number)}
+                                                    onClick={() => setRecentPage(p as number)}
                                                 >
                                                     {p}
                                                 </Button>
                                             )
                                         )}
-                                        <Button size="icon" variant="outline" onClick={() => onPageChange(Math.min(totalPages, recentPage + 1))} disabled={recentPage === totalPages}>
+                                        <Button size="icon" variant="outline" onClick={() => setRecentPage(Math.min(totalPages, recentPage + 1))} disabled={recentPage === totalPages}>
                                             <ChevronRight className="h-4 w-4" />
                                         </Button>
                                     </div>

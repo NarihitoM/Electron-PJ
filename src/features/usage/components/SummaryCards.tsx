@@ -2,8 +2,13 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { BarChart3, Coins, Activity, Clock } from "lucide-react"
 import { formatNumber, formatCost, formatLatency } from "./usageHelpers"
+import { useUsageStats } from "../hooks/useUsageStats"
 
-export const SummaryCards = ({ s, loading }: { s: { totalTokens: number; totalInputTokens: number; totalOutputTokens: number; totalCost: number; totalRequests: number; avgLatency: number } | null | undefined; loading: boolean }) => {
+export const SummaryCards = () => {
+    const { data: stats, isLoading } = useUsageStats()
+    const s = stats?.summary
+    const loading = isLoading
+
     if (s && !loading) {
         return (
             <>

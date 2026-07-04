@@ -3,13 +3,20 @@ import { Skeleton } from "@/shared/components/ui/skeleton"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/shared/components/ui/chart"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts"
 import { formatNumber } from "./usageHelpers"
+import { useUsageStats } from "../hooks/useUsageStats"
+import { usagestore } from "../store/store"
 
 const barChartConfig = {
     inputTokens: { label: "Input Tokens", color: "#06b6d4" },
     outputTokens: { label: "Output Tokens", color: "#8b5cf6" },
 } satisfies ChartConfig;
 
-export const TokenUsageChart = ({ data, loading, period }: { data: { date: string; inputTokens: number; outputTokens: number }[] | undefined; loading: boolean; period: string }) => {
+export const TokenUsageChart = () => {
+    const { data: stats, isLoading } = useUsageStats()
+    const { period } = usagestore()
+    const data = stats?.byTime
+    const loading = isLoading
+
     return (
         <Card className="lg:col-span-2">
             <CardHeader>

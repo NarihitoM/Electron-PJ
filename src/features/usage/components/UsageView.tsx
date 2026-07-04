@@ -1,0 +1,74 @@
+import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import { usagestore } from "../store/store";
+import { useUsageStats } from "../hooks/useUsageStats";
+import { BarChart3, AlertTriangle, RefreshCw } from "lucide-react";
+import { Button } from "@/shared/components/ui/button";
+import { SummaryCards } from "./SummaryCards";
+import { TokenUsageChart } from "./TokenUsageChart";
+import { ProviderPieChart } from "./ProviderPieChart";
+import { UsageByAgent } from "./UsageByAgent";
+import { RecentActivity } from "./RecentActivity";
+
+export const UsageView = () => {
+    const { period, setPeriod, selectedYear, setSelectedYear } = usagestore();
+    const { data: stats, isFetching, isError, refetch } = useUsageStats();
+
+    if (isError && !stats) {
+        return (
+            <div className="flex h-[92vh] w-full flex-col bg-background">
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="flex flex-col gap-3 justify-center items-center">
+                        <AlertTriangle className="w-10 h-10 text-red-500" />
+                        <h1 className="text-2xl font-semibold">Fail To Load Usage Data</h1>
+                        <p className="text-sm text-muted-foreground">There was a problem connecting to the server.</p>
+                        <Button onClick={() => refetch()} className="bg-cyan-500 dark:bg-white">Retry</Button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex h-[92vh] w-full flex-col bg-background">
+            <div className="mx-auto w-full max-w-5xl flex justify-between items-center gap-1">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-2xl font-bold flex items-center gap-3"><BarChart3 className="w-7 h-7 text-cyan-500 dark:text-white" />Analytics Dashboard</h1>
+                    <p className="text-muted-foreground">Track token usage, costs, and performance across all ai providers.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                        <SelectTrigger className="w-24">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {stats?.availableYears && Array.from({ length: stats.availableYears.max - stats.availableYears.min + 1 }, (_, i) => stats.availableYears.min + i).map((y) => (
+                                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Button size="icon" variant="outline" onClick={() => refetch()} disabled={isFetching}>
+                        <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
+                    </Button>
+                    <Tabs value={period} onValueChange={(v) => setPeriod(v as "day" | "week" | "month" | "year")}>
+                        <TabsList>
+                            <TabsTrigger value="day">Day</TabsTrigger>
+                            <TabsTrigger value="week">Week</TabsTrigger>
+                            <TabsTrigger value="month">Month</TabsTrigger>
+                            <TabsTrigger value="year">Year</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                </div>
+            </div>
+            <div className="mx-auto w-full max-w-5xl grid grid-cols-2 lg:grid-cols-4 mt-4 gap-2">
+                <SummaryCards />
+            </div>
+            <div className="mx-auto w-full max-w-5xl grid grid-cols-1 lg:grid-cols-3 mt-4 gap-3">
+                <TokenUsageChart />
+                <ProviderPieChart />
+            </div>
+            <UsageByAgent />
+            <RecentActivity />
+        </div>
+    );
+};
