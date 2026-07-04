@@ -84,6 +84,7 @@ export const RunAgent = () => {
         } catch (error) {
             if ((error as any)?.name === 'AbortError') {
                 console.log("Workflow aborted by user");
+                event.reply('node-error', { message: "Workflow aborted" });
                 return;
             }
             console.error("IPC Workflow Error:", error);

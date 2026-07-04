@@ -88,6 +88,7 @@ export const AgentChat = () => {
 
                 if (!isWorkflowStillRunning) {
                     store.setWorkflowloading(false);
+                    store.setMessageloading(false);
                 }
 
                 return updatedNodes;
@@ -141,6 +142,7 @@ export const AgentChat = () => {
         const handleError = (_: any, data: { message?: string }) => {
             const gen = store.workflowGenRef.current;
             store.setWorkflowloading(false);
+            store.setMessageloading(false);
             if (data?.message) {
                 toast.error("Workflow Error", { description: data.message });
             }
