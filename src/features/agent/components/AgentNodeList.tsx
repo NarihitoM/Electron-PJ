@@ -123,8 +123,8 @@ export const AgentNodeList = () => {
                                     </div>
                                 )}
                                 <div className="whitespace-pre-wrap">
-                                    {element.output || element.activeTool ? (
-                                        <AiContent content={element.output!} />
+                                    {element.output ? (
+                                        <AiContent content={element.output} />
                                     ) : element.thinking ? (
                                         <AiContent content={element.thinking} />
                                     ) : (

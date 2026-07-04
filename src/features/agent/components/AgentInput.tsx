@@ -46,6 +46,7 @@ export const AgentInput = () => {
         store.setWorkflowloading(true)
         store.setMessageloading(true)
         store.setHistory([])
+        store.setNodes((prev) => prev.map((n: any) => ({ ...n, output: "", thinking: "", activeTool: null, status: "idle" as const })))
         store.workflowGenRef.current++
 
         const selectedNode = agents.find((n) => n.name === store.selectnode)

@@ -47,6 +47,7 @@ const CodeBlock = React.memo(({ language, value }: any) => {
 
 //processContent
 const processContent = (text: string) => {
+    if (!text) return "";
     let result = text
         .replace(/(Appended data to: [^\s]+|Updated \d+ cells[^\s]+)/g, "$1\n\n")
         .replace(/^\[\[[\s\S]*?\]\]/, "")
