@@ -91,44 +91,6 @@ npm run dev
 
 ---
 
-## Project Structure
-
-```
-src/
-├── features/                  # Feature-based modules
-│   ├── account/               # User account settings
-│   ├── agent/                 # Multi-agent workflow
-│   ├── auth/                  # Authentication
-│   ├── chat/                  # AI chat
-│   ├── dashboard/             # Dashboard overview
-│   ├── email/                 # Email service
-│   ├── google/                # Google Sheets & Docs
-│   ├── n8n/                   # N8n integration
-│   ├── notion/                # Notion integration
-│   ├── services/              # API key management
-│   ├── slack/                 # Slack integration
-│   ├── telegram/              # Telegram integration
-│   ├── usage/                 # Usage analytics
-│   ├── video-analysis/        # Video transcription
-│   └── voice/                 # Voice recording
-│
-├── shared/                    # Cross-cutting concerns
-│   ├── assets/                # Images & icons
-│   ├── components/            # UI primitives & layout
-│   ├── config/                # Configs & constants
-│   ├── hooks/                 # Shared hooks
-│   ├── lib/                   # Utilities
-│   ├── routes/                # Route guards
-│   ├── types/                 # Global types
-│   └── utils/                 # Helper functions
-│
-├── pages/                     # Page components
-├── App.tsx                    # Root component
-└── main.tsx                   # Entry point
-```
-
----
-
 ## License
 
-[MIT](LICENSE)
+[MIT LICENSE](LICENSE)
