@@ -25,7 +25,7 @@ export const DeleteAccountDialog = () => {
                 setDeleteDialogOpen(false)
                 setConfirmText("")
                 await userauthapi.logout()
-                navigate("/", { replace: true })
+                navigate("/", { state: { logoutSuccess: true }, replace: true })
             } else {
                 toast.error(response.message)
             }

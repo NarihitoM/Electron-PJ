@@ -164,6 +164,7 @@ export const Sidebarprovider = () => {
             datafetch.clear();
 
             navigate("/", {
+                state: { logoutSuccess: true },
                 replace: true
             })
         }

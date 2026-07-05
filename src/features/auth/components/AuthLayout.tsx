@@ -3,12 +3,23 @@ import Multimate from "@/shared/assets/Multimate.png";
 import { AiWaveformScene } from "@/shared/components/layout/animatedscreen";
 import { useTheme } from "@/shared/components/ui/themeprovider";
 import { Toaster } from "@/shared/components/ui/sonner";
+import { toast } from "sonner";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 
 export const AuthLayout = ({ title, children }: { title: string; children: React.ReactNode }) => {
     const { theme, setTheme } = useTheme();
     const toggletheme = () => {
         setTheme(theme === "dark" ? "light" : "dark");
     };
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state?.logoutSuccess) {
+            toast.success("Logged out successfully");
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
 
     return (
         <>
