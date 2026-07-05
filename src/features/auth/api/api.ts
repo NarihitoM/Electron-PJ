@@ -152,5 +152,13 @@ export const userauthapi = {
             stateid
         })
         return response.data;
+    },
+    deleteaccount: async (): Promise<authfeedback> => {
+        const response = await Server.post("/auth/api/deleteaccount");
+        return response.data;
+    },
+    undodelete: async (): Promise<authfeedback> => {
+        const response = await Server.post("/auth/api/undodelete");
+        return response.data;
     }
 }

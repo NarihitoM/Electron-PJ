@@ -14,6 +14,8 @@ export interface AccountState {
     loadingpasswordchange: boolean;
     dialogService: string | null;
     search: string;
+    deleteDialogOpen: boolean;
+    deleteloading: boolean;
 
     setUsername: (v: string) => void;
     setCurrentpassword: (v: string) => void;
@@ -30,4 +32,6 @@ export interface AccountState {
     setLoadingpasswordchange: (v: boolean) => void;
     setDialogService: (v: string | null) => void;
     setSearch: (v: string) => void;
+    setDeleteDialogOpen: (v: boolean) => void;
+    setDeleteloading: (v: boolean) => void;
 }

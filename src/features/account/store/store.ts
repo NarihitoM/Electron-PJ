@@ -17,6 +17,8 @@ export const accountstore = create<AccountState>((set) => ({
     loadingpasswordchange: false,
     dialogService: null,
     search: "",
+    deleteDialogOpen: false,
+    deleteloading: false,
 
     setUsername: (v) => set({ username: v }),
     setCurrentpassword: (v) => set({ currentpassword: v }),
@@ -33,4 +35,6 @@ export const accountstore = create<AccountState>((set) => ({
     setLoadingpasswordchange: (v) => set({ loadingpasswordchange: v }),
     setDialogService: (v) => set({ dialogService: v }),
     setSearch: (v) => set({ search: v }),
+    setDeleteDialogOpen: (v) => set({ deleteDialogOpen: v }),
+    setDeleteloading: (v) => set({ deleteloading: v }),
 }))

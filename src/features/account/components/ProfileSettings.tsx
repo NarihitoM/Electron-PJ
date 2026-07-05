@@ -58,7 +58,7 @@ export const ProfileSettings = () => {
     return (
         <Card className="border-none shadow-md bg-card/50 backdrop-blur-sm">
             <CardHeader>
-                <CardTitle>{userdata?.authtype === "User" ? "Profile Setting" : "Google Profile Setting"}</CardTitle>
+                <CardTitle>{userdata?.authtype === "User" ? "Profile" : "Google Profile"}</CardTitle>
                 {userdata?.authtype === "User" && <CardDescription className="font-bold">Configure your user account</CardDescription>}
             </CardHeader>
             <CardContent className="space-y-4">
