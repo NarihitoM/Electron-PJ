@@ -27,6 +27,7 @@ import { slackauth } from "../api/api";
 import { chatauth } from "@/features/chat/api/api";
 import { voiceauth } from "@/features/voice/api/api";
 import { slackauthstore } from "../store/store";
+import { useQueryClient } from "@tanstack/react-query";
 import type { chatsession } from "@/shared/types/globaltype";
 import type { ModelEntry } from "@/shared/lib/modelsapi";
 
@@ -99,6 +100,7 @@ export const SlackInput = () => {
         setCustomMonth,
     } = slackauthstore();
 
+    const queryClient = useQueryClient();
     const { data: slackAccount } = useSlackAccount();
     const { data: Api = [] } = useServiceKeys();
 
@@ -262,7 +264,7 @@ export const SlackInput = () => {
             if (!input.trim()) return;
         }
 
-        if (!input.trim() || !provider || !model) return;
+        if (!input.trim() || !provider || !model || !channelid) return;
 
         const controller = new AbortController();
         abortControllerRef.current = controller;
@@ -432,6 +434,8 @@ export const SlackInput = () => {
                 setSending(false);
                 abortControllerRef.current = null;
             }
+            queryClient.invalidateQueries({ queryKey: ["usage-stats"] });
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
         }
     };
 

@@ -26,12 +26,14 @@ import { chatauth } from "@/features/chat/api/api"
 import { voiceauth } from "@/features/voice/api/api"
 import { telegramauthstore } from "@/features/telegram/store/store"
 import { TelegramCronScheduler } from "./TelegramCronScheduler"
+import { useQueryClient } from "@tanstack/react-query"
 import type { ModelEntry } from "@/shared/lib/modelsapi"
 
 export const TelegramInput = () => {
     const { data: Api = [] } = useServiceKeys()
     const { data: accountData } = useTelegramAccount()
     const store = telegramauthstore()
+    const queryClient = useQueryClient()
 
     const [recordstatus, setrecordstatus] = useState(false)
     const [loadingrecord, setloadingrecord] = useState(false)
@@ -74,7 +76,7 @@ export const TelegramInput = () => {
             if (!store.input.trim()) return
         }
 
-        if (!store.input.trim() || !store.provider || !store.model) return
+        if (!store.input.trim() || !store.provider || !store.model || !targetId) return
 
         const controller = new AbortController()
         abortControllerRef.current = controller
@@ -222,6 +224,8 @@ export const TelegramInput = () => {
                 store.setSending(false)
                 abortControllerRef.current = null
             }
+            queryClient.invalidateQueries({ queryKey: ["usage-stats"] })
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })
         }
     }
 

@@ -16,7 +16,7 @@ export const RecentActivity = () => {
     const { recentPage, setRecentPage } = usagestore()
 
     const recent = stats?.recent ?? []
-    const loading = isLoading
+    const loading = isFetching
     const pageLoading = isFetching && !isLoading
     const recentTotal = stats?.recentTotal ?? 0
     const totalPages = Math.ceil(recentTotal / recentLimit);

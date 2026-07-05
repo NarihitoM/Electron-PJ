@@ -12,8 +12,6 @@ export const useMessages = (chatid: string | undefined, cursor?: number, limit?:
             return response.data?.messages ?? []
         },
         enabled: !!chatid,
-        staleTime: 1000 * 60 * 5,
-        gcTime: 1000 * 60 * 5,
         retry: false,
     })
 }

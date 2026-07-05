@@ -4,7 +4,7 @@ import { AGENT_COLORS, AGENT_LABELS, formatNumber, formatCost } from "./usageHel
 import { useUsageStats } from "../hooks/useUsageStats"
 
 export const UsageByAgent = () => {
-    const { data: stats, isLoading } = useUsageStats()
+    const { data: stats, isFetching } = useUsageStats()
 
     const agentData = stats?.byAgent.map((a) => ({
         name: AGENT_LABELS[a.agent] || a.agent,
@@ -12,7 +12,7 @@ export const UsageByAgent = () => {
         cost: a.cost,
     })) ?? []
 
-    const loading = isLoading
+    const loading = isFetching
 
     return (
         <div className="mx-auto w-full max-w-5xl mt-4">

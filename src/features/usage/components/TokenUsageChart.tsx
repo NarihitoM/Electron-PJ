@@ -12,10 +12,10 @@ const barChartConfig = {
 } satisfies ChartConfig;
 
 export const TokenUsageChart = () => {
-    const { data: stats, isLoading } = useUsageStats()
+    const { data: stats, isFetching } = useUsageStats()
     const { period } = usagestore()
     const data = stats?.byTime
-    const loading = isLoading
+    const loading = isFetching
 
     return (
         <Card className="lg:col-span-2">

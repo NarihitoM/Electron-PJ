@@ -14,11 +14,13 @@ import { googleauthstore } from "../store/store"
 import { googleauth } from "../api/api"
 import { chatauth } from "@/features/chat/api/api"
 import { voiceauth } from "@/features/voice/api/api"
+import { useQueryClient } from "@tanstack/react-query"
 
 export const GoogleSheetInput = () => {
     const { data: Api = [] } = useServiceKeys()
     const { data: googleService } = useGoogleService()
     const store = googleauthstore()
+    const queryClient = useQueryClient()
 
     const serviceemail = (googleService as any)?.email ?? ""
     const sheet = (googleService as any)?.googlesheet ?? []
@@ -48,7 +50,7 @@ export const GoogleSheetInput = () => {
             if (!store.input_sheet.trim()) return
         }
 
-        if ((!store.input_sheet.trim() && store.pendingImages_sheet.length === 0) || !store.provider || !store.model || store.uploadingImages_sheet)
+        if ((!store.input_sheet.trim() && store.pendingImages_sheet.length === 0) || !store.provider || !store.model || store.uploadingImages_sheet || !store.sheeturl)
             return
 
         const controller = new AbortController()
@@ -218,6 +220,8 @@ export const GoogleSheetInput = () => {
                 store.setSending_sheet(false)
                 abortControllerRef.current = null
             }
+            queryClient.invalidateQueries({ queryKey: ["usage-stats"] })
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })
         }
     }
 

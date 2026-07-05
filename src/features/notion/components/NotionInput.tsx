@@ -15,11 +15,13 @@ import { voiceauth } from "@/features/voice/api/api"
 import { notionauth } from "../api/api"
 import { useNotionAccount } from "../hooks/useNotionAccount"
 import { notionauthstore } from "../store/store"
+import { useQueryClient } from "@tanstack/react-query"
 
 export const NotionInput = () => {
     const { data: Api = [] } = useServiceKeys()
     const { data: notionAccount } = useNotionAccount()
     const store = notionauthstore()
+    const queryClient = useQueryClient()
 
     const workspacename = (notionAccount as any)?.workspacename ?? ""
     const pages = (notionAccount as any)?.pages ?? []
@@ -55,7 +57,7 @@ export const NotionInput = () => {
             abortControllerRef.current.abort()
             if (!store.input.trim()) return
         }
-        if (!store.input.trim() || !store.provider || !store.model) return
+        if (!store.input.trim() || !store.provider || !store.model || !store.pageid) return
 
         const controller = new AbortController()
         abortControllerRef.current = controller
@@ -172,6 +174,8 @@ export const NotionInput = () => {
                 store.setSending(false)
                 abortControllerRef.current = null
             }
+            queryClient.invalidateQueries({ queryKey: ["usage-stats"] })
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })
         }
     }
 

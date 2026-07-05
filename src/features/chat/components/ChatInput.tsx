@@ -13,7 +13,7 @@ import { ImagePreview, ImagePicker } from "@/shared/components/ImageUpload"
 import { ModelSelect } from "@/features/chat/components/ModelSelect"
 import { toast } from "sonner"
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys"
-import { useParams } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { getProviderModels } from "@/shared/config/providermodels"
 import { chatauth } from "@/features/chat/api/api"
 import { voiceauth } from "@/features/voice/api/api"
@@ -26,6 +26,7 @@ export const ChatInput = () => {
     const { data: Api = [] } = useServiceKeys()
     const store = chatauthstore()
     const { id } = useParams()
+    const navigate = useNavigate()
     const queryClient = useQueryClient()
 
     const [recordstatus, setrecordstatus] = useState(false)
@@ -109,9 +110,27 @@ export const ChatInput = () => {
             blobUrls.forEach(url => URL.revokeObjectURL(url))
         }
 
+        let chatId = id
+        if (!chatId) {
+            try {
+                const newChat = await chatauth.createchat()
+                if (newChat.success && newChat.data) {
+                    chatId = newChat.data.id
+                } else {
+                    toast.error("Failed to create chat")
+                    store.setSending(false)
+                    return
+                }
+            } catch {
+                toast.error("Failed to create chat")
+                store.setSending(false)
+                return
+            }
+        }
+
         try {
             await chatauth.sendmessage(
-                id as string,
+                chatId,
                 store.provider,
                 store.model,
                 currentInput,
@@ -175,7 +194,12 @@ export const ChatInput = () => {
                 store.setSending(false)
                 abortControllerRef.current = null
             }
-            queryClient.invalidateQueries({ queryKey: ["message", id] })
+            if (!id && chatId) {
+                navigate(`/chat/${chatId}`, { replace: true })
+            }
+            queryClient.invalidateQueries({ queryKey: ["message", id ?? chatId] })
+            queryClient.invalidateQueries({ queryKey: ["usage-stats"] })
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })
         }
     }
 

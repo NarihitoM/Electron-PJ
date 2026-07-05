@@ -19,6 +19,7 @@ import { googleauthstore } from "../store/store"
 import { googleauth } from "../api/api"
 import { chatauth } from "@/features/chat/api/api"
 import { voiceauth } from "@/features/voice/api/api"
+import { useQueryClient } from "@tanstack/react-query"
 import type { chatsession } from "@/shared/types/globaltype"
 import type { ModelEntry } from "@/shared/lib/modelsapi"
 
@@ -26,6 +27,7 @@ export const GoogleDocsInput = () => {
     const { data: Api = [] } = useServiceKeys()
     const { data: googleService } = useGoogleService()
     const store = googleauthstore()
+    const queryClient = useQueryClient()
 
     const serviceemail = (googleService as any)?.email ?? ""
     const docs = (googleService as any)?.googledocs ?? []
@@ -60,7 +62,7 @@ export const GoogleDocsInput = () => {
             if (!store.input_docs.trim() && store.pendingImages_docs.length === 0) return
         }
 
-        if ((!store.input_docs.trim() && store.pendingImages_docs.length === 0) || !store.provider || !store.model || store.uploadingImages_docs)
+        if ((!store.input_docs.trim() && store.pendingImages_docs.length === 0) || !store.provider || !store.model || store.uploadingImages_docs || !store.docsurl)
             return
 
         const controller = new AbortController()
@@ -224,6 +226,8 @@ export const GoogleDocsInput = () => {
                 store.setSending_docs(false)
                 abortControllerRef.current = null
             }
+            queryClient.invalidateQueries({ queryKey: ["usage-stats"] })
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })
         }
     }
 

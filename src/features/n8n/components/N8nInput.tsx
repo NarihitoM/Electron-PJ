@@ -19,12 +19,14 @@ import { n8nauth } from "../api/api"
 import { chatauth } from "@/features/chat/api/api"
 import { voiceauth } from "@/features/voice/api/api"
 import { useN8nConfig } from "@/features/n8n/hooks/useN8nConfig"
+import { useQueryClient } from "@tanstack/react-query"
 import type { ModelEntry } from "@/shared/lib/modelsapi"
 
 export const N8nInput = () => {
     const { data: Api = [] } = useServiceKeys()
     const { data: n8nConfig } = useN8nConfig()
     const store = n8nauthstore()
+    const queryClient = useQueryClient()
 
     const connected = !!(n8nConfig as any)?.connected
     const n8nUrl = (n8nConfig as any)?.n8nUrl ?? ""
@@ -165,6 +167,8 @@ export const N8nInput = () => {
                 store.setSending(false)
                 abortControllerRef.current = null
             }
+            queryClient.invalidateQueries({ queryKey: ["usage-stats"] })
+            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })
         }
     }
 

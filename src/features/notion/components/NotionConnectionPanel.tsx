@@ -5,11 +5,12 @@ import { toast } from "sonner"
 import { notionauth } from "../api/api"
 import { notionauthstore } from "../store/store"
 import { useNotionAccount } from "../hooks/useNotionAccount"
-import { datafetch } from "@/shared/config/tanstackqueryconfig"
+import { useQueryClient } from "@tanstack/react-query"
 
 export const NotionConnectionPanel = () => {
     const store = notionauthstore()
     const { data: notionAccount, isLoading } = useNotionAccount()
+    const queryClient = useQueryClient()
     const workspacename = (notionAccount as any)?.workspacename ?? ""
 
     const connectNotion = async () => {
@@ -42,7 +43,7 @@ export const NotionConnectionPanel = () => {
                     const response = await notionauth.notioncheckstatus()
                     if (response.success) {
                         store.setIsChecking(false)
-                        await datafetch.invalidateQueries({ queryKey: ["notion"] })
+                        await queryClient.invalidateQueries({ queryKey: ["notion"] })
                         if (interval) clearInterval(interval)
                         if (fallbackTimeout) clearTimeout(fallbackTimeout)
                     }

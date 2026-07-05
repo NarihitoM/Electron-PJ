@@ -8,7 +8,7 @@ import { PROVIDER_LABELS, AGENT_COLORS } from "./usageHelpers"
 const pieChartConfig = { tokens: { label: "Tokens" } } satisfies ChartConfig;
 
 export const ProviderPieChart = () => {
-    const { data: stats, isLoading } = useUsageStats()
+    const { data: stats, isFetching } = useUsageStats()
 
     const pieData = stats?.byProvider.map((p, i) => ({
         name: PROVIDER_LABELS[p.provider] || p.provider,
@@ -16,7 +16,7 @@ export const ProviderPieChart = () => {
         fill: AGENT_COLORS[i % AGENT_COLORS.length],
     })) ?? []
 
-    const loading = isLoading
+    const loading = isFetching
 
     return (
         <Card>

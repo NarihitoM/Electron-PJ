@@ -78,6 +78,10 @@ export const ChatMessageList = () => {
     }
 
     const fetchMessages = async () => {
+        if (!id) {
+            store.setloadingfetch(false)
+            return
+        }
         store.setloadingfetch(true)
         store.setloadingerror(false)
         store.setSending(false)
@@ -85,7 +89,7 @@ export const ChatMessageList = () => {
         store.setNextCursor(null)
         store.setHasMore(false)
         try {
-            const response = await chatauth.fetchchatmessage(id as string)
+            const response = await chatauth.fetchchatmessage(id)
             if (response.success && response.data) {
                 store.setsessionmessage(response.data.messages ?? [])
                 store.setNextCursor(response.data.nextCursor)

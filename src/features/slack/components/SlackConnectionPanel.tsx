@@ -5,11 +5,12 @@ import { toast } from "sonner";
 import { slackauth } from "../api/api";
 import { slackauthstore } from "../store/store";
 import { useSlackAccount } from "../hooks/useSlackAccount";
-import { datafetch } from "@/shared/config/tanstackqueryconfig";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const SlackConnectionPanel = () => {
     const { isChecking, setIsChecking } = slackauthstore();
     const { data: slackAccount } = useSlackAccount();
+    const queryClient = useQueryClient();
     const workspace = (slackAccount as any)?.workspace ?? "";
 
     const connectSlack = async () => {
@@ -42,7 +43,7 @@ export const SlackConnectionPanel = () => {
                 const response = await slackauth.slackcheckstatus();
                 if (response.success) {
                     setIsChecking(false);
-                    await datafetch.invalidateQueries({ queryKey: ["slack"] });
+                    await queryClient.invalidateQueries({ queryKey: ["slack"] });
                     if (interval) clearInterval(interval);
                     if (fallbackTimeout) clearTimeout(fallbackTimeout);
                 }
@@ -57,7 +58,7 @@ export const SlackConnectionPanel = () => {
             try {
                 const response = await slackauth.slackcheckstatus();
                 if (response.success) {
-                    await datafetch.invalidateQueries({ queryKey: ["slack"] });
+                    await queryClient.invalidateQueries({ queryKey: ["slack"] });
                 }
             } catch (err) {
                 console.error("Final check error", err);

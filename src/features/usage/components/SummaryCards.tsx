@@ -5,9 +5,9 @@ import { formatNumber, formatCost, formatLatency } from "./usageHelpers"
 import { useUsageStats } from "../hooks/useUsageStats"
 
 export const SummaryCards = () => {
-    const { data: stats, isLoading } = useUsageStats()
+    const { data: stats, isFetching } = useUsageStats()
     const s = stats?.summary
-    const loading = isLoading
+    const loading = isFetching
 
     if (s && !loading) {
         return (
