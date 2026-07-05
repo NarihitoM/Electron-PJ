@@ -72,8 +72,8 @@ export const AgentChatArea = () => {
                         <Skeleton className="h-8 w-8 rounded-full shrink-0" />
                         <div className="space-y-2">
                             <Skeleton className="h-3 w-20" />
-                            <Skeleton className="h-4 w-[180px]" />
-                            <Skeleton className="h-4 w-[120px]" />
+                            <Skeleton className="h-4 w-45" />
+                            <Skeleton className="h-4 w-30" />
                         </div>
                     </div>
                 ))}

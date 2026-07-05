@@ -238,7 +238,7 @@ export const AgentInput = () => {
                                 <SheetTrigger asChild>
                                     <Button className="bg-cyan-500 dark:bg-white rounded-full">History</Button>
                                 </SheetTrigger>
-                                <SheetContent side="right" className="w-full sm:w-[500px]">
+                                <SheetContent side="right" className="w-full sm:w-125">
                                     <SheetHeader>
                                         <SheetTitle>
                                             <div className="flex items-center gap-2">

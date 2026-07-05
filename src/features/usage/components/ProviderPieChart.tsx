@@ -26,7 +26,7 @@ export const ProviderPieChart = () => {
             <CardContent>
                 {pieData.length > 0 && !loading ? (
                     <>
-                        <ChartContainer config={pieChartConfig} className="h-[200px] w-full">
+                        <ChartContainer config={pieChartConfig} className="h-50 w-full">
                             <PieChart>
                                 <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} innerRadius={35} paddingAngle={2}>
                                     {pieData.map((entry, i) => (
@@ -47,7 +47,7 @@ export const ProviderPieChart = () => {
                     </>
                 ) : loading ? (
                     <>
-                        <Skeleton className="h-[200px] w-full rounded-lg" />
+                        <Skeleton className="h-50 w-full rounded-lg" />
                         <div className="flex flex-wrap gap-2 mt-2">
                             {[1, 2, 3].map((i) => (
                                 <Skeleton key={i} className="h-4 w-16 rounded-full" />

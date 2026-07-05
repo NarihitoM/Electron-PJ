@@ -45,7 +45,7 @@ export const RecentActivity = () => {
                 </CardHeader>
                 <CardContent>
                     {loading ? (
-                        <Skeleton className="h-[350px] w-full rounded-lg" />
+                        <Skeleton className="h-87.5 w-full rounded-lg" />
                     ) : recent.length > 0 || pageLoading ? (
                         <>
                             <Table>

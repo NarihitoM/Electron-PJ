@@ -233,7 +233,7 @@ export const ChatMessageList = () => {
                                             {msg.generatedImages.map((url: string, i: number) => (
                                                 <div
                                                     key={i}
-                                                    className="relative rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity max-w-[300px]"
+                                                    className="relative rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity max-w-75"
                                                     onClick={() => { store.setLightboxImages(msg.generatedImages!); store.setLightboxIndex(i); store.setLightboxOpen(true) }}
                                                 >
                                                     <img src={url} alt="generated" className="w-full h-auto object-cover" />

@@ -24,7 +24,7 @@ export const TokenUsageChart = () => {
             </CardHeader>
             <CardContent>
                 {data && !loading && data.length > 0 ? (
-                    <ChartContainer config={barChartConfig} className="h-[200px] w-full">
+                    <ChartContainer config={barChartConfig} className="h-50 w-full">
                         <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
                             <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => {
@@ -48,7 +48,7 @@ export const TokenUsageChart = () => {
                         </BarChart>
                     </ChartContainer>
                 ) : loading || !data ? (
-                    <Skeleton className="h-[200px] w-full rounded-lg" />
+                    <Skeleton className="h-50 w-full rounded-lg" />
                 ) : (
                     <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">No data for this period</div>
                 )}
