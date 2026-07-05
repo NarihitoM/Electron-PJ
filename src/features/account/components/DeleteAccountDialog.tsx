@@ -7,11 +7,13 @@ import { Spinner } from "@/shared/components/ui/spinner"
 import { AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
 import { userauthapi } from "@/features/auth/api/api"
+import { useNavigate } from "react-router-dom"
 import { accountstore } from "../store/store"
 
 export const DeleteAccountDialog = () => {
     const { deleteDialogOpen, setDeleteDialogOpen, deleteloading, setDeleteloading } = accountstore()
     const [confirmText, setConfirmText] = useState("")
+    const navigate = useNavigate()
 
     const handleDelete = async () => {
         if (confirmText !== "DELETE") return
@@ -22,6 +24,8 @@ export const DeleteAccountDialog = () => {
                 toast.success(response.message)
                 setDeleteDialogOpen(false)
                 setConfirmText("")
+                await userauthapi.logout()
+                navigate("/", { replace: true })
             } else {
                 toast.error(response.message)
             }
