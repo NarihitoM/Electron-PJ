@@ -323,7 +323,17 @@ export const ServiceApiKeyList = () => {
                     if (value) setSelectedProvider(value);
                 }}>
                     <SelectTrigger className="w-full max-w-md">
-                        <SelectValue placeholder="Select provider" />
+                        <SelectValue placeholder="Select provider">
+                            {selectedProvider && (
+                                <div className="flex items-center gap-2">
+                                    <img
+                                        src={API_KEY_PROVIDERS.find(p => p.name === selectedProvider)?.icon}
+                                        className="bg-white rounded-lg w-5 h-5 p-0.5 object-contain shrink-0"
+                                    />
+                                    <span>{API_KEY_PROVIDERS.find(p => p.name === selectedProvider)?.displayName}</span>
+                                </div>
+                            )}
+                        </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                         {API_KEY_PROVIDERS.map((provider) => (
