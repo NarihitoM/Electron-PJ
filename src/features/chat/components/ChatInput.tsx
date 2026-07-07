@@ -41,15 +41,24 @@ export const ChatInput = () => {
     const lastSentInputRef = useRef("")
 
     useEffect(() => {
-        if (!store.provider) { setModelList([]); return }
+        if (!store.provider) {
+            setModelList([])
+            return
+        }
         setModelsLoading(true)
-        getProviderModels(store.provider).then(models => {
-            setModelList(models)
-            setModelsLoading(false)
-            if (models.length > 0 && !models.some(m => m.model === store.model)) {
-                store.setModel(models[0].model)
-            }
-        })
+        getProviderModels(store.provider)
+            .then(models => {
+                setModelList(models)
+                setModelsLoading(false)
+                if (models.length > 0 && !models.some(m => m.model === store.model)) {
+                    store.setModel(models[0].model)
+                }
+            })
+            .catch(err => {
+                console.error('Failed to load models:', err)
+                setModelList([])
+                setModelsLoading(false)
+            })
     }, [store.provider])
 
     useEffect(() => () => abortControllerRef.current?.abort(), [])

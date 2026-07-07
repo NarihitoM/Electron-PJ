@@ -31,7 +31,11 @@ export const ChatHeader = () => {
             </div>
             {apiWithLogos.length > 0 ? (
                 <div className="flex gap-2">
-                    <Select onValueChange={(value) => store.setProvider(value ?? "")} value={store.provider}>
+                    <Select onValueChange={(value) => {
+                        if (value) {
+                            store.setProvider(value)
+                        }
+                    }} value={store.provider}>
                         <SelectTrigger>
                             {store.provider ?
                                 <>
