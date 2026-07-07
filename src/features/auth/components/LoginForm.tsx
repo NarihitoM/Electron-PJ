@@ -70,6 +70,9 @@ export const LoginForm = () => {
                 if (!acesstoken) return;
                 const data = await userauthapi.googlelogin(acesstoken);
                 if (data.success) {
+                    if (data.token) {
+                        await (window as any).api.savetoken(data.token);
+                    }
                     toast.success(data.message);
                     setTimeout(() => {
                         navigate("/app/dashboard", { replace: true });
