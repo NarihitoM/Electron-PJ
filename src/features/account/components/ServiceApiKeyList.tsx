@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/sha
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Button } from "@/shared/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { Key, Save, ShieldCheck, Trash } from "lucide-react";
 import { toast } from "sonner";
@@ -11,6 +10,7 @@ import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useAddServiceKey } from "@/features/services/hooks/useAddServiceKey";
 import { useDeleteServiceKey } from "@/features/services/hooks/useDeleteServiceKey";
 import { clearModelCache } from "@/shared/config/providermodels";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import Gemini from "@/shared/assets/gemini.png"
 import Anthropic from "@/shared/assets/claude.png"
 import Groq from "@/shared/assets/groq.png"
@@ -308,31 +308,37 @@ const OllamaUI = () => {
 };
 
 export const ServiceApiKeyList = () => {
-  return (
-    <div className="mx-auto max-w-5xl">
-      <div className="flex flex-col gap-1 mb-2">
-        <h1 className="text-2xl font-bold flex items-center gap-3">
-          <Key className="w-6 h-6 text-cyan-500 dark:text-white " /> Service Providers
-        </h1>
-        <p className="text-muted-foreground">Configure your API providers and model preferences.</p>
-      </div>
+    const [selectedProvider, setSelectedProvider] = useState("openai");
+    return (
+        <div className="mx-auto max-w-5xl">
+            <div className="flex flex-col gap-1 mb-2">
+                <h1 className="text-2xl font-bold flex items-center gap-3">
+                    <Key className="w-6 h-6 text-cyan-500 dark:text-white " /> Service Providers
+                </h1>
+                <p className="text-muted-foreground">Configure your API providers and model preferences.</p>
+            </div>
 
-      <Tabs defaultValue="openai" className="mt-5 flex flex-col">
-        <TabsList className="bg-muted/50 p-3 flex flex-row gap-2 h-auto justify-start">
-          {API_KEY_PROVIDERS.map((provider) => (
-            <TabsTrigger key={provider.name} value={provider.name} className="py-3">
-              <img src={provider.icon} className="bg-white rounded-lg w-5 h-5 p-0.5 object-contain shrink-0" />
-              <span className="mr-2">{provider.displayName}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
+            <div className="mt-5">
+                <Select value={selectedProvider} onValueChange={(value: string | null) => {
+                    if (value) setSelectedProvider(value);
+                }}>
+                    <SelectTrigger className="w-full max-w-md">
+                        <SelectValue placeholder="Select provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {API_KEY_PROVIDERS.map((provider) => (
+                            <SelectItem key={provider.name} value={provider.name}>
+                                <div className="flex items-center gap-2">
+                                    <img src={provider.icon} className="bg-white rounded-lg w-5 h-5 p-0.5 object-contain shrink-0" />
+                                    <span>{provider.displayName}</span>
+                                </div>
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
 
-        {API_KEY_PROVIDERS.map((provider) => (
-          <TabsContent key={provider.name} value={provider.name}>
-            {provider.name === "ollama" ? <OllamaUI /> : <ProviderUI name={provider.name} placeholder={`${provider.displayName} API Key...`} />}
-          </TabsContent>
-        ))}
-      </Tabs>
-    </div>
-  );
+            {selectedProvider === "ollama" ? <OllamaUI /> : <ProviderUI name={selectedProvider} placeholder={`${API_KEY_PROVIDERS.find(p => p.name === selectedProvider)?.displayName || selectedProvider} API Key...`} />}
+        </div>
+    );
 };
