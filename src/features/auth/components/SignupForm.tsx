@@ -6,8 +6,8 @@ import { Label } from "@/shared/components/ui/label";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { userauthapi } from "@/features/auth/api/api";
 import { Eye, EyeOff, Lock, Mail, User2 } from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 
 export const SignupForm = () => {
@@ -21,6 +21,22 @@ export const SignupForm = () => {
     const [show, setshow] = useState<boolean>(false);
     const [show2, setshow2] = useState<boolean>(false);
     const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        const token = (window as any).api.gettoken();
+        if (token) {
+            navigate(`/app/dashboard`, { replace: true });
+        }
+    }, [navigate]);
+
+    useEffect(() => {
+        const state = location.state as { logoutSuccess?: boolean } | null;
+        if (state?.logoutSuccess) {
+            toast.success("Logged out successfully.");
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
 
     const handleSignup = async () => {
         try {
