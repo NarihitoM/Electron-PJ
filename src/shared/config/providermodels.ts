@@ -6,6 +6,7 @@ import OpenRouter from "../assets/openrouter.png"
 import Mistral from "../assets/mistralai.png"
 import Deepseek from "../assets/deepseek.png"
 import Ollama from "../assets/ollama.png"
+import ZAI from "../assets/zai.svg"
 import { fetchModelsForProvider, clearModelCache, type ModelEntry } from "../lib/modelsapi";
 
 export const BRAND_ASSETS: Record<string, string> = {
@@ -16,7 +17,8 @@ export const BRAND_ASSETS: Record<string, string> = {
     openrouter: OpenRouter,
     mistral: Mistral,
     deepseek : Deepseek,
-    ollama: Ollama
+    ollama: Ollama,
+    zai: ZAI
 };
 
 
@@ -76,6 +78,13 @@ export const PROVIDER = [
         image: BRAND_ASSETS["ollama"],
         description:
             "Run open-source large language models locally on your machine. Supports Llama, Mistral, Qwen, DeepSeek and hundreds of models."
+    },
+    {
+        name: "Z.AI",
+        model: "GLM Series",
+        image: BRAND_ASSETS["zai"],
+        description:
+            "Advanced open-weight GLM models optimized for reasoning, coding, and multimodal tasks. Powered by Zhipu AI."
     }
 ]
 
@@ -170,6 +179,22 @@ export const PROVIDER_MODELS: Record<string, { model: string; imageUrl: string }
         { model: "codellama", imageUrl: Ollama },
         { model: "mixtral", imageUrl: Ollama },
         { model: "nomic-embed-text", imageUrl: Ollama }
+    ],
+    zai: [
+        { model: "glm-5.2", imageUrl: ZAI },
+        { model: "glm-5.1", imageUrl: ZAI },
+        { model: "glm-5", imageUrl: ZAI },
+        { model: "glm-5-turbo", imageUrl: ZAI },
+        { model: "glm-5v-turbo", imageUrl: ZAI },
+        { model: "glm-4.7", imageUrl: ZAI },
+        { model: "glm-4.7-flash", imageUrl: ZAI },
+        { model: "glm-4.7-flashx", imageUrl: ZAI },
+        { model: "glm-4.6", imageUrl: ZAI },
+        { model: "glm-4.6v", imageUrl: ZAI },
+        { model: "glm-4.5", imageUrl: ZAI },
+        { model: "glm-4.5-air", imageUrl: ZAI },
+        { model: "glm-4.5-flash", imageUrl: ZAI },
+        { model: "glm-4.5v", imageUrl: ZAI },
     ]
 };
 
@@ -216,10 +241,10 @@ export async function getProviderModels(provider: string): Promise<ModelEntry[]>
 function inferCapabilities(id: string): string[] {
     const lower = id.toLowerCase();
     const caps: string[] = ["text"];
-    if (/vl|vision|image|multimodal|visual|pixtral|sonnet|opus|haiku|gpt-4|gpt-5|gemini|claude/.test(lower)) caps.push("vision");
+    if (/vl|vision|image|multimodal|visual|pixtral|sonnet|opus|haiku|glm.*v[^a-z]|gpt-4|gpt-5|gemini|claude/.test(lower)) caps.push("vision");
     if (/code|coder|codex|devstral|programming|starcoder|deepseek|qwen-coder|laguna|cobuddy/.test(lower)) caps.push("code");
-    if (/reason|think|o1|o3|o4|deepseek|nemotron.*reasoning|lfm.*thinking/.test(lower)) caps.push("reasoning");
-    if (/gpt|claude|gemini|mistral-large|mistral-medium|devstral|open-mistral|function|tool/.test(lower)) caps.push("tools");
+    if (/reason|think|o1|o3|o4|glm-5[.\d]|deepseek|nemotron.*reasoning|lfm.*thinking/.test(lower)) caps.push("reasoning");
+    if (/gpt|claude|gemini|glm[.\-\d]|mistral-large|mistral-medium|devstral|open-mistral|function|tool/.test(lower)) caps.push("tools");
     return caps;
 }
 

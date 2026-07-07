@@ -19,6 +19,7 @@ import OpenRouter from "@/shared/assets/openrouter.png"
 import Mistral from "@/shared/assets/mistralai.png"
 import Deepseek from "@/shared/assets/deepseek.png"
 import OllamaAsset from "@/shared/assets/ollama.png"
+import ZAI from "@/shared/assets/zai.svg"
 
 const BRAND_ASSETS: Record<string, string> = {
   openai: OpenAi,
@@ -29,6 +30,7 @@ const BRAND_ASSETS: Record<string, string> = {
   mistral: Mistral,
   deepseek: Deepseek,
   ollama: OllamaAsset,
+  zai: ZAI,
 };
 
 const API_KEY_PROVIDERS = [
@@ -40,6 +42,7 @@ const API_KEY_PROVIDERS = [
   { name: "mistral", displayName: "Mistral", icon: Mistral },
   { name: "deepseek", displayName: "Deepseek", icon: Deepseek },
   { name: "ollama", displayName: "Ollama", icon: OllamaAsset },
+  { name: "zai", displayName: "Z.AI", icon: ZAI },
 ];
 
 const ProviderUI = ({ name, placeholder }: { name: string; placeholder: string }) => {
