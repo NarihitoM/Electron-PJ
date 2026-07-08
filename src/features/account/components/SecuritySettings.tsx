@@ -7,7 +7,7 @@ import { Separator } from "@/shared/components/ui/separator"
 import { Spinner } from "@/shared/components/ui/spinner"
 import { toast } from "sonner"
 import { useState } from "react"
-import { userauthapi } from "@/features/auth/api/api"
+import { accountauth } from "../api/api"
 import { accountstore } from "../store/store"
 
 export const SecuritySettings = () => {
@@ -21,7 +21,7 @@ export const SecuritySettings = () => {
         if (currentpassword === newpassword) { toast.error("New password must be different from current password."); return }
         try {
             setLoadingpassword(true)
-            const response = await userauthapi.passwordreset(currentpassword, newpassword)
+            const response = await accountauth.passwordreset(currentpassword, newpassword)
             if (response.success) {
                 setOpenverify(true)
                 setStateid(response.stateid)

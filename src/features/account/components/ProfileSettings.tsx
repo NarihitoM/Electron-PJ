@@ -6,7 +6,7 @@ import { Button } from "@/shared/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar"
 import { Spinner } from "@/shared/components/ui/spinner"
 import { useUser } from "@/features/auth/hooks/useUser"
-import { userauthapi } from "@/features/auth/api/api"
+import { accountauth } from "../api/api"
 import { useEffect, useRef } from "react"
 import { toast } from "sonner"
 import { accountstore } from "../store/store"
@@ -37,7 +37,7 @@ export const ProfileSettings = () => {
             const formdata = new FormData()
             if (fileRef.current?.files?.[0]) formdata.append("file", fileRef.current.files[0])
             formdata.append("username", username)
-            const response = await userauthapi.userupdate(formdata)
+            const response = await accountauth.userupdate(formdata)
             if (response.success) {
                 toast.success(response.message)
                 setPreview("")

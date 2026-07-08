@@ -6,7 +6,7 @@ import { Spinner } from "@/shared/components/ui/spinner"
 import { toast } from "sonner"
 import { useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { userauthapi } from "@/features/auth/api/api"
+import { accountauth } from "../api/api"
 import { accountstore } from "../store/store"
 
 export const VerificationDialog = () => {
@@ -24,12 +24,12 @@ export const VerificationDialog = () => {
     const handleVerify = async () => {
         try {
             setLoadingpasswordverify(true)
-            const response = await userauthapi.passwordverify(stateid, code)
+            const response = await accountauth.passwordverify(stateid, code)
             if (response.success) {
                 setOpenverify(true)
                 toast.success(response.message)
                 setTimeout(() => {
-                    userauthapi.logout()
+                    accountauth.logout()
                     navigate("/login", { replace: true })
                 }, 2000)
             }
@@ -49,7 +49,7 @@ export const VerificationDialog = () => {
         if (timer > 0) return
         try {
             setLoadingpasswordresend(true)
-            const data = await userauthapi.passwordresend(stateid)
+            const data = await accountauth.passwordresend(stateid)
             if (data.success) { toast.success(data.message); setTimer(60) }
         } catch (err: unknown) {
             if (err instanceof Error) {
@@ -66,7 +66,7 @@ export const VerificationDialog = () => {
     const handleOpenChange = (open: boolean) => {
         if (!open) {
             setOpenverify(false)
-            userauthapi.clearpasswordcode(stateid)
+            accountauth.clearpasswordcode(stateid)
         }
     }
 

@@ -6,7 +6,7 @@ import { Label } from "@/shared/components/ui/label"
 import { Spinner } from "@/shared/components/ui/spinner"
 import { AlertTriangle } from "lucide-react"
 import { toast } from "sonner"
-import { userauthapi } from "@/features/auth/api/api"
+import { accountauth } from "../api/api"
 import { useNavigate } from "react-router-dom"
 import { accountstore } from "../store/store"
 
@@ -19,12 +19,12 @@ export const DeleteAccountDialog = () => {
         if (confirmText !== "DELETE") return
         setDeleteloading(true)
         try {
-            const response = await userauthapi.deleteaccount()
+            const response = await accountauth.deleteaccount()
             if (response.success) {
                 toast.success(response.message)
                 setDeleteDialogOpen(false)
                 setConfirmText("")
-                await userauthapi.logout()
+                await accountauth.logout()
                 navigate("/", { state: { logoutSuccess: true }, replace: true })
             } else {
                 toast.error(response.message)

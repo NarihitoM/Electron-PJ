@@ -28,7 +28,7 @@ import { Input } from "../ui/input";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../ui/themeprovider";
 import { useUser } from "../../../features/auth/hooks/useUser";
-import { userauthapi } from "../../../features/auth/api/api";
+import { accountauth } from "../../../features/account/api/api";
 import { Toaster } from "../ui/sonner";
 import { toast } from "sonner";
 import { chatauthstore } from "../../../features/chat/store/store";
@@ -150,7 +150,7 @@ export const Sidebarprovider = () => {
     //Functions
     const handleLogout = async () => {
         try {
-            await userauthapi.logout();
+            await accountauth.logout();
 
             //Clear all the states
             resetchat()

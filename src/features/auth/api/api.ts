@@ -63,52 +63,6 @@ export const userauthapi = {
             stateid
         });
     },
-    clearpasswordcode: async (
-        stateid: string
-    ): Promise<void> => {
-        await Server.post("/auth/api/clearpass", {
-            stateid
-        });
-    },
-    passwordreset: async (
-        currentpassword: string,
-        newpassword: string
-    ): Promise<authfeedback> => {
-        const response = await Server.post("/auth/api/passwordreset", {
-            currentpassword,
-            newpassword
-        })
-        return response.data;
-    },
-    passwordverify: async (
-        stateid: string,
-        code: string
-    ): Promise<authfeedback> => {
-        const response = await Server.post("/auth/api/passwordverify", {
-            stateid,
-            code
-        })
-        return response.data;
-    },
-    passwordresend: async (
-        stateid: string
-    ): Promise<authfeedback> => {
-        const response = await Server.post("/auth/api/passwordresend", {
-            stateid
-        })
-        return response.data;
-    },
-    logout: async (): Promise<void> => {
-        if ((window as any).api) {
-            await (window as any).api.logout();
-        }
-    },
-    userupdate: async (
-        formdata : FormData
-    ): Promise<authfeedback> => {
-        const response = await Server.post("/auth/api/update", formdata);
-        return response.data;
-    },
     changepasswordreset: async (
         useremail: string
     ): Promise<authfeedback> => {
@@ -151,10 +105,6 @@ export const userauthapi = {
         const response = await Server.post("/auth/api/cleartempemail", {
             stateid
         })
-        return response.data;
-    },
-    deleteaccount: async (): Promise<authfeedback> => {
-        const response = await Server.post("/auth/api/deleteaccount");
         return response.data;
     },
     undodelete: async (): Promise<authfeedback> => {
