@@ -24,10 +24,17 @@ export const SignupForm = () => {
     const location = useLocation();
 
     useEffect(() => {
-        const token = (window as any).api.gettoken();
-        if (token) {
-            navigate(`/app/dashboard`, { replace: true });
-        }
+        const checkToken = async () => {
+            try {
+                const token = await (window as any).api.getToken();
+                if (token) {
+                    navigate(`/app/dashboard`, { replace: true });
+                }
+            } catch (error) {
+                console.error("Error checking token:", error);
+            }
+        };
+        checkToken();
     }, [navigate]);
 
     useEffect(() => {
