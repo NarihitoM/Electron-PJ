@@ -64,6 +64,8 @@ const createRawLLM = (provider: string, model: string, apiKey: string, host?: st
             return new ChatMistralAI({ apiKey, model, streaming: true, streamUsage: true });
         case "deepseek":
             return new ChatDeepSeek({ apiKey, model, streaming: true, streamUsage: true });
+        case "zen":
+            return new ChatOpenAI({ apiKey, model, streaming: true, streamUsage: true, configuration: { baseURL: "https://opencode.ai/zen/v1" } });
         case "ollama": {
             const baseUrl = host || (apiKey ? "https://ollama.com" : "http://localhost:11434");
             const headers = apiKey ? { Authorization: `Bearer ${apiKey}` } : undefined;

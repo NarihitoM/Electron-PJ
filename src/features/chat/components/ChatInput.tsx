@@ -209,6 +209,7 @@ export const ChatInput = () => {
             queryClient.invalidateQueries({ queryKey: ["message", id ?? chatId] })
             queryClient.invalidateQueries({ queryKey: ["usage-stats"] })
             queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })
+            queryClient.invalidateQueries({ queryKey: ["creditBalance"] })
         }
     }
 
