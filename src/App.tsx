@@ -24,6 +24,7 @@ import { Verifychangepassword } from "./pages/VerifyChangePassword"
 import { Passwordchange } from "./pages/ChangePasswordPage"
 import { Aivideoanalyse } from "./pages/Aivideoanalyse"
 import { Usage } from "./pages/Usage"
+import Credits from "./pages/Credits"
 
 function App() {
 
@@ -56,6 +57,7 @@ function App() {
                 <Route path="n8n" element={<N8n />} />
                 <Route path="localagent" element={<LocalAgent />} />//done
                 <Route path="usage" element={<Usage />} />
+                <Route path="credits" element={<Credits />} />
                 <Route path="settings" element={<Settings />} /> //done
                 <Route path="account" element={<Account />} /> //done
               </Route>

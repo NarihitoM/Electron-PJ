@@ -4,6 +4,8 @@ export interface User {
     useremail: string,
     authtype: string,
     profileurl: string,
+    credits?: number,
+    creditsUpdatedAt?: string,
 }
 
 //Apiresponse

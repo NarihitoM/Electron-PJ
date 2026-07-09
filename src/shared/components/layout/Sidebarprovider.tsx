@@ -57,6 +57,7 @@ import { dashboardstore } from "../../../features/dashboard/store/store";
 import { datafetch } from "../../config/tanstackqueryconfig";
 import { Spinner } from "../ui/spinner";
 import { Button } from "../ui/button";
+import { CreditBadge } from "../../../features/credits/components/CreditBadge";
 
 const IconRenderer = ({ icon: Icon }: { icon: any }) => {
     if (typeof Icon === 'string') {
@@ -519,6 +520,9 @@ export const Sidebarprovider = () => {
                     </SidebarContent>
                     <Separator />
                     <SidebarFooter>
+                        <div className="px-2 pb-1">
+                            <CreditBadge />
+                        </div>
                         <DropdownMenu>
                             <DropdownMenuTrigger
                                 className="flex w-full items-center gap-2 rounded-lg px-2 py-1 hover:bg-muted transition">

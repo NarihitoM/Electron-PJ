@@ -1,4 +1,4 @@
-import { BotIcon, LayoutDashboard, SquarePen, SettingsIcon, Video, BarChart3 } from "lucide-react";
+import { BotIcon, LayoutDashboard, SquarePen, SettingsIcon, Video, BarChart3, Coins } from "lucide-react";
 
 export const mainItems = [
     { title: "Dashboard", url: "/app/dashboard", icon: LayoutDashboard },
@@ -54,4 +54,5 @@ export const Localagent = [
 
 export const Settings = [
     { title: "Service Settings", url: "/app/settings", icon: SettingsIcon },
+    { title: "Credits", url: "/app/credits", icon: Coins },
 ]
