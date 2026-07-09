@@ -7,6 +7,7 @@ import Mistral from "../assets/mistralai.png"
 import Deepseek from "../assets/deepseek.png"
 import Ollama from "../assets/ollama.png"
 import ZAI from "../assets/zai.svg"
+import MultimateLogo from "../assets/Multimate.png"
 import { fetchModelsForProvider, clearModelCache, type ModelEntry } from "../lib/modelsapi";
 
 export const BRAND_ASSETS: Record<string, string> = {
@@ -18,7 +19,8 @@ export const BRAND_ASSETS: Record<string, string> = {
     mistral: Mistral,
     deepseek : Deepseek,
     ollama: Ollama,
-    zai: ZAI
+    zai: ZAI,
+    zen: MultimateLogo
 };
 
 
@@ -85,6 +87,13 @@ export const PROVIDER = [
         image: BRAND_ASSETS["zai"],
         description:
             "Advanced open-weight GLM models optimized for reasoning, coding, and multimodal tasks. Powered by Zhipu AI."
+    },
+    {
+        name: "MultimateAi (Free)",
+        model: "Free Tier",
+        image: BRAND_ASSETS["zen"],
+        description:
+            "Server-side free AI models. Uses your credit balance — 50 free credits monthly. No API key required."
     }
 ]
 
@@ -195,6 +204,13 @@ export const PROVIDER_MODELS: Record<string, { model: string; imageUrl: string }
         { model: "glm-4.5-air", imageUrl: ZAI },
         { model: "glm-4.5-flash", imageUrl: ZAI },
         { model: "glm-4.5v", imageUrl: ZAI },
+    ],
+    zen: [
+        { model: "deepseek-v4-flash-free", imageUrl: MultimateLogo },
+        { model: "mimo-v2.5-free", imageUrl: MultimateLogo },
+        { model: "north-mini-code-free", imageUrl: MultimateLogo },
+        { model: "nemotron-3-ultra-free", imageUrl: MultimateLogo },
+        { model: "big-pickle", imageUrl: MultimateLogo },
     ]
 };
 

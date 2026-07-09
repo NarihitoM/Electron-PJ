@@ -20,6 +20,7 @@ import Mistral from "@/shared/assets/mistralai.png"
 import Deepseek from "@/shared/assets/deepseek.png"
 import OllamaAsset from "@/shared/assets/ollama.png"
 import ZAI from "@/shared/assets/zai.svg"
+import MultimateLogo from "@/shared/assets/Multimate.png"
 
 const BRAND_ASSETS: Record<string, string> = {
   openai: OpenAi,
@@ -31,6 +32,7 @@ const BRAND_ASSETS: Record<string, string> = {
   deepseek: Deepseek,
   ollama: OllamaAsset,
   zai: ZAI,
+  zen: MultimateLogo,
 };
 
 const API_KEY_PROVIDERS = [
@@ -43,6 +45,7 @@ const API_KEY_PROVIDERS = [
   { name: "deepseek", displayName: "Deepseek", icon: Deepseek },
   { name: "ollama", displayName: "Ollama", icon: OllamaAsset },
   { name: "zai", displayName: "Z.AI", icon: ZAI },
+  { name: "zen", displayName: "MultimateAi (Free)", icon: MultimateLogo },
 ];
 
 const ProviderUI = ({ name, placeholder }: { name: string; placeholder: string }) => {
@@ -307,6 +310,40 @@ const OllamaUI = () => {
   )
 };
 
+const ZenUI = () => {
+  return (
+    <Card className="border-none bg-card shadow-none mt-6 p-4 animate-in fade-in slide-in-from-bottom-2">
+      <CardHeader className="px-0 pt-0">
+        <div className="flex items-center gap-3 mb-1">
+          <div className="p-2 dark:bg-white rounded-lg">
+            <img src={MultimateLogo} className="h-5 w-5" />
+          </div>
+          <div>
+            <CardTitle className="text-xl font-bold">MultimateAi (Free)</CardTitle>
+            <CardDescription className="text-muted-foreground">
+              Server-side free AI models — no API key needed.
+            </CardDescription>
+          </div>
+          <span className="bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300 px-2 py-1 rounded text-xs font-medium">
+            Active
+          </span>
+        </div>
+      </CardHeader>
+      <CardContent className="px-4 pt-4 space-y-6">
+        <div className="p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/10">
+          <p className="text-xs dark:text-muted-foreground text-cyan-500 leading-relaxed">
+            <strong>MultimateAi (Free)</strong> is a pre-configured free AI provider.
+            You get <strong>50 free credits every month</strong>, and each AI call
+            uses 1 credit. Select <strong>MultimateAi (Free)</strong> as your provider
+            in the chat dropdown, pick a free model, and start chatting — credits
+            are deducted automatically.
+          </p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 export const ServiceApiKeyList = () => {
     const [selectedProvider, setSelectedProvider] = useState("openai");
     return (
@@ -348,7 +385,7 @@ export const ServiceApiKeyList = () => {
                 </Select>
             </div>
 
-            {selectedProvider === "ollama" ? <OllamaUI /> : <ProviderUI name={selectedProvider} placeholder={`${API_KEY_PROVIDERS.find(p => p.name === selectedProvider)?.displayName || selectedProvider} API Key...`} />}
+            {selectedProvider === "ollama" ? <OllamaUI /> : selectedProvider === "zen" ? <ZenUI /> : <ProviderUI name={selectedProvider} placeholder={`${API_KEY_PROVIDERS.find(p => p.name === selectedProvider)?.displayName || selectedProvider} API Key...`} />}
         </div>
     );
 };
