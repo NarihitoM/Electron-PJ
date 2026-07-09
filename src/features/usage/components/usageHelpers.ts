@@ -24,6 +24,7 @@ export const PROVIDER_LABELS: Record<string, string> = {
     openrouter: "OpenRouter",
     mistral: "Mistral",
     deepseek: "DeepSeek",
+    zen: "MultimateAi",
 };
 
 export const AGENT_LABELS: Record<string, string> = {

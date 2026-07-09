@@ -2,7 +2,7 @@ import { Coins } from "lucide-react";
 import { useCreditBalance } from "../hooks/useCredits";
 
 export const CreditBadge = () => {
-  const { data, isLoading } = useCreditBalance();
+  const { data, isLoading, isFetching } = useCreditBalance();
 
   if (isLoading) {
     return (
@@ -24,7 +24,7 @@ export const CreditBadge = () => {
 
   return (
     <div
-      className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium ${colorClass}`}
+      className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium ${colorClass} ${isFetching ? "opacity-70" : ""}`}
       title={`${balance} credits remaining`}
     >
       <Coins className="w-3.5 h-3.5" />

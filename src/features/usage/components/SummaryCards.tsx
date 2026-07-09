@@ -3,6 +3,42 @@ import { Skeleton } from "@/shared/components/ui/skeleton"
 import { BarChart3, Coins, Activity, Clock } from "lucide-react"
 import { formatNumber, formatCost, formatLatency } from "./usageHelpers"
 import { useUsageStats } from "../hooks/useUsageStats"
+import { useCreditBalance } from "../../credits/hooks/useCredits"
+
+const CreditBalanceCard = () => {
+    const { data: balanceData, isFetching: balanceLoading } = useCreditBalance()
+    const balance = balanceData?.data?.credits ?? 0
+
+    let balanceColor = "text-green-500"
+    let balanceLabel = "Credits remaining"
+    if (balance <= 10 && balance > 0) {
+        balanceColor = "text-yellow-500"
+        balanceLabel = "Low on credits"
+    } else if (balance <= 0) {
+        balanceColor = "text-red-500"
+        balanceLabel = "Out of credits"
+    }
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                <div className="space-y-1">
+                    <CardTitle className="text-sm font-medium">Credits</CardTitle>
+                    <CardDescription>Free tier balance</CardDescription>
+                </div>
+                <CardAction><Coins className="w-5 h-5 text-cyan-500 dark:text-white" /></CardAction>
+            </CardHeader>
+            <CardContent>
+                {balanceLoading ? (
+                    <Skeleton className="h-10 w-16 rounded-lg" />
+                ) : (
+                    <div className={`text-2xl font-bold ${balanceColor}`}>{balance}</div>
+                )}
+                <p className={`text-xs mt-1 ${balanceColor}`}>{balanceLabel}</p>
+            </CardContent>
+        </Card>
+    )
+}
 
 export const SummaryCards = () => {
     const { data: stats, isFetching } = useUsageStats()
@@ -12,6 +48,7 @@ export const SummaryCards = () => {
     if (s && !loading) {
         return (
             <>
+                <CreditBalanceCard />
                 <Card>
                     <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                         <div className="space-y-1">
@@ -68,7 +105,7 @@ export const SummaryCards = () => {
 
     return (
         <>
-            {[1, 2, 3, 4].map((i) => (
+            {[1, 2, 3, 4, 5].map((i) => (
                 <Card key={i}>
                     <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                         <div className="space-y-2 w-full">

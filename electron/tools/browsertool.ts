@@ -32,6 +32,18 @@ async function waitForPageSettle(_page: any) {
     await new Promise(r => setTimeout(r, 1200));
 }
 
+/** Dispatch native change + blur events on the focused element to trigger
+ *  framework form validation (React, Vue, Angular — many validate on blur/change). */
+async function dispatchFormEvents(page: any) {
+    await page.evaluate(() => {
+        const el = document.activeElement as HTMLElement | null;
+        if (!el) return;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+        el.dispatchEvent(new Event("blur", { bubbles: true }));
+    });
+    await new Promise(r => setTimeout(r, 100));
+}
+
 export const browser_agent = tool(
     async ({ url, action, text, x, y, direction, key }) => {
         try {
@@ -47,6 +59,13 @@ export const browser_agent = tool(
             }
 
             if (action === "type" && text) {
+                // If coordinates provided, click first to focus the element
+                if (x !== undefined && y !== undefined) {
+                    await page.mouse.move(x, y, { steps: 6 });
+                    await new Promise(r => setTimeout(r, 80));
+                    await page.mouse.click(x, y);
+                    await new Promise(r => setTimeout(r, 200));
+                }
                 const activeEl = await page.evaluate(() => {
                     const el = document.activeElement;
                     if (!el) return null;
@@ -54,6 +73,8 @@ export const browser_agent = tool(
                 });
                 await page.keyboard.type(text, { delay: 80 });
                 await new Promise(r => setTimeout(r, 300));
+                // Dispatch change + blur so framework validation fires
+                await dispatchFormEvents(page);
                 const content = await BrowserManager.getPageContent(page);
                 return JSON.stringify({
                     action: "type",
@@ -127,6 +148,37 @@ export const browser_agent = tool(
                 });
             }
 
+            if (action === "select_option" && x !== undefined && y !== undefined && text !== undefined) {
+                const elementInfo = await getElementInfo(page, x, y);
+
+                await page.mouse.move(x, y, { steps: 6 });
+                await new Promise(r => setTimeout(r, 80));
+                await page.mouse.click(x, y);
+                await new Promise(r => setTimeout(r, 300));
+
+                await page.evaluate((value: string) => {
+                    const el = document.activeElement as HTMLSelectElement | null;
+                    if (!el || el.tagName.toLowerCase() !== "select") return;
+                    for (let i = 0; i < el.options.length; i++) {
+                        if (el.options[i].value === value || el.options[i].text === value) {
+                            el.selectedIndex = i;
+                            el.dispatchEvent(new Event("change", { bubbles: true }));
+                            break;
+                        }
+                    }
+                }, text);
+
+                await new Promise(r => setTimeout(r, 200));
+                const content = await BrowserManager.getPageContent(page);
+                return JSON.stringify({
+                    action: "select_option",
+                    value: text,
+                    element: elSummary(elementInfo),
+                    pageTitle: content.title,
+                    pageContent: content,
+                });
+            }
+
             if (action === "fill_field" && x !== undefined && y !== undefined && text !== undefined) {
                 const elementInfo = await getElementInfo(page, x, y);
 
@@ -144,6 +196,9 @@ export const browser_agent = tool(
 
                 await page.keyboard.type(text, { delay: 50 });
                 await new Promise(r => setTimeout(r, 200));
+
+                // Dispatch change + blur so framework validation fires
+                await dispatchFormEvents(page);
 
                 const content = await BrowserManager.getPageContent(page);
                 return JSON.stringify({
@@ -277,13 +332,19 @@ export const browser_agent = tool(
     },
     {
         name: "browser_agent",
-        description: `Human-like browser control with position feedback. Actions: open, type, press_key, scroll, click, move_mouse, fill_field, screenshot, get_html, get_overlays, get_elements.
+        description: `Human-like browser control with position feedback. Actions: open, type, press_key, scroll, click, move_mouse, fill_field, select_option, screenshot, get_html, get_overlays, get_elements.
 
 PRIMARY DISCOVERY TOOL — get_elements:
 Call get_elements FIRST after opening a page. It returns a sorted list of all visible interactive elements (inputs, buttons, links, etc.) with their center coordinates and bounding rects. Use the center coordinates to target elements.
 
-FORM FILLING — fill_field (x, y, text):
-The best way to fill forms. Clicks the position, selects ALL existing text (Ctrl+A), deletes it, then types the new text. One action instead of click → type. Use after get_elements to find input coordinates.
+FORM FILLING — fill_field(x, y, text):
+The best way to fill forms. Clicks the position, selects ALL existing text (Ctrl+A), deletes it, then types the new text. Dispatches change + blur events automatically so form validation (React/Vue/Angular) fires and the submit button enables. Use after get_elements to find input coordinates.
+
+TYPE WITH CLICK — type(x, y, text):
+Same as fill_field but APPENDS text instead of clearing existing content. Clicks at (x,y) first to focus the element, then types. Dispatches change + blur events after typing.
+
+SELECT DROPDOWN — select_option(x, y, "Option Text"):
+Selects an option from a <select> dropdown. Click coordinates + option label or value.
 
 SEARCH WORKFLOW (e.g. YouTube / Google):
 1. open a URL
@@ -294,11 +355,13 @@ SEARCH WORKFLOW (e.g. YouTube / Google):
 
 IMPORTANT NOTES:
 - fill_field clears existing text first (unlike type which appends).
+- type with (x,y) clicks first; type without (x,y) types into the currently focused element.
+- Both fill_field and type fire change+blur events so form validation enables the submit button.
 - type does NOT press Enter. Use press_key("Enter") to submit.
 - get_overlays detects modals/cookie banners blocking content. Dismiss them first.`,
         schema: z.object({
             url: z.string().url().optional(),
-            action: z.enum(["open", "type", "press_key", "scroll", "click", "move_mouse", "fill_field", "screenshot", "get_html", "get_overlays", "get_elements"]),
+            action: z.enum(["open", "type", "press_key", "scroll", "click", "move_mouse", "fill_field", "select_option", "screenshot", "get_html", "get_overlays", "get_elements"]),
             text: z.string().optional(),
             x: z.number().optional(),
             y: z.number().optional(),

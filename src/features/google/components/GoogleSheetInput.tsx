@@ -222,6 +222,7 @@ export const GoogleSheetInput = () => {
             }
             queryClient.invalidateQueries({ queryKey: ["usage-stats"] })
             queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })
+            queryClient.invalidateQueries({ queryKey: ["creditBalance"], refetchType: 'all' })
         }
     }
 
