@@ -61,25 +61,20 @@ export const AgentChat = () => {
         const handleFinished = async (_: any, data: any) => {
             if (!data?.nodeName) return;
             const gen = store.workflowGenRef.current;
+
+            let finishedNode: { name: string; output: string; thinking: string; provider: string; model: string } | null = null;
+
             store.setNodes((prev) => {
                 if (store.workflowGenRef.current !== gen) return prev;
                 const targetNode = prev.find((n) => n.name === data.nodeName);
-
                 if (targetNode) {
-                    const Agentname = targetNode.name;
-                    const finalContent = targetNode.output || targetNode.thinking || "";
-
-                    if (finalContent) {
-                        store.updateHistory((element) => [...element, {
-                            role: "assistant",
-                            content: finalContent,
-                            name: Agentname,
-                            provider: targetNode.provider,
-                            model: targetNode.model
-                        }]);
-
-                        agentauth.storeagentmessage("assistant", finalContent, Agentname, targetNode.provider, targetNode.model);
-                    }
+                    finishedNode = {
+                        name: targetNode.name,
+                        output: targetNode.output || "",
+                        thinking: targetNode.thinking || "",
+                        provider: targetNode.provider,
+                        model: targetNode.model,
+                    };
                 }
 
                 const updatedNodes = prev.map((n: any) =>
@@ -99,6 +94,24 @@ export const AgentChat = () => {
 
                 return updatedNodes;
             });
+
+            if (finishedNode) {
+                const finalContent = finishedNode.output || finishedNode.thinking || "";
+                if (finalContent) {
+                    store.updateHistory((element) => [...element, {
+                        role: "assistant",
+                        content: finalContent,
+                        name: finishedNode.name,
+                        provider: finishedNode.provider,
+                        model: finishedNode.model
+                    }]);
+
+                    agentauth.storeagentmessage(
+                        "assistant", finalContent, finishedNode.name,
+                        finishedNode.provider, finishedNode.model
+                    );
+                }
+            }
         };
 
         const handleStream = (_: any, data: any) => {

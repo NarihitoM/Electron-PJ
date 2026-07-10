@@ -53,7 +53,7 @@ export const AgentInput = () => {
         store.workflowGenRef.current++
 
         store.updateHistory((prev) => [...prev, { role: "user", content: messageText, name: "" }])
-        agentauth.storeagentmessage("user", messageText).catch(() => {})
+        agentauth.storeagentmessage("user", messageText, "").catch(() => {})
 
         const selectedNode = agents.find((n) => n.name === store.selectnode)
         const runningNodes = selectedNode ? [selectedNode] : agents.length > 0 ? [agents[0]] : []
