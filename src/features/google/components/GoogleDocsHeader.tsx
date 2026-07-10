@@ -6,7 +6,7 @@ import { Plus } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys"
 import { useGoogleService } from "@/features/google/hooks/useGoogleService"
-import { BRAND_ASSETS } from "@/shared/config/providermodels"
+import { BRAND_ASSETS, getProviderDisplayName } from "@/shared/config/providermodels"
 import { googleauthstore } from "../store/store"
 
 export const GoogleDocsHeader = () => {
@@ -49,14 +49,14 @@ export const GoogleDocsHeader = () => {
                                 {store.provider ?
                                     <>
                                         <img src={BRAND_ASSETS[store.provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                        <span>{store.provider.charAt(0).toUpperCase() + store.provider.slice(1)}</span>
+                                        <span>{getProviderDisplayName(store.provider)}</span>
                                     </> : "Select Provider"}
                             </SelectTrigger>
                             <SelectContent>
                                 {apiWithLogos.map((item: any) => (
                                     <SelectItem key={item.provider} value={item.provider}>
                                         <img src={item.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                        <span>{item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}</span>
+                                        <span>{getProviderDisplayName(item.provider)}</span>
                                     </SelectItem>
                                 ))}
                             </SelectContent>

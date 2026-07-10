@@ -250,7 +250,7 @@ export const AgentInput = () => {
                                         </SheetTitle>
                                         <SheetDescription>View your previous interactions with the agents.</SheetDescription>
                                     </SheetHeader>
-                                    <div className="mt-4">
+                                    <div className="mt-4 flex flex-col flex-1 min-h-0 overflow-hidden">
                                         <AgentChatArea />
                                     </div>
                                 </SheetContent>

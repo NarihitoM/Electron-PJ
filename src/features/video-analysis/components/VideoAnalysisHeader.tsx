@@ -1,7 +1,7 @@
 import { Button } from "@/shared/components/ui/button";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@/shared/components/ui/select";
 import { Video, Plus } from "lucide-react";
-import { BRAND_ASSETS } from "@/shared/config/providermodels";
+import { BRAND_ASSETS, getProviderDisplayName } from "@/shared/config/providermodels"
 import { useNavigate } from "react-router-dom";
 import { videoauthstore } from "@/features/video-analysis/store/store";
 
@@ -31,7 +31,7 @@ export const VideoAnalysisHeader = () => {
                                 {provider ? (
                                     <>
                                         <img src={BRAND_ASSETS[provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0 border" />
-                                        <span className="truncate">{provider.charAt(0).toUpperCase() + provider.slice(1)}</span>
+                                        <span className="truncate">{getProviderDisplayName(provider)}</span>
                                     </>
                                 ) : "Select Provider"}
                             </div>
@@ -41,7 +41,7 @@ export const VideoAnalysisHeader = () => {
                                 <SelectItem key={item.provider} value={item.provider}>
                                     <div className="flex items-center gap-3">
                                         <img src={item.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0 border" />
-                                        <span>{item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}</span>
+                                        <span>{getProviderDisplayName(item.provider)}</span>
                                     </div>
                                 </SelectItem>
                             ))}

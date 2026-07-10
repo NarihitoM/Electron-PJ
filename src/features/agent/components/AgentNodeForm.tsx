@@ -8,7 +8,7 @@ import { Spinner } from "@/shared/components/ui/spinner"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/shared/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover"
 import { ChevronsUpDown, Plus } from "lucide-react"
-import { BRAND_ASSETS, getProviderImage, getProviderModels } from "@/shared/config/providermodels"
+import { BRAND_ASSETS, getProviderDisplayName, getProviderImage, getProviderModels } from "@/shared/config/providermodels"
 import { ToolLabels } from "@/shared/config/toolsselection"
 import { useagentstore } from "../store/store"
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys"
@@ -156,7 +156,7 @@ export const AgentNodeForm = () => {
                                                         className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
                                                     />
                                                     <span>
-                                                        {store.provider.charAt(0).toUpperCase() + store.provider.slice(1)}
+                                                        {getProviderDisplayName(store.provider)}
                                                     </span>
                                                 </>
                                             ) : "Select Provider"}
@@ -169,7 +169,7 @@ export const AgentNodeForm = () => {
                                                         className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
                                                     />
                                                     <span>
-                                                        {item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}
+                                                        {getProviderDisplayName(item.provider)}
                                                     </span>
                                                 </SelectItem>
                                             ))}

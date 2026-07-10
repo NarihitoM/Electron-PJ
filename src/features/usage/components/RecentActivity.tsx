@@ -6,17 +6,17 @@ import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import { PROVIDER_LABELS, AGENT_LABELS, formatNumber, formatCost, formatLatency } from "./usageHelpers"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
-import { useUsageStats } from "../hooks/useUsageStats"
+import { useRecentActivity } from "../hooks/useUsageStats"
 import { usagestore } from "../store/store"
 
 const recentLimit = 20;
 
 export const RecentActivity = () => {
-    const { data: stats, isLoading, isFetching } = useUsageStats()
     const { recentPage, setRecentPage } = usagestore()
+    const { data: stats, isLoading, isFetching } = useRecentActivity(recentPage, recentLimit)
 
     const recent = stats?.recent ?? []
-    const loading = isFetching
+    const loading = isLoading
     const pageLoading = isFetching && !isLoading
     const recentTotal = stats?.recentTotal ?? 0
     const totalPages = Math.ceil(recentTotal / recentLimit);
@@ -84,7 +84,7 @@ export const RecentActivity = () => {
                                                 <TableCell className="text-sm font-mono">{r.model.length > 20 ? r.model.slice(0, 20) + "..." : r.model}</TableCell>
                                                 <TableCell><Badge variant="outline" className="text-xs">{AGENT_LABELS[r.agent] || r.agent}</Badge></TableCell>
                                                 <TableCell className="text-right text-sm">{formatNumber(r.inputTokens + r.outputTokens)}</TableCell>
-                                                <TableCell className="text-right text-sm font-medium">{formatCost(r.cost)}</TableCell>
+                                                <TableCell className="text-right text-sm font-medium">{r.provider === "zen" ? "Free" : formatCost(r.cost)}</TableCell>
                                                 <TableCell className="text-right text-sm">{formatLatency(r.latencyMs)}</TableCell>
                                                 <TableCell>
                                                     {r.success ? (

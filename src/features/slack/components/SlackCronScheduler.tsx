@@ -20,7 +20,7 @@ import {
     DialogFooter,
 } from "@/shared/components/ui/dialog";
 import { Spinner } from "@/shared/components/ui/spinner";
-import { BRAND_ASSETS, getProviderImage } from "@/shared/config/providermodels";
+import { BRAND_ASSETS, getProviderDisplayName, getProviderImage } from "@/shared/config/providermodels";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/shared/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
 import { ChevronsUpDown } from "lucide-react";
@@ -257,7 +257,7 @@ export const SlackCronScheduler: React.FC<SlackCronSchedulerProps> = ({
                                                         className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
                                                         alt=""
                                                     />
-                                                    <span>{slackcron.provider.charAt(0).toUpperCase() + slackcron.provider.slice(1)}</span>
+                                                    <span>{getProviderDisplayName(slackcron.provider)}</span>
                                                 </div>
                                             ) : (
                                                 "Select Provider"
@@ -276,7 +276,7 @@ export const SlackCronScheduler: React.FC<SlackCronSchedulerProps> = ({
                                                             className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
                                                             alt=""
                                                         />
-                                                        <span>{item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}</span>
+                                                        <span>{getProviderDisplayName(item.provider)}</span>
                                                     </div>
                                                 </SelectItem>
                                             ))}

@@ -28,7 +28,7 @@ import {
 import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogFooter, DialogDescription } from "@/shared/components/ui/dialog"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
-import { BRAND_ASSETS, getProviderImage, getProviderModels } from "@/shared/config/providermodels"
+import { BRAND_ASSETS, getProviderDisplayName, getProviderImage, getProviderModels } from "@/shared/config/providermodels"
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys"
 import { useTelegramAccount } from "@/features/telegram/hooks/useTelegramAccount"
 import { telegramauth } from "@/features/telegram/api/api"
@@ -249,7 +249,7 @@ export const TelegramCronScheduler = () => {
                                                         className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
                                                         alt=""
                                                     />
-                                                    <span>{store.telegramcron.provider.charAt(0).toUpperCase() + store.telegramcron.provider.slice(1)}</span>
+                                                    <span>{getProviderDisplayName(store.telegramcron.provider)}</span>
                                                 </div>
                                             ) : (
                                                 "Select Provider"
@@ -261,7 +261,7 @@ export const TelegramCronScheduler = () => {
                                                 <SelectItem key={item.provider} value={item.provider.toString()} className="cursor-pointer">
                                                     <div className="flex items-center gap-2">
                                                         <img src={item.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" alt="" />
-                                                        <span>{item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}</span>
+                                                        <span>{getProviderDisplayName(item.provider)}</span>
                                                     </div>
                                                 </SelectItem>
                                             ))}

@@ -23,6 +23,22 @@ export const BRAND_ASSETS: Record<string, string> = {
     zen: MultimateLogo
 };
 
+export const PROVIDER_DISPLAY_NAMES: Record<string, string> = {
+    openai: "OpenAI",
+    anthropic: "Anthropic",
+    gemini: "Gemini",
+    groq: "Groq",
+    openrouter: "OpenRouter",
+    mistral: "Mistral",
+    deepseek: "DeepSeek",
+    ollama: "Ollama",
+    zai: "Z.AI",
+    zen: "MultimateAi",
+};
+
+export const getProviderDisplayName = (provider: string) =>
+    PROVIDER_DISPLAY_NAMES[provider.toLowerCase()] || provider.charAt(0).toUpperCase() + provider.slice(1);
+
 
 export const PROVIDER = [
     {

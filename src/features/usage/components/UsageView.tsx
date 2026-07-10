@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { usagestore } from "../store/store";
 import { useUsageStats } from "../hooks/useUsageStats";
 import { useCreditHistory } from "../../credits/hooks/useCredits";
-import { BarChart3, ArrowDownCircle, ArrowUpCircle, RefreshCw, AlertTriangle } from "lucide-react";
+import { BarChart3, ArrowDownCircle, ArrowUpCircle, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { SummaryCards } from "./SummaryCards";
 import { TokenUsageChart } from "./TokenUsageChart";
@@ -15,9 +15,28 @@ import { useState } from "react";
 
 const CreditTransactionHistory = () => {
     const [page, setPage] = useState(1);
-    const { data: historyData, isFetching: historyLoading } = useCreditHistory(page);
+    const limit = 10;
+    const { data: historyData, isFetching: historyLoading } = useCreditHistory(page, limit);
     const transactions = historyData?.transactions ?? [];
     const pagination = historyData?.pagination;
+    const totalPages = pagination?.totalPages ?? 0;
+    const total = pagination?.total ?? 0;
+
+    const getPageNumbers = () => {
+        const pages: (number | "...")[] = [];
+        if (totalPages <= 5) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            if (page > 3) pages.push("...");
+            for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+                pages.push(i);
+            }
+            if (page < totalPages - 2) pages.push("...");
+            pages.push(totalPages);
+        }
+        return pages;
+    };
 
     return (
         <div className="mx-auto w-full max-w-5xl mt-4">
@@ -97,27 +116,34 @@ const CreditTransactionHistory = () => {
                                 </div>
                             ))}
 
-                            {pagination && pagination.totalPages > 1 && (
+                            {totalPages > 1 && (
                                 <div className="flex items-center justify-between pt-4">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={page <= 1}
-                                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                                    >
-                                        Previous
-                                    </Button>
-                                    <span className="text-xs text-muted-foreground">
-                                        Page {pagination.page} of {pagination.totalPages}
-                                    </span>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        disabled={page >= pagination.totalPages}
-                                        onClick={() => setPage((p) => p + 1)}
-                                    >
-                                        Next
-                                    </Button>
+                                    <p className="text-xs text-muted-foreground">
+                                        Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
+                                    </p>
+                                    <div className="flex items-center gap-1">
+                                        <Button size="icon" variant="outline" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}>
+                                            <ChevronLeft className="h-4 w-4" />
+                                        </Button>
+                                        {getPageNumbers().map((p, i) =>
+                                            p === "..." ? (
+                                                <span key={`dots-${i}`} className="px-2 text-muted-foreground text-sm">...</span>
+                                            ) : (
+                                                <Button
+                                                    key={p}
+                                                    size="icon"
+                                                    variant={page === p ? "default" : "outline"}
+                                                    className={page === p ? "bg-cyan-500 text-white dark:bg-white dark:text-black" : ""}
+                                                    onClick={() => setPage(p as number)}
+                                                >
+                                                    {p}
+                                                </Button>
+                                            )
+                                        )}
+                                        <Button size="icon" variant="outline" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages}>
+                                            <ChevronRight className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             )}
                         </div>

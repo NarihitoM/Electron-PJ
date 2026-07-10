@@ -127,7 +127,7 @@ export const AgentNodeList = () => {
                                         <AiContent content={element.output} />
                                     ) : element.thinking ? (
                                         <AiContent content={element.thinking} />
-                                    ) : (
+                                    ) : element.activeTool ? null : (
                                         <motion.span
                                             animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
                                             transition={{ repeat: Infinity, duration: 2, ease: "linear" }}

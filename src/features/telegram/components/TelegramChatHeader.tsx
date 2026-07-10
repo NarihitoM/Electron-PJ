@@ -8,7 +8,7 @@ import {
     SelectItem,
     SelectTrigger,
 } from "@/shared/components/ui/select"
-import { BRAND_ASSETS } from "@/shared/config/providermodels"
+import { BRAND_ASSETS, getProviderDisplayName } from "@/shared/config/providermodels"
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys"
 import { useTelegramAccount } from "@/features/telegram/hooks/useTelegramAccount"
 import { telegramauthstore } from "@/features/telegram/store/store"
@@ -48,14 +48,14 @@ export const TelegramChatHeader = () => {
                                 {store.provider ?
                                     <>
                                         <img src={BRAND_ASSETS[store.provider.toLowerCase()]} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                        <span>{store.provider.charAt(0).toUpperCase() + store.provider.slice(1)}</span>
+                                        <span>{getProviderDisplayName(store.provider)}</span>
                                     </> : "Select Provider"}
                             </SelectTrigger>
                             <SelectContent>
                                 {apiWithLogos.map((item) => (
                                     <SelectItem key={item.provider} value={item.provider}>
                                         <img src={item.imageUrl} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                        <span>{item.provider.charAt(0).toUpperCase() + item.provider.slice(1)}</span>
+                                        <span>{getProviderDisplayName(item.provider)}</span>
                                     </SelectItem>
                                 ))}
                             </SelectContent>

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query"
+import { keepPreviousData, useQuery } from "@tanstack/react-query"
 import { usageapi } from "../api/api"
 import { usagestore } from "../store/store"
 import type { UsageStats } from "../types/type"
@@ -40,13 +40,13 @@ function buildDateRange(period: string, selectedYear: number) {
 }
 
 export const useUsageStats = () => {
-    const { period, selectedYear, recentPage, recentLimit } = usagestore()
+    const { period, selectedYear } = usagestore()
     const { from, to } = buildDateRange(period, selectedYear)
 
     return useQuery<UsageStats>({
-        queryKey: ["usage-stats", period, selectedYear, recentPage],
+        queryKey: ["usage-stats", period, selectedYear],
         queryFn: async () => {
-            const response = await usageapi.fetchStats(period, from, to, recentPage, recentLimit, new Date().getTimezoneOffset())
+            const response = await usageapi.fetchStats(period, from, to, 1, 20, new Date().getTimezoneOffset())
             if (!response.success || !response.data) {
                 throw new Error(response.message || "Failed to load usage data")
             }
@@ -54,6 +54,26 @@ export const useUsageStats = () => {
         },
         staleTime: 1000 * 30,
         gcTime: 1000 * 60 * 5,
+        retry: false,
+    })
+}
+
+export const useRecentActivity = (page: number, limit: number = 20) => {
+    const { period, selectedYear } = usagestore()
+    const { from, to } = buildDateRange(period, selectedYear)
+
+    return useQuery<UsageStats>({
+        queryKey: ["recent-activity", period, selectedYear, page, limit],
+        queryFn: async () => {
+            const response = await usageapi.fetchStats(period, from, to, page, limit, new Date().getTimezoneOffset())
+            if (!response.success || !response.data) {
+                throw new Error(response.message || "Failed to load usage data")
+            }
+            return response.data
+        },
+        staleTime: 1000 * 30,
+        gcTime: 1000 * 60 * 5,
+        placeholderData: keepPreviousData,
         retry: false,
     })
 }
