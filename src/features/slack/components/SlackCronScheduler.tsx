@@ -315,7 +315,7 @@ export const SlackCronScheduler: React.FC<SlackCronSchedulerProps> = ({
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                                     </Button>
                                     {modelOpen && (
-                                        <div className="absolute left-0 right-0 bottom-full mb-1 z-100 min-w-full rounded-lg border bg-popover text-popover-foreground shadow-md">
+                                        <div className="absolute left-0 right-0 top-full mt-1 z-100 min-w-full rounded-lg border bg-popover text-popover-foreground shadow-md">
                                             <div className="flex items-center gap-2 border-b px-3 py-2">
                                                 <Search className="h-4 w-4 shrink-0 opacity-50" />
                                                 <input
