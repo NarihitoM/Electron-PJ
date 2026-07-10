@@ -22,7 +22,7 @@ export const SlackChatHeader = () => {
     }));
 
     return (
-        <div className="mx-auto w-full max-w-5xl flex justify-between gap-1 pt-4">
+        <div className="mx-auto w-full max-w-5xl flex justify-between gap-1">
             <div className="flex flex-col gap-1">
                 <h1 className="text-2xl font-bold flex items-center gap-3">
                     <img src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg" className="w-7 h-7" alt="" />

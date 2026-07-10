@@ -13,7 +13,10 @@ const INITIAL_STATE = {
 export const usagestore = create<UsageClientState>((set) => ({
     ...INITIAL_STATE,
     setPeriod: (period) => set({ period, recentPage: 1 }),
-    setSelectedYear: (selectedYear) => set({ selectedYear, recentPage: 1 }),
+    setSelectedYear: (selectedYear) => {
+        if (selectedYear <= 0) return;
+        set({ selectedYear, recentPage: 1 });
+    },
     setRecentPage: (recentPage) => set({ recentPage }),
     resetUsage: () => set({ ...INITIAL_STATE }),
 }))

@@ -155,16 +155,20 @@ export const UsageView = () => {
                     <p className="text-muted-foreground">Track token usage, costs, and performance across all ai providers.</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
-                        <SelectTrigger className="w-24">
-                            <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {stats?.availableYears && Array.from({ length: stats.availableYears.max - stats.availableYears.min + 1 }, (_, i) => stats.availableYears.min + i).map((y) => (
-                                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    {stats?.availableYears ? (
+                        <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+                            <SelectTrigger className="w-24">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {Array.from({ length: stats.availableYears.max - stats.availableYears.min + 1 }, (_, i) => stats.availableYears.min + i).map((y) => (
+                                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    ) : (
+                        <div className="h-10 w-24 rounded-md bg-muted animate-pulse" />
+                    )}
                     <Button size="icon" variant="outline" onClick={() => refetch()} disabled={isFetching}>
                         <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
                     </Button>

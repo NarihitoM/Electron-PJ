@@ -28,7 +28,7 @@ export const CreditBadge = () => {
       title={`${balance} credits remaining`}
     >
       <Coins className="w-3.5 h-3.5" />
-      <span>{balance}</span>
+      <span>Credits Remaining: {balance}</span>
     </div>
   );
 };
