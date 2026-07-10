@@ -2,6 +2,7 @@ import { useRef, useEffect } from "react";
 import { ResizablePanel, ResizablePanelGroup, ResizableHandle } from "@/shared/components/ui/resizable";
 import { Toaster } from "@/shared/components/ui/sonner";
 import { useVideoTranscript } from "@/features/video-analysis/hooks/useVideoTranscript";
+import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { getProviderModels } from "@/shared/config/providermodels";
 import { videoauth } from "@/features/video-analysis/api/api";
 import { toast } from "sonner";
@@ -17,6 +18,13 @@ export const VideoAnalysisChat = () => {
 
     const store = videoauthstore();
     const { provider, videoSrc } = store;
+    const { data: ApiKeys = [] } = useServiceKeys();
+
+    useEffect(() => {
+        if (ApiKeys.length > 0) {
+            store.setApi(ApiKeys);
+        }
+    }, [ApiKeys]);
 
     useEffect(() => { store.setisPending(videoTranscriptMutation.isPending); }, [videoTranscriptMutation.isPending]);
 

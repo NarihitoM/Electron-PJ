@@ -6,7 +6,7 @@ export const useSlackAccount = () => {
         queryKey: ["slack"],
         queryFn: async () => {
             const response = await slackauth.slackacc()
-            if (!response.success) throw new Error(response.message || "Failed to fetch slack data")
+            if (!response.success) return null
             return response.data ?? null
         },
         staleTime: 1000 * 60 * 5,

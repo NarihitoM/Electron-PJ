@@ -6,7 +6,7 @@ export const useTelegramAccount = () => {
         queryKey: ["telegram"],
         queryFn: async () => {
             const response = await telegramauth.fetchtelegramaccount()
-            if (!response.success) throw new Error(response.message || "Failed to fetch telegram data")
+            if (!response.success) return null
             return response.data ?? null
         },
         staleTime: 1000 * 60 * 5,

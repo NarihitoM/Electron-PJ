@@ -6,7 +6,7 @@ import { Label } from "../../../shared/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "../../../shared/components/ui/radio-group";
 import { Spinner } from "../../../shared/components/ui/spinner";
 import { toast } from "sonner";
-import { CheckCircle2, ExternalLink } from "lucide-react";
+import { CheckCircle2, ExternalLink, ChevronsUpDown, Search } from "lucide-react";
 import { slackauth } from "../../slack/api/api";
 import { notionauth } from "../../notion/api/api";
 import { telegramauth } from "../../telegram/api/api";
@@ -32,48 +32,184 @@ const SERVICE_INFO: Record<ServiceType, { name: string; icon: string; descriptio
 };
 
 const COUNTRY_CODES = [
-    { code: "+1", label: "US", flag: "🇺🇸" },
-    { code: "+44", label: "UK", flag: "🇬🇧" },
-    { code: "+81", label: "JP", flag: "🇯🇵" },
-    { code: "+82", label: "KR", flag: "🇰🇷" },
-    { code: "+49", label: "DE", flag: "🇩🇪" },
-    { code: "+33", label: "FR", flag: "🇫🇷" },
-    { code: "+39", label: "IT", flag: "🇮🇹" },
-    { code: "+34", label: "ES", flag: "🇪🇸" },
-    { code: "+55", label: "BR", flag: "🇧🇷" },
-    { code: "+86", label: "CN", flag: "🇨🇳" },
-    { code: "+91", label: "IN", flag: "🇮🇳" },
+    { code: "+93", label: "AF", flag: "🇦🇫" },
+    { code: "+355", label: "AL", flag: "🇦🇱" },
+    { code: "+213", label: "DZ", flag: "🇩🇿" },
+    { code: "+376", label: "AD", flag: "🇦🇩" },
+    { code: "+244", label: "AO", flag: "🇦🇴" },
+    { code: "+54", label: "AR", flag: "🇦🇷" },
+    { code: "+374", label: "AM", flag: "🇦🇲" },
+    { code: "+297", label: "AW", flag: "🇦🇼" },
     { code: "+61", label: "AU", flag: "🇦🇺" },
-    { code: "+7", label: "RU", flag: "🇷🇺" },
-    { code: "+380", label: "UA", flag: "🇺🇦" },
+    { code: "+43", label: "AT", flag: "🇦🇹" },
+    { code: "+994", label: "AZ", flag: "🇦🇿" },
+    { code: "+973", label: "BH", flag: "🇧🇭" },
+    { code: "+880", label: "BD", flag: "🇧🇩" },
+    { code: "+375", label: "BY", flag: "🇧🇾" },
+    { code: "+32", label: "BE", flag: "🇧🇪" },
+    { code: "+501", label: "BZ", flag: "🇧🇿" },
+    { code: "+229", label: "BJ", flag: "🇧🇯" },
+    { code: "+975", label: "BT", flag: "🇧🇹" },
+    { code: "+591", label: "BO", flag: "🇧🇴" },
+    { code: "+387", label: "BA", flag: "🇧🇦" },
+    { code: "+267", label: "BW", flag: "🇧🇼" },
+    { code: "+55", label: "BR", flag: "🇧🇷" },
+    { code: "+673", label: "BN", flag: "🇧🇳" },
+    { code: "+359", label: "BG", flag: "🇧🇬" },
+    { code: "+226", label: "BF", flag: "🇧🇫" },
+    { code: "+257", label: "BI", flag: "🇧🇮" },
+    { code: "+855", label: "KH", flag: "🇰🇭" },
+    { code: "+237", label: "CM", flag: "🇨🇲" },
+    { code: "+1", label: "CA", flag: "🇨🇦" },
+    { code: "+238", label: "CV", flag: "🇨🇻" },
+    { code: "+236", label: "CF", flag: "🇨🇫" },
+    { code: "+235", label: "TD", flag: "🇹🇩" },
+    { code: "+56", label: "CL", flag: "🇨🇱" },
+    { code: "+86", label: "CN", flag: "🇨🇳" },
+    { code: "+57", label: "CO", flag: "🇨🇴" },
+    { code: "+269", label: "KM", flag: "🇰🇲" },
+    { code: "+242", label: "CG", flag: "🇨🇬" },
+    { code: "+243", label: "CD", flag: "🇨🇩" },
+    { code: "+506", label: "CR", flag: "🇨🇷" },
+    { code: "+225", label: "CI", flag: "🇨🇮" },
+    { code: "+385", label: "HR", flag: "🇭🇷" },
+    { code: "+53", label: "CU", flag: "🇨🇺" },
+    { code: "+357", label: "CY", flag: "🇨🇾" },
+    { code: "+420", label: "CZ", flag: "🇨🇿" },
+    { code: "+45", label: "DK", flag: "🇩🇰" },
+    { code: "+253", label: "DJ", flag: "🇩🇯" },
+    { code: "+593", label: "EC", flag: "🇪🇨" },
+    { code: "+20", label: "EG", flag: "🇪🇬" },
+    { code: "+503", label: "SV", flag: "🇸🇻" },
+    { code: "+240", label: "GQ", flag: "🇬🇶" },
+    { code: "+372", label: "EE", flag: "🇪🇪" },
+    { code: "+251", label: "ET", flag: "🇪🇹" },
+    { code: "+679", label: "FJ", flag: "🇫🇯" },
+    { code: "+358", label: "FI", flag: "🇫🇮" },
+    { code: "+33", label: "FR", flag: "🇫🇷" },
+    { code: "+241", label: "GA", flag: "🇬🇦" },
+    { code: "+220", label: "GM", flag: "🇬🇲" },
+    { code: "+995", label: "GE", flag: "🇬🇪" },
+    { code: "+49", label: "DE", flag: "🇩🇪" },
+    { code: "+233", label: "GH", flag: "🇬🇭" },
+    { code: "+30", label: "GR", flag: "🇬🇷" },
+    { code: "+502", label: "GT", flag: "🇬🇹" },
+    { code: "+224", label: "GN", flag: "🇬🇳" },
+    { code: "+245", label: "GW", flag: "🇬🇼" },
+    { code: "+592", label: "GY", flag: "🇬🇾" },
+    { code: "+509", label: "HT", flag: "🇭🇹" },
+    { code: "+504", label: "HN", flag: "🇭🇳" },
+    { code: "+852", label: "HK", flag: "🇭🇰" },
+    { code: "+36", label: "HU", flag: "🇭🇺" },
+    { code: "+354", label: "IS", flag: "🇮🇸" },
+    { code: "+91", label: "IN", flag: "🇮🇳" },
+    { code: "+62", label: "ID", flag: "🇮🇩" },
+    { code: "+98", label: "IR", flag: "🇮🇷" },
+    { code: "+964", label: "IQ", flag: "🇮🇶" },
+    { code: "+353", label: "IE", flag: "🇮🇪" },
+    { code: "+972", label: "IL", flag: "🇮🇱" },
+    { code: "+39", label: "IT", flag: "🇮🇹" },
+    { code: "+81", label: "JP", flag: "🇯🇵" },
+    { code: "+962", label: "JO", flag: "🇯🇴" },
+    { code: "+7", label: "KZ", flag: "🇰🇿" },
+    { code: "+254", label: "KE", flag: "🇰🇪" },
+    { code: "+383", label: "XK", flag: "🇽🇰" },
+    { code: "+965", label: "KW", flag: "🇰🇼" },
+    { code: "+996", label: "KG", flag: "🇰🇬" },
+    { code: "+856", label: "LA", flag: "🇱🇦" },
+    { code: "+371", label: "LV", flag: "🇱🇻" },
+    { code: "+961", label: "LB", flag: "🇱🇧" },
+    { code: "+266", label: "LS", flag: "🇱🇸" },
+    { code: "+231", label: "LR", flag: "🇱🇷" },
+    { code: "+218", label: "LY", flag: "🇱🇾" },
+    { code: "+423", label: "LI", flag: "🇱🇮" },
+    { code: "+370", label: "LT", flag: "🇱🇹" },
+    { code: "+352", label: "LU", flag: "🇱🇺" },
+    { code: "+853", label: "MO", flag: "🇲🇴" },
+    { code: "+389", label: "MK", flag: "🇲🇰" },
+    { code: "+261", label: "MG", flag: "🇲🇬" },
+    { code: "+265", label: "MW", flag: "🇲🇼" },
+    { code: "+60", label: "MY", flag: "🇲🇾" },
+    { code: "+960", label: "MV", flag: "🇲🇻" },
+    { code: "+223", label: "ML", flag: "🇲🇱" },
+    { code: "+356", label: "MT", flag: "🇲🇹" },
+    { code: "+222", label: "MR", flag: "🇲🇷" },
+    { code: "+230", label: "MU", flag: "🇲🇺" },
+    { code: "+52", label: "MX", flag: "🇲🇽" },
+    { code: "+373", label: "MD", flag: "🇲🇩" },
+    { code: "+377", label: "MC", flag: "🇲🇨" },
+    { code: "+976", label: "MN", flag: "🇲🇳" },
+    { code: "+382", label: "ME", flag: "🇲🇪" },
+    { code: "+212", label: "MA", flag: "🇲🇦" },
+    { code: "+258", label: "MZ", flag: "🇲🇿" },
+    { code: "+95", label: "MM", flag: "🇲🇲" },
+    { code: "+264", label: "NA", flag: "🇳🇦" },
+    { code: "+977", label: "NP", flag: "🇳🇵" },
+    { code: "+31", label: "NL", flag: "🇳🇱" },
+    { code: "+64", label: "NZ", flag: "🇳🇿" },
+    { code: "+505", label: "NI", flag: "🇳🇮" },
+    { code: "+227", label: "NE", flag: "🇳🇪" },
+    { code: "+234", label: "NG", flag: "🇳🇬" },
+    { code: "+47", label: "NO", flag: "🇳🇴" },
+    { code: "+968", label: "OM", flag: "🇴🇲" },
+    { code: "+92", label: "PK", flag: "🇵🇰" },
+    { code: "+970", label: "PS", flag: "🇵🇸" },
+    { code: "+507", label: "PA", flag: "🇵🇦" },
+    { code: "+675", label: "PG", flag: "🇵🇬" },
+    { code: "+595", label: "PY", flag: "🇵🇾" },
+    { code: "+51", label: "PE", flag: "🇵🇪" },
+    { code: "+63", label: "PH", flag: "🇵🇭" },
     { code: "+48", label: "PL", flag: "🇵🇱" },
     { code: "+351", label: "PT", flag: "🇵🇹" },
-    { code: "+352", label: "LU", flag: "🇱🇺" },
-    { code: "+47", label: "NO", flag: "🇳🇴" },
-    { code: "+46", label: "SE", flag: "🇸🇪" },
-    { code: "+45", label: "DK", flag: "🇩🇰" },
-    { code: "+358", label: "FI", flag: "🇫🇮" },
-    { code: "+41", label: "CH", flag: "🇨🇭" },
-    { code: "+43", label: "AT", flag: "🇦🇹" },
-    { code: "+31", label: "NL", flag: "🇳🇱" },
-    { code: "+32", label: "BE", flag: "🇧🇪" },
-    { code: "+852", label: "HK", flag: "🇭🇰" },
+    { code: "+974", label: "QA", flag: "🇶🇦" },
+    { code: "+40", label: "RO", flag: "🇷🇴" },
+    { code: "+7", label: "RU", flag: "🇷🇺" },
+    { code: "+250", label: "RW", flag: "🇷🇼" },
+    { code: "+966", label: "SA", flag: "🇸🇦" },
+    { code: "+221", label: "SN", flag: "🇸🇳" },
+    { code: "+381", label: "RS", flag: "🇷🇸" },
+    { code: "+248", label: "SC", flag: "🇸🇨" },
+    { code: "+232", label: "SL", flag: "🇸🇱" },
     { code: "+65", label: "SG", flag: "🇸🇬" },
-    { code: "+60", label: "MY", flag: "🇲🇾" },
-    { code: "+66", label: "TH", flag: "🇹🇭" },
-    { code: "+63", label: "PH", flag: "🇵🇭" },
-    { code: "+62", label: "ID", flag: "🇮🇩" },
-    { code: "+84", label: "VN", flag: "🇻🇳" },
-    { code: "+90", label: "TR", flag: "🇹🇷" },
-    { code: "+20", label: "EG", flag: "🇪🇬" },
+    { code: "+421", label: "SK", flag: "🇸🇰" },
+    { code: "+386", label: "SI", flag: "🇸🇮" },
+    { code: "+677", label: "SB", flag: "🇸🇧" },
+    { code: "+252", label: "SO", flag: "🇸🇴" },
     { code: "+27", label: "ZA", flag: "🇿🇦" },
-    { code: "+234", label: "NG", flag: "🇳🇬" },
-    { code: "+254", label: "KE", flag: "🇰🇪" },
-    { code: "+52", label: "MX", flag: "🇲🇽" },
-    { code: "+54", label: "AR", flag: "🇦🇷" },
-    { code: "+56", label: "CL", flag: "🇨🇱" },
-    { code: "+57", label: "CO", flag: "🇨🇴" },
-    { code: "+51", label: "PE", flag: "🇵🇪" },
+    { code: "+82", label: "KR", flag: "🇰🇷" },
+    { code: "+211", label: "SS", flag: "🇸🇸" },
+    { code: "+34", label: "ES", flag: "🇪🇸" },
+    { code: "+94", label: "LK", flag: "🇱🇰" },
+    { code: "+249", label: "SD", flag: "🇸🇩" },
+    { code: "+597", label: "SR", flag: "🇸🇷" },
+    { code: "+268", label: "SZ", flag: "🇸🇿" },
+    { code: "+46", label: "SE", flag: "🇸🇪" },
+    { code: "+41", label: "CH", flag: "🇨🇭" },
+    { code: "+963", label: "SY", flag: "🇸🇾" },
+    { code: "+886", label: "TW", flag: "🇹🇼" },
+    { code: "+992", label: "TJ", flag: "🇹🇯" },
+    { code: "+255", label: "TZ", flag: "🇹🇿" },
+    { code: "+66", label: "TH", flag: "🇹🇭" },
+    { code: "+670", label: "TL", flag: "🇹🇱" },
+    { code: "+228", label: "TG", flag: "🇹🇬" },
+    { code: "+676", label: "TO", flag: "🇹🇴" },
+    { code: "+216", label: "TN", flag: "🇹🇳" },
+    { code: "+90", label: "TR", flag: "🇹🇷" },
+    { code: "+993", label: "TM", flag: "🇹🇲" },
+    { code: "+256", label: "UG", flag: "🇺🇬" },
+    { code: "+380", label: "UA", flag: "🇺🇦" },
+    { code: "+971", label: "AE", flag: "🇦🇪" },
+    { code: "+44", label: "GB", flag: "🇬🇧" },
+    { code: "+1", label: "US", flag: "🇺🇸" },
+    { code: "+598", label: "UY", flag: "🇺🇾" },
+    { code: "+998", label: "UZ", flag: "🇺🇿" },
+    { code: "+678", label: "VU", flag: "🇻🇺" },
+    { code: "+379", label: "VA", flag: "🇻🇦" },
+    { code: "+58", label: "VE", flag: "🇻🇪" },
+    { code: "+84", label: "VN", flag: "🇻🇳" },
+    { code: "+967", label: "YE", flag: "🇾🇪" },
+    { code: "+260", label: "ZM", flag: "🇿🇲" },
+    { code: "+263", label: "ZW", flag: "🇿🇼" },
 ];
 
 export const ServiceConfigDialog = ({ open, onOpenChange, service, onConnected }: ServiceConfigDialogProps) => {
@@ -89,7 +225,7 @@ export const ServiceConfigDialog = ({ open, onOpenChange, service, onConnected }
     if (!service || !info) return null;
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
+        <Dialog open={open} onOpenChange={onOpenChange} modal={false}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <div className="flex items-center gap-3">
@@ -301,6 +437,8 @@ export const NotionForm = ({ onComplete }: { onComplete: () => void }) => {
 
 export const TelegramForm = ({ onComplete }: { onComplete: () => void }) => {
     const [countryCode, setCountryCode] = useState("+1");
+    const [countryOpen, setCountryOpen] = useState(false);
+    const [search, setSearch] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
     const [password, setPassword] = useState("");
     const [phoneCode, setPhoneCode] = useState("");
@@ -369,17 +507,57 @@ export const TelegramForm = ({ onComplete }: { onComplete: () => void }) => {
                 Enter your Telegram phone number. You'll receive a verification code.
             </p>
             <div className="flex gap-2">
-                <div className="w-28">
+                <div className="relative w-32">
                     <Label>Country</Label>
-                    <select
-                        value={countryCode}
-                        onChange={(e) => setCountryCode(e.target.value)}
-                        className="w-full h-9 rounded-md border bg-transparent px-2 text-sm"
+                    <Button
+                        variant="outline"
+                        onClick={() => setCountryOpen(!countryOpen)}
+                        className="w-full justify-between"
                     >
-                        {COUNTRY_CODES.map((c) => (
-                            <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
-                        ))}
-                    </select>
+                        {(() => {
+                            const c = COUNTRY_CODES.find(c => c.code === countryCode);
+                            return c ? <>{c.flag} {c.label} {c.code}</> : "Select country"
+                        })()}
+                        <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                    {countryOpen && (
+                        <div className="absolute left-0 right-0 bottom-full mb-1 z-100 rounded-lg border bg-popover text-popover-foreground shadow-md">
+                            <div className="flex items-center gap-2 border-b px-3 py-2">
+                                <Search className="h-4 w-4 shrink-0 opacity-50" />
+                                <input
+                                    autoFocus
+                                    placeholder="Search country..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                                />
+                            </div>
+                            <div className="max-h-60 overflow-y-auto p-1">
+                                {COUNTRY_CODES.filter((c) =>
+                                    `${c.label} ${c.code} ${c.flag}`.toLowerCase().includes(search.toLowerCase())
+                                ).length === 0 ? (
+                                    <p className="py-6 text-center text-sm text-muted-foreground">No country found.</p>
+                                ) : (
+                                    COUNTRY_CODES.filter((c) =>
+                                        `${c.label} ${c.code} ${c.flag}`.toLowerCase().includes(search.toLowerCase())
+                                    ).map((c) => (
+                                        <button
+                                            key={c.code}
+                                            type="button"
+                                            onClick={() => {
+                                                setCountryCode(c.code);
+                                                setCountryOpen(false);
+                                                setSearch("");
+                                            }}
+                                            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
+                                        >
+                                            <span>{c.flag} {c.label} {c.code}</span>
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
                 <div className="flex-1">
                     <Label>Phone Number</Label>

@@ -1,5 +1,5 @@
-import React from "react";
-import { Plus } from "lucide-react";
+import React, { useState } from "react";
+import { Plus, ChevronsUpDown, Search } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Label } from "@/shared/components/ui/label";
@@ -21,9 +21,6 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { BRAND_ASSETS, getProviderDisplayName, getProviderImage } from "@/shared/config/providermodels";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/shared/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover";
-import { ChevronsUpDown } from "lucide-react";
 import type { ModelEntry } from "@/shared/lib/modelsapi";
 import type { slackcrondata } from "@/features/slack/types/type";
 import type { NavigateFunction } from "react-router-dom";
@@ -102,6 +99,7 @@ export const SlackCronScheduler: React.FC<SlackCronSchedulerProps> = ({
     selectedimchannelcron,
     selectedmpimchannelcron,
 }) => {
+    const [modelSearch, setModelSearch] = useState("");
     return (
         <Dialog open={opencron} onOpenChange={setopencron} modal={false}>
             <DialogContent className="max-h-[80vh] overflow-y-auto">
@@ -299,8 +297,13 @@ export const SlackCronScheduler: React.FC<SlackCronSchedulerProps> = ({
                         <div className="space-y-1">
                             <Label htmlFor="model">Model</Label>
                             {Api.length > 0 && (
-                                <Popover open={modelOpen} onOpenChange={setModelOpen}>
-                                    <PopoverTrigger render={<Button variant="outline" role="combobox" aria-expanded={modelOpen} className="justify-between" disabled={!slackcron.provider || !slackcron.isActive} />}>
+                                <div className="relative overflow-visible">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setModelOpen(!modelOpen)}
+                                        className="w-full justify-between"
+                                        disabled={!slackcron.provider || !slackcron.isActive}
+                                    >
                                         {slackcron.model ? (
                                             <div className="flex items-center gap-2">
                                                 <img src={getProviderImage(slackcron.provider || "")} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
@@ -310,27 +313,46 @@ export const SlackCronScheduler: React.FC<SlackCronSchedulerProps> = ({
                                             <span className="text-muted-foreground">Select Model</span>
                                         )}
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </PopoverTrigger>
-                                    <PopoverContent className="p-1" align="start">
-                                        <Command className="bg-transparent">
-                                            <CommandInput placeholder="Search model..." />
-                                            <CommandList>
-                                                <CommandEmpty>No model found.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {cronModelList.length === 0 && (
-                                                        <div className="px-3 py-2 text-sm text-muted-foreground">No models available.</div>
-                                                    )}
-                                                    {cronModelList.map((entry) => (
-                                                        <CommandItem key={entry.model} value={entry.model} onSelect={() => { setslackcron((prev) => ({ ...prev, model: entry.model })); setModelOpen(false); }}>
+                                    </Button>
+                                    {modelOpen && (
+                                        <div className="absolute left-0 right-0 bottom-full mb-1 z-100 min-w-full rounded-lg border bg-popover text-popover-foreground shadow-md">
+                                            <div className="flex items-center gap-2 border-b px-3 py-2">
+                                                <Search className="h-4 w-4 shrink-0 opacity-50" />
+                                                <input
+                                                    autoFocus
+                                                    placeholder="Search model..."
+                                                    value={modelSearch}
+                                                    onChange={(e) => setModelSearch(e.target.value)}
+                                                    className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                                                />
+                                            </div>
+                                            <div className="max-h-60 overflow-y-auto p-1">
+                                                {cronModelList.length === 0 && (
+                                                    <div className="px-3 py-2 text-sm text-muted-foreground">No models available.</div>
+                                                )}
+                                                {cronModelList.filter((entry) =>
+                                                    entry.model.toLowerCase().includes(modelSearch.toLowerCase())
+                                                ).length === 0 && cronModelList.length > 0 ? (
+                                                    <p className="py-6 text-center text-sm text-muted-foreground">No model found.</p>
+                                                ) : (
+                                                    cronModelList.filter((entry) =>
+                                                        entry.model.toLowerCase().includes(modelSearch.toLowerCase())
+                                                    ).map((entry) => (
+                                                        <button
+                                                            key={entry.model}
+                                                            type="button"
+                                                            onClick={() => { setslackcron((prev) => ({ ...prev, model: entry.model })); setModelOpen(false); setModelSearch(""); }}
+                                                            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
+                                                        >
                                                             <img src={getProviderImage(slackcron.provider || "")} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
                                                             <span className="text-sm ml-3">{entry.model}</span>
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
+                                                        </button>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>

@@ -20,6 +20,7 @@ import { voiceauth } from "@/features/voice/api/api"
 import { chatauthstore } from "../store/store"
 import { useQueryClient } from "@tanstack/react-query"
 import type { chatsession } from "@/shared/types/globaltype"
+import type { chatfetch } from "../types/type"
 import type { ModelEntry } from "@/shared/lib/modelsapi"
 
 export const ChatInput = () => {
@@ -120,6 +121,7 @@ export const ChatInput = () => {
         }
 
         let chatId = id
+        const isNewChat = !chatId
         if (!chatId) {
             try {
                 const newChat = await chatauth.createchat()
@@ -137,6 +139,14 @@ export const ChatInput = () => {
             }
         }
 
+        // Optimistically set chat title from the first user message
+        if (isNewChat && chatId) {
+            const title = currentInput.length > 30 ? currentInput.substring(0, 30) + "..." : currentInput
+            queryClient.setQueryData(["chat"], (old: chatfetch[] | undefined) =>
+                old?.map(c => c.id === chatId ? { ...c, title } : c)
+            )
+        }
+
         try {
             await chatauth.sendmessage(
                 chatId,
@@ -146,13 +156,18 @@ export const ChatInput = () => {
                 store.type ?? "text",
                 uploadedUrls.length > 0 ? uploadedUrls : undefined,
                 store.reasoningLevel || undefined,
-                (chunk: string) => {
+                (chunk: string, title?: string) => {
                     store.updateSessionMessages(prev => {
                         const ns = [...prev]
                         const li = ns.length - 1
                         if (ns[li]?.role === "assistant") ns[li] = { ...ns[li], content: ns[li].content + chunk }
                         return ns
                     })
+                    if (title && chatId) {
+                        queryClient.setQueryData(["chat"], (old: chatfetch[] | undefined) =>
+                            old?.map(c => c.id === chatId ? { ...c, title } : c)
+                        )
+                    }
                 },
                 (status) => {
                     store.updateSessionMessages(prev => {
@@ -207,6 +222,7 @@ export const ChatInput = () => {
                 navigate(`/chat/${chatId}`, { replace: true })
             }
             queryClient.invalidateQueries({ queryKey: ["message", id ?? chatId] })
+            queryClient.invalidateQueries({ queryKey: ["chat"] })
             queryClient.invalidateQueries({ queryKey: ["usage-stats"] })
             queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })
             queryClient.invalidateQueries({ queryKey: ["key"] })
@@ -255,7 +271,7 @@ export const ChatInput = () => {
     const disabled = !store.model || !store.provider || loadingrecord || recordstatus
 
     return (
-        <div className="w-full bg-card mx-auto max-w-5xl rounded-2xl border p-3 shadow-lg">
+        <div className="w-full bg-card mx-auto max-w-5xl rounded-2xl border p-3 shadow-lg overflow-visible">
             <ImagePreview
                 images={store.pendingImages}
                 onImagesChange={store.setPendingImages}
@@ -269,7 +285,7 @@ export const ChatInput = () => {
                 onKeyDown={handleKeyDown}
                 className="border-none max-h-50 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
             />
-            <div className="flex items-center justify-between mt-2">
+            <div className="flex items-center justify-between mt-2 overflow-visible">
                 <div className="flex gap-2 items-center">
                     <ImagePicker
                         images={store.pendingImages}
@@ -319,7 +335,7 @@ export const ChatInput = () => {
                         </button>
                     )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 overflow-visible">
                     {Api.length > 0 && (
                         <ModelSelect
                             modelList={modelList}

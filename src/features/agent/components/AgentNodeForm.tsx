@@ -5,9 +5,7 @@ import { Label } from "@/shared/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select"
 import { Textarea } from "@/shared/components/ui/textarea"
 import { Spinner } from "@/shared/components/ui/spinner"
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/shared/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/components/ui/popover"
-import { ChevronsUpDown, Plus } from "lucide-react"
+import { ChevronsUpDown, Plus, Search } from "lucide-react"
 import { BRAND_ASSETS, getProviderDisplayName, getProviderImage, getProviderModels } from "@/shared/config/providermodels"
 import { ToolLabels } from "@/shared/config/toolsselection"
 import { useagentstore } from "../store/store"
@@ -24,6 +22,8 @@ export const AgentNodeForm = () => {
     const queryClient = useQueryClient()
     const navigate = useNavigate()
     const [loadingnode, setLoadingnode] = useState(false)
+    const [toolSearch, setToolSearch] = useState("")
+    const [modelSearch, setModelSearch] = useState("")
 
     const mode = store.nodeDialogMode
     const open = store.nodeDialogOpen
@@ -137,8 +137,8 @@ export const AgentNodeForm = () => {
                                 onChange={(e) => store.setPrompt(e.target.value)}
                             />
                         </div>
-                        <div className="flex justify-between gap-2">
-                            <div className="flex flex-col gap-1">
+                        <div className="flex gap-2">
+                            <div className="flex-1 flex flex-col gap-1">
                                 <Label htmlFor="provider">Provider</Label>
                                 <div className="flex items-center gap-2">
                                     <Select
@@ -185,111 +185,134 @@ export const AgentNodeForm = () => {
                                     </Button>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-1">
+                            <div className="flex-1 flex flex-col gap-1">
                                 <Label htmlFor="Tool">Tools</Label>
-                                <Popover open={store.toolOpen} onOpenChange={store.setToolOpen}>
-                                    <PopoverTrigger>
-                                        <Button
-                                            variant="outline"
-                                            role="combobox"
-                                            aria-expanded={store.toolOpen}
-                                            className="w-full justify-between"
-                                        >
-                                            {store.tool ? ToolLabels[store.tool] : "Select tool..."}
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-full p-1" align="start">
-                                        <Command className="bg-transparent">
-                                            <CommandInput placeholder="Search tool..." />
-                                            <CommandList>
-                                                <CommandEmpty>No tool found.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {Object.entries(ToolLabels).map(([key, label]) => (
-                                                        <CommandItem
+                                <div className="relative overflow-visible">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => store.setToolOpen(!store.toolOpen)}
+                                        className="w-full justify-between"
+                                    >
+                                        {store.tool ? ToolLabels[store.tool] : "Select tool..."}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                    {store.toolOpen && (
+                                        <div className="absolute left-0 right-0 bottom-full mb-1 z-100 min-w-full rounded-lg border bg-popover text-popover-foreground shadow-md">
+                                            <div className="flex items-center gap-2 border-b px-3 py-2">
+                                                <Search className="h-4 w-4 shrink-0 opacity-50" />
+                                                <input
+                                                    autoFocus
+                                                    placeholder="Search tool..."
+                                                    value={toolSearch}
+                                                    onChange={(e) => setToolSearch(e.target.value)}
+                                                    className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                                                />
+                                            </div>
+                                            <div className="max-h-60 overflow-y-auto p-1">
+                                                {Object.entries(ToolLabels).filter(([_, label]) =>
+                                                    label.toLowerCase().includes(toolSearch.toLowerCase())
+                                                ).length === 0 ? (
+                                                    <p className="py-6 text-center text-sm text-muted-foreground">No tool found.</p>
+                                                ) : (
+                                                    Object.entries(ToolLabels).filter(([_, label]) =>
+                                                        label.toLowerCase().includes(toolSearch.toLowerCase())
+                                                    ).map(([key, label]) => (
+                                                        <button
                                                             key={key}
-                                                            value={label}
-                                                            onSelect={() => {
+                                                            type="button"
+                                                            onClick={() => {
                                                                 store.setTool(key)
                                                                 store.setToolOpen(false)
+                                                                setToolSearch("")
                                                             }}
-                                                            className="cursor-pointer"
+                                                            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
                                                         >
                                                             {label}
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
+                                                        </button>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            <div className="flex flex-col gap-1">
-                                <Label htmlFor="model">Models</Label>
-                                {Api.length > 0 && (
-                                    <Popover open={store.modelOpen} onOpenChange={store.setModelOpen}>
-                                        <PopoverTrigger
-                                            render={
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    aria-expanded={store.modelOpen}
-                                                    className="justify-between"
-                                                    disabled={!store.provider || store.modelsLoading}
+                        </div>
+                        <div className="flex flex-col gap-1">
+                            <Label htmlFor="model">Models</Label>
+                            {Api.length > 0 && (
+                                <div className="relative overflow-visible">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => store.setModelOpen(!store.modelOpen)}
+                                        className="w-full justify-between"
+                                        disabled={!store.provider || store.modelsLoading}
+                                    >
+                                        {store.modelsLoading ? (
+                                            <span className="text-sm text-muted-foreground">Loading...</span>
+                                        ) : store.model ? (
+                                            <div className="flex items-center gap-2">
+                                                <img
+                                                    src={getProviderImage(store.provider || "")}
+                                                    className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
                                                 />
-                                            }
-                                        >
-                                            {store.modelsLoading ? (
-                                                <span className="text-sm text-muted-foreground">Loading...</span>
-                                            ) : store.model ? (
-                                                <div className="flex items-center gap-2">
-                                                    <img
-                                                        src={getProviderImage(store.provider || "")}
-                                                        className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
-                                                    />
-                                                    <span className="truncate">
-                                                        {store.model.substring(0, 7) + "..."}
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <span className="text-muted-foreground">Select Model</span>
-                                            )}
-                                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                        </PopoverTrigger>
-                                        <PopoverContent className="p-1" align="start">
-                                            <Command className="bg-transparent">
-                                                <CommandInput placeholder="Search model..." />
-                                                <CommandList>
-                                                    <CommandEmpty>No model found.</CommandEmpty>
-                                                    <CommandGroup>
-                                                        {store.modelList.length === 0 && !store.modelsLoading && (
-                                                            <div className="px-3 py-2 text-sm text-muted-foreground">
-                                                                No models available.
-                                                            </div>
-                                                        )}
-                                                        {store.modelList.map((entry) => (
-                                                            <CommandItem
-                                                                key={entry.model}
-                                                                value={entry.model}
-                                                                onSelect={() => {
-                                                                    store.setModel(entry.model)
-                                                                    store.setModelOpen(false)
-                                                                }}
-                                                            >
-                                                                <img
-                                                                    src={getProviderImage(store.provider || "")}
-                                                                    className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
-                                                                />
-                                                                <span className="text-sm ml-3">{entry.model}</span>
-                                                            </CommandItem>
-                                                        ))}
-                                                    </CommandGroup>
-                                                </CommandList>
-                                            </Command>
-                                        </PopoverContent>
-                                    </Popover>
-                                )}
-                            </div>
+                                                <span className="truncate">
+                                                    {store.model}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <span className="text-muted-foreground">Select Model</span>
+                                        )}
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                    {store.modelOpen && (
+                                            <div className="absolute left-0 right-0 bottom-full mb-1 z-100 min-w-full rounded-lg border bg-popover text-popover-foreground shadow-md">
+                                            <div className="flex items-center gap-2 border-b px-3 py-2">
+                                                <Search className="h-4 w-4 shrink-0 opacity-50" />
+                                                <input
+                                                    autoFocus
+                                                    placeholder="Search model..."
+                                                    value={modelSearch}
+                                                    onChange={(e) => setModelSearch(e.target.value)}
+                                                    className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                                                />
+                                            </div>
+                                            <div className="max-h-60 overflow-y-auto p-1">
+                                                {store.modelList.length === 0 && !store.modelsLoading && (
+                                                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                                                        No models available.
+                                                    </div>
+                                                )}
+                                                {store.modelList.filter((entry) =>
+                                                    entry.model.toLowerCase().includes(modelSearch.toLowerCase())
+                                                ).length === 0 && store.modelList.length > 0 ? (
+                                                    <p className="py-6 text-center text-sm text-muted-foreground">No model found.</p>
+                                                ) : (
+                                                    store.modelList.filter((entry) =>
+                                                        entry.model.toLowerCase().includes(modelSearch.toLowerCase())
+                                                    ).map((entry) => (
+                                                        <button
+                                                            key={entry.model}
+                                                            type="button"
+                                                            onClick={() => {
+                                                                store.setModel(entry.model)
+                                                                store.setModelOpen(false)
+                                                                setModelSearch("")
+                                                            }}
+                                                            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
+                                                        >
+                                                            <img
+                                                                src={getProviderImage(store.provider || "")}
+                                                                className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
+                                                            />
+                                                            <span className="text-sm ml-3">{entry.model}</span>
+                                                        </button>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </>
                 )}

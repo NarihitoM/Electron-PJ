@@ -1,23 +1,10 @@
 import { useState } from "react"
-import { Send, Eye, EyeOff, ChevronsUpDown } from "lucide-react"
+import { Send, Eye, EyeOff, ChevronsUpDown, Search } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
 import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogFooter, DialogDescription } from "@/shared/components/ui/dialog"
 import { Label } from "@/shared/components/ui/label"
 import { Input } from "@/shared/components/ui/input"
 import { Spinner } from "@/shared/components/ui/spinner"
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from "@/shared/components/ui/command"
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/shared/components/ui/popover"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { telegramauth } from "@/features/telegram/api/api"
@@ -37,6 +24,7 @@ export const TelegramConnectionPanel = () => {
     const queryClient = useQueryClient()
     const [showPassword, setShowPassword] = useState(false)
     const [open, setOpen] = useState(false)
+    const [search, setSearch] = useState("")
 
     const handlecodesend = async () => {
         try {
@@ -106,35 +94,54 @@ export const TelegramConnectionPanel = () => {
                         <div className="flex flex-col gap-2">
                             <Label htmlFor="phone">Phone Number</Label>
                             <div className="flex items-center space-x-2 w-full">
-                                <Popover open={open} onOpenChange={setOpen}>
-                                    <PopoverTrigger className="w-27.5 justify-between shrink-0 inline-flex items-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2" role="combobox" aria-expanded={open}>
+                                <div className="relative w-28 shrink-0">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setOpen(!open)}
+                                        className="w-full justify-between"
+                                    >
                                         {store.countryCode}
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-50 p-1" align="start">
-                                        <Command className="bg-transparent">
-                                            <CommandInput placeholder="Search country..." />
-                                            <CommandList>
-                                                <CommandEmpty>No country found.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {countries.map((country) => (
-                                                        <CommandItem
+                                    </Button>
+                                    {open && (
+                                        <div className="absolute left-0 right-0 bottom-full mb-1 z-100 rounded-lg border bg-popover text-popover-foreground shadow-md">
+                                            <div className="flex items-center gap-2 border-b px-3 py-2">
+                                                <Search className="h-4 w-4 shrink-0 opacity-50" />
+                                                <input
+                                                    autoFocus
+                                                    placeholder="Search country..."
+                                                    value={search}
+                                                    onChange={(e) => setSearch(e.target.value)}
+                                                    className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                                                />
+                                            </div>
+                                            <div className="max-h-60 overflow-y-auto p-1">
+                                                {countries.filter((c) =>
+                                                    c.label.toLowerCase().includes(search.toLowerCase())
+                                                ).length === 0 ? (
+                                                    <p className="py-6 text-center text-sm text-muted-foreground">No country found.</p>
+                                                ) : (
+                                                    countries.filter((c) =>
+                                                        c.label.toLowerCase().includes(search.toLowerCase())
+                                                    ).map((country) => (
+                                                        <button
                                                             key={country.value}
-                                                            value={country.label}
-                                                            onSelect={() => {
+                                                            type="button"
+                                                            onClick={() => {
                                                                 store.setCountryCode(country.value)
                                                                 setOpen(false)
+                                                                setSearch("")
                                                             }}
-                                                            className="cursor-pointer"
+                                                            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
                                                         >
                                                             {country.label}
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
+                                                        </button>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
 
                                 <Input
                                     id="phone"

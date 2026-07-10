@@ -1,8 +1,6 @@
 import { useState } from "react";
-import { Eye, MessageSquare, Code, Brain, Wrench, Image, ChevronsUpDown } from "lucide-react";
+import { Eye, MessageSquare, Code, Brain, Wrench, Image, ChevronsUpDown, Search } from "lucide-react";
 import { Button } from "../../../shared/components/ui/button";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../../../shared/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "../../../shared/components/ui/popover";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "../../../shared/components/ui/tooltip";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "../../../shared/components/ui/select";
 import { getProviderImage } from "../../../shared/config/providermodels";
@@ -65,6 +63,7 @@ function ReasoningLevelSelect({ value, onChange }: { value: ReasoningLevel; onCh
 
 export function ModelSelect({ modelList, provider, model, loading, disabled, onSelect, reasoningLevel, onReasoningLevelChange }: ModelSelectProps) {
     const [open, setOpen] = useState(false);
+    const [search, setSearch] = useState("");
 
     const selectedModel = modelList.find(m => m.model === model);
     const hasReasoning = selectedModel?.capabilities.includes("reasoning") ?? false;
@@ -72,17 +71,12 @@ export function ModelSelect({ modelList, provider, model, loading, disabled, onS
     return (
         <TooltipProvider>
             <div className="flex gap-2 items-center">
-                <Popover open={open} onOpenChange={setOpen}>
-                    <PopoverTrigger
-                        render={
-                            <Button
-                                variant="outline"
-                                role="combobox"
-                                aria-expanded={open}
-                                className="justify-between"
-                                disabled={disabled || loading}
-                            />
-                        }
+                <div className="relative flex-1 overflow-visible">
+                    <Button
+                        variant="outline"
+                        onClick={() => setOpen(!open)}
+                        className="w-full justify-between"
+                        disabled={disabled || loading}
                     >
                         {loading ? (
                             <span className="text-sm text-muted-foreground">Loading...</span>
@@ -95,39 +89,53 @@ export function ModelSelect({ modelList, provider, model, loading, disabled, onS
                             <span className="text-muted-foreground">Select Model</span>
                         )}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </PopoverTrigger>
-                    <PopoverContent className="p-1" align="start">
-                        <Command className="bg-transparent">
-                            <CommandInput placeholder="Search model..." />
-                            <CommandList>
-                                <CommandEmpty>No model found.</CommandEmpty>
-                                <CommandGroup>
-                                    {modelList.length === 0 && !loading && (
-                                        <div className="px-3 py-2 text-sm text-muted-foreground">No models available. Configure your API key in Settings.</div>
-                                    )}
-                                    {modelList.map((entry) => (
-                                        <CommandItem
+                    </Button>
+                    {open && (
+                        <div className="absolute left-0 bottom-full mb-1 z-100 min-w-full w-max max-w-[90vw] rounded-lg border bg-popover text-popover-foreground shadow-md">
+                            <div className="flex items-center gap-2 border-b px-3 py-2">
+                                <Search className="h-4 w-4 shrink-0 opacity-50" />
+                                <input
+                                    autoFocus
+                                    placeholder="Search model..."
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                                />
+                            </div>
+                            <div className="max-h-60 overflow-y-auto p-1">
+                                {modelList.length === 0 && !loading && (
+                                    <div className="px-3 py-2 text-sm text-muted-foreground">No models available. Configure your API key in Settings.</div>
+                                )}
+                                {modelList.filter((entry) =>
+                                    entry.model.toLowerCase().includes(search.toLowerCase())
+                                ).length === 0 && modelList.length > 0 ? (
+                                    <p className="py-6 text-center text-sm text-muted-foreground">No model found.</p>
+                                ) : (
+                                    modelList.filter((entry) =>
+                                        entry.model.toLowerCase().includes(search.toLowerCase())
+                                    ).map((entry) => (
+                                        <button
                                             key={entry.model}
-                                            value={entry.model}
-                                            onSelect={() => { onSelect(entry.model); setOpen(false); }}
-                                            className="group"
+                                            type="button"
+                                            onClick={() => { onSelect(entry.model); setOpen(false); setSearch(""); }}
+                                            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer group"
                                         >
                                             <img src={getProviderImage(provider)} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
-                                            <span className="text-sm ml-3 truncate">{entry.model}</span>
+                                            <span className="text-sm ml-3 whitespace-nowrap">{entry.model}</span>
                                             {entry.capabilities.length > 0 && (
-                                                <span className="ml-auto flex gap-0.5">
+                                                <span className="ml-auto flex gap-0.5 shrink-0">
                                                     {entry.capabilities.map(c => (
                                                         <CapabilityBadge key={c} name={c} />
                                                     ))}
                                                 </span>
                                             )}
-                                        </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                            </CommandList>
-                        </Command>
-                    </PopoverContent>
-                </Popover>
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
                 {hasReasoning && onReasoningLevelChange && (
                     <ReasoningLevelSelect value={reasoningLevel ?? ""} onChange={onReasoningLevelChange} />
                 )}

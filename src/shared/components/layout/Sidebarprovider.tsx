@@ -416,7 +416,7 @@ export const Sidebarprovider = () => {
                                 )}
                             </SidebarGroupContent>
                         </SidebarGroup>
-                        {hasConnectedService && (
+    
                             <SidebarGroup>
                                 <SidebarGroupContent>
                                     <SidebarGroupLabel>Workflow Agent</SidebarGroupLabel>
@@ -429,7 +429,7 @@ export const Sidebarprovider = () => {
                                     ))}
                                 </SidebarGroupContent>
                             </SidebarGroup>
-                        )}
+                        
                         <SidebarGroup>
                             <SidebarGroupContent>
                                 <SidebarGroupLabel>Settings</SidebarGroupLabel>
@@ -565,7 +565,7 @@ export const Sidebarprovider = () => {
                     </SidebarFooter>
                 </Sidebar>
                 <SidebarInset className="min-w-0 flex-1">
-                    <main className="w-full max-w-5xl mx-auto p-5 min-w-0">
+                    <main className="w-full max-w-5xl mx-auto py-5 px-12 min-w-0">
                         <Outlet />
                     </main>
                 </SidebarInset>

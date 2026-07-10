@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react"
-import { Plus, ChevronsUpDown } from "lucide-react"
+import { Plus, ChevronsUpDown, Search } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
 import { Textarea } from "@/shared/components/ui/textarea"
 import { Label } from "@/shared/components/ui/label"
@@ -12,19 +12,6 @@ import {
     SelectItem,
     SelectTrigger,
 } from "@/shared/components/ui/select"
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from "@/shared/components/ui/command"
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/shared/components/ui/popover"
 import { Dialog, DialogHeader, DialogContent, DialogTitle, DialogFooter, DialogDescription } from "@/shared/components/ui/dialog"
 import { useNavigate } from "react-router-dom"
 import { toast } from "sonner"
@@ -62,6 +49,7 @@ export const TelegramCronScheduler = () => {
     const navigate = useNavigate()
 
     const [modelOpen, setModelOpen] = useState(false)
+    const [modelSearch, setModelSearch] = useState("")
     const [cronModelList, setCronModelList] = useState<ModelEntry[]>([])
 
     const connected = !!accountData
@@ -279,8 +267,13 @@ export const TelegramCronScheduler = () => {
                         <div className="space-y-1">
                             <Label htmlFor="model">Model</Label>
                             {apiWithLogos.length > 0 && (
-                                <Popover open={modelOpen} onOpenChange={setModelOpen}>
-                                    <PopoverTrigger render={<Button variant="outline" role="combobox" aria-expanded={modelOpen} className="justify-between" disabled={!store.telegramcron.provider || !store.telegramcron.isActive} />}>
+                                <div className="relative overflow-visible">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setModelOpen(!modelOpen)}
+                                        className="w-full justify-between"
+                                        disabled={!store.telegramcron.provider || !store.telegramcron.isActive}
+                                    >
                                         {store.telegramcron.model ? (
                                             <div className="flex items-center gap-2">
                                                 <img src={getProviderImage(store.telegramcron.provider || "")} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
@@ -290,27 +283,46 @@ export const TelegramCronScheduler = () => {
                                             <span className="text-muted-foreground">Select Model</span>
                                         )}
                                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                    </PopoverTrigger>
-                                    <PopoverContent className="p-1" align="start">
-                                        <Command className="bg-transparent">
-                                            <CommandInput placeholder="Search model..." />
-                                            <CommandList>
-                                                <CommandEmpty>No model found.</CommandEmpty>
-                                                <CommandGroup>
-                                                    {cronModelList.length === 0 && (
-                                                        <div className="px-3 py-2 text-sm text-muted-foreground">No models available.</div>
-                                                    )}
-                                                    {cronModelList.map((entry) => (
-                                                        <CommandItem key={entry.model} value={entry.model} onSelect={() => { store.setTelegramcron({ ...store.telegramcron, model: entry.model }); setModelOpen(false) }}>
+                                    </Button>
+                                    {modelOpen && (
+                                        <div className="absolute left-0 right-0 bottom-full mb-1 z-100 min-w-full rounded-lg border bg-popover text-popover-foreground shadow-md">
+                                            <div className="flex items-center gap-2 border-b px-3 py-2">
+                                                <Search className="h-4 w-4 shrink-0 opacity-50" />
+                                                <input
+                                                    autoFocus
+                                                    placeholder="Search model..."
+                                                    value={modelSearch}
+                                                    onChange={(e) => setModelSearch(e.target.value)}
+                                                    className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                                                />
+                                            </div>
+                                            <div className="max-h-60 overflow-y-auto p-1">
+                                                {cronModelList.length === 0 && (
+                                                    <div className="px-3 py-2 text-sm text-muted-foreground">No models available.</div>
+                                                )}
+                                                {cronModelList.filter((entry) =>
+                                                    entry.model.toLowerCase().includes(modelSearch.toLowerCase())
+                                                ).length === 0 && cronModelList.length > 0 ? (
+                                                    <p className="py-6 text-center text-sm text-muted-foreground">No model found.</p>
+                                                ) : (
+                                                    cronModelList.filter((entry) =>
+                                                        entry.model.toLowerCase().includes(modelSearch.toLowerCase())
+                                                    ).map((entry) => (
+                                                        <button
+                                                            key={entry.model}
+                                                            type="button"
+                                                            onClick={() => { store.setTelegramcron({ ...store.telegramcron, model: entry.model }); setModelOpen(false); setModelSearch(""); }}
+                                                            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
+                                                        >
                                                             <img src={getProviderImage(store.telegramcron.provider || "")} className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0" />
                                                             <span className="text-sm ml-3">{entry.model}</span>
-                                                        </CommandItem>
-                                                    ))}
-                                                </CommandGroup>
-                                            </CommandList>
-                                        </Command>
-                                    </PopoverContent>
-                                </Popover>
+                                                        </button>
+                                                    ))
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
                     </div>
