@@ -47,7 +47,7 @@ interface ModelSelectProps {
 function ReasoningLevelSelect({ value, onChange }: { value: ReasoningLevel; onChange: (v: ReasoningLevel) => void }) {
     return (
         <Select value={value || "auto"} onValueChange={(v) => onChange(v === "auto" ? "" : v as ReasoningLevel)}>
-            <SelectTrigger size="sm" className="w-[110px] border-cyan-500/20 bg-cyan-500/5">
+            <SelectTrigger size="sm" className="w-27.5 border-cyan-500/20 bg-cyan-500/5">
                 <Brain size={12} className="text-amber-400 mr-1" />
                 <SelectValue />
             </SelectTrigger>

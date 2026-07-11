@@ -101,8 +101,8 @@ export const N8nMessageList = () => {
                     {[1, 2, 3].map((i) => (
                         <div key={i} className="flex items-start gap-3 justify-end">
                             <div className="space-y-2">
-                                <Skeleton className="h-4 w-[200px]" />
-                                <Skeleton className="h-4 w-[150px]" />
+                                <Skeleton className="h-4 w-50" />
+                                <Skeleton className="h-4 w-37.5" />
                             </div>
                             <Skeleton className="h-8 w-8 rounded-full" />
                         </div>
@@ -176,7 +176,7 @@ export const N8nMessageList = () => {
                                             ))}
                                         </div>
                                     )}
-                                    <div className="text-sm whitespace-pre-wrap break-words"><AiContent content={mes.content} /></div>
+                                    <div className="text-sm whitespace-pre-wrap wrap-break-word"><AiContent content={mes.content} /></div>
                                 </div>
                             ) : (
                                 <div className="space-y-2">
@@ -185,10 +185,10 @@ export const N8nMessageList = () => {
                                             {mes.content && (() => {
                                                 const extracted = extractToolMessage(mes.content)
                                                 if (extracted && !mes.toolsCall?.length) {
-                                                    return <div className="text-sm whitespace-pre-wrap break-words">{mes.thinking && <ThinkingBlock thinking={mes.thinking} isStreaming={store.sending && index === store.sessionmessage.length - 1} />}<AiContent content={extracted} /></div>
+                                                    return <div className="text-sm whitespace-pre-wrap wrap-break-word">{mes.thinking && <ThinkingBlock thinking={mes.thinking} isStreaming={store.sending && index === store.sessionmessage.length - 1} />}<AiContent content={extracted} /></div>
                                                 }
                                                 return (
-                                                    <div className="text-sm whitespace-pre-wrap break-words">{mes.thinking && <ThinkingBlock thinking={mes.thinking} isStreaming={store.sending && index === store.sessionmessage.length - 1} />}
+                                                    <div className="text-sm whitespace-pre-wrap wrap-break-word">{mes.thinking && <ThinkingBlock thinking={mes.thinking} isStreaming={store.sending && index === store.sessionmessage.length - 1} />}
                                                         <AiContent content={mes.content} />
                                                     </div>
                                                 )

@@ -627,7 +627,7 @@ export const GoogleForm = ({ onComplete }: { onComplete: () => void }) => {
                     value={serviceKey}
                     onChange={(e) => setServiceKey(e.target.value)}
                     placeholder='Paste the entire private key JSON here...'
-                    className="min-h-[100px] w-full rounded-md border bg-transparent px-3 py-2 text-sm resize-none"
+                    className="min-h-25 w-full rounded-md border bg-transparent px-3 py-2 text-sm resize-none"
                 />
             </div>
             <Button onClick={handleConnect} disabled={loading || !serviceEmail || !serviceKey} className="bg-cyan-500 dark:bg-white">
