@@ -16,6 +16,7 @@ export interface messagefetch {
     id: number
     role: string
     content: string
+    thinking?: string
     images?: string[]
     generatedImages?: string[]
     provider?: string

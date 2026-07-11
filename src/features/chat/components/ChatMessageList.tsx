@@ -9,6 +9,7 @@ import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import { Chattool } from "@/shared/config/toolsselection"
 import { extractToolMessage } from "@/shared/utils/toolutils"
 import AiContent from "@/shared/components/layout/LayoutAiresponse"
+import ThinkingBlock from "./ThinkingBlock"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
 import { useUser } from "@/features/auth/hooks/useUser"
@@ -322,6 +323,7 @@ export const ChatMessageList = () => {
                                                     </Collapsible>
                                                 ))}
                                             </div>
+                                            {msg.thinking && <ThinkingBlock thinking={msg.thinking} isStreaming={store.sending && index === store.sessionmessage.length - 1} />}
                                             <AiContent content={msg.content} />
                                         </motion.div>
                                     </div>
