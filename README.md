@@ -43,6 +43,7 @@ MultimateAi is a desktop application that orchestrates AI agents across multiple
 | Mistral | Mistral Large, Mistral Small, Codestral |
 | Ollama | Any local model |
 | OpenRouter | All supported models |
+| MultimateAi (Free) | DeepSeek V4 Flash, Mimo v2.5, Nemotron 3 Ultra, North Mini Code |
 
 ---
 
