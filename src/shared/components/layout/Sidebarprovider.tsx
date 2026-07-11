@@ -286,8 +286,6 @@ export const Sidebarprovider = () => {
     const [agentSearch, setAgentSearch] = useState<string>("");
     const [loadingServices, setLoadingServices] = useState<boolean>(true);
 
-    const hasConnectedService = !!telegramUserdata || !!workspace || !!workspacename || !!serviceemail || n8nConnected;
-
     const connectedAgentItems = useMemo(() => {
         return Agent.filter((item) => {
             switch (item.title) {

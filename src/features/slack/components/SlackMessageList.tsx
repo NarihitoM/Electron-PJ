@@ -263,7 +263,7 @@ export const SlackMessageList = () => {
                                         {msg.generatedImages.map((url, i) => (
                                             <div
                                                 key={i}
-                                                className="relative rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity max-w-[300px]"
+                                                className="relative rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity max-w-75"
                                                 onClick={() => {
                                                     setLightboxImages(msg.generatedImages!);
                                                     setLightboxIndex(i);
@@ -363,7 +363,7 @@ export const SlackMessageList = () => {
                                             </Collapsible>
                                         ))}
                                     </motion.div>
-                                    {msg.thinking && <ThinkingBlock thinking={msg.thinking} isStreaming={store.sending && index === store.sessionmessage.length - 1} />}
+                                    {msg.thinking && <ThinkingBlock thinking={msg.thinking} isStreaming={sending && index === sessionmessage.length - 1} />}
                                     <AiContent content={msg.content} />
                                 </div>
                                 {msg.content && (

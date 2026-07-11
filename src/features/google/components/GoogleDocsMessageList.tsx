@@ -240,7 +240,7 @@ export const GoogleDocsMessageList = () => {
                                                 {msg.generatedImages.map((url, i) => (
                                                     <div
                                                         key={i}
-                                                        className="relative rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity max-w-[300px]"
+                                                        className="relative rounded-xl border border-zinc-200 dark:border-zinc-700 overflow-hidden cursor-pointer hover:opacity-80 transition-opacity max-w-75"
                                                         onClick={() => handleLightbox(msg.generatedImages!, i)}
                                                     >
                                                         <img src={url} alt="generated" className="w-full h-auto object-cover" />
@@ -316,7 +316,7 @@ export const GoogleDocsMessageList = () => {
                                                     </Collapsible>
                                                 ))}
                                             </motion.div>
-                                            {msg.thinking && <ThinkingBlock thinking={msg.thinking} isStreaming={store.sending && index === store.sessionmessage_docs.length - 1} />}
+                                            {msg.thinking && <ThinkingBlock thinking={msg.thinking} isStreaming={store.sending_docs && index === store.sessionmessage_docs.length - 1} />}
                                             <AiContent content={msg.content} />
                                         </div>
                                         {msg.content && (

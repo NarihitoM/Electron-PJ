@@ -62,20 +62,20 @@ export const AgentChat = () => {
             if (!data?.nodeName) return;
             const gen = store.workflowGenRef.current;
 
-            let finishedNode: { name: string; output: string; thinking: string; provider: string; model: string } | null = null;
+            const currentNodes = useagentstore.getState().nodes;
+            const targetNode = currentNodes.find((n: any) => n.name === data.nodeName);
+            const finishedNode = targetNode
+                ? {
+                    name: targetNode.name,
+                    output: targetNode.output || "",
+                    thinking: targetNode.thinking || "",
+                    provider: targetNode.provider,
+                    model: targetNode.model,
+                }
+                : null;
 
             store.setNodes((prev) => {
                 if (store.workflowGenRef.current !== gen) return prev;
-                const targetNode = prev.find((n) => n.name === data.nodeName);
-                if (targetNode) {
-                    finishedNode = {
-                        name: targetNode.name,
-                        output: targetNode.output || "",
-                        thinking: targetNode.thinking || "",
-                        provider: targetNode.provider,
-                        model: targetNode.model,
-                    };
-                }
 
                 const updatedNodes = prev.map((n: any) =>
                     n.name === data.nodeName ? { ...n, status: "idle" as const } : n
