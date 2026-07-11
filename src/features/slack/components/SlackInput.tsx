@@ -342,6 +342,19 @@ export const SlackInput = () => {
                         return newSession;
                     });
                 },
+                (chunk: string) => {
+                    setsessionmessage((prev) => {
+                        const newSession = [...prev];
+                        const lastIndex = newSession.length - 1;
+                        if (newSession[lastIndex]?.role === "assistant") {
+                            newSession[lastIndex] = {
+                                ...newSession[lastIndex],
+                                thinking: (newSession[lastIndex].thinking || "") + chunk
+                            };
+                        }
+                        return newSession;
+                    });
+                },
                 (status) => {
                     setsessionmessage((prev) => {
                         const newSession = [...prev];

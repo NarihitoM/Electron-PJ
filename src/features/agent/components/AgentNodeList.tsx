@@ -8,6 +8,7 @@ import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import { ToolLabels } from "@/shared/config/toolsselection"
 import { motion } from "framer-motion"
 import AiContent from "@/shared/components/layout/LayoutAiresponse"
+import ThinkingBlock from "@/shared/components/ui/ThinkingBlock"
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys"
 import { useAgentNodes } from "@/features/agent/hooks/useAgentNodes"
 import { useagentstore } from "../store/store"
@@ -124,9 +125,12 @@ export const AgentNodeList = () => {
                                 )}
                                 <div className="whitespace-pre-wrap">
                                     {element.output ? (
-                                        <AiContent content={element.output} />
+                                        <>
+                                            {element.thinking && <ThinkingBlock thinking={element.thinking} />}
+                                            <AiContent content={element.output} />
+                                        </>
                                     ) : element.thinking ? (
-                                        <AiContent content={element.thinking} />
+                                        <ThinkingBlock thinking={element.thinking} isStreaming />
                                     ) : element.activeTool ? null : (
                                         <motion.span
                                             animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}

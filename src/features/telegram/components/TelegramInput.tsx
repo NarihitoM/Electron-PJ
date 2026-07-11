@@ -142,6 +142,14 @@ export const TelegramInput = () => {
                         return ns
                     })
                 },
+                (chunk: string) => {
+                    store.updateSessionMessages(prev => {
+                        const ns = [...prev]
+                        const li = ns.length - 1
+                        if (ns[li]?.role === "assistant") ns[li] = { ...ns[li], thinking: (ns[li].thinking || "") + chunk }
+                        return ns
+                    })
+                },
                 (status) => {
                     store.updateSessionMessages(prev => {
                         const ns = [...prev]

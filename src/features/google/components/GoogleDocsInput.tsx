@@ -136,6 +136,19 @@ export const GoogleDocsInput = () => {
                         return newSession
                     })
                 },
+                (chunk: string) => {
+                    store.updateSessionMessages_docs(prev => {
+                        const newSession = [...prev]
+                        const lastIndex = newSession.length - 1
+                        if (newSession[lastIndex]?.role === "assistant") {
+                            newSession[lastIndex] = {
+                                ...newSession[lastIndex],
+                                thinking: (newSession[lastIndex].thinking || "") + chunk
+                            }
+                        }
+                        return newSession
+                    })
+                },
                 (status) => {
                     store.updateSessionMessages_docs(prev => {
                         const newSession = [...prev]

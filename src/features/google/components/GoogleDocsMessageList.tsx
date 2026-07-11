@@ -10,6 +10,7 @@ import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import { Googledocstool } from "@/shared/config/toolsselection"
 import { extractToolMessage } from "@/shared/utils/toolutils"
 import AiContent from "@/shared/components/layout/LayoutAiresponse"
+import ThinkingBlock from "@/shared/components/ui/ThinkingBlock"
 import { useUser } from "@/features/auth/hooks/useUser"
 import { googleauth } from "../api/api"
 import { googleauthstore } from "../store/store"
@@ -315,6 +316,7 @@ export const GoogleDocsMessageList = () => {
                                                     </Collapsible>
                                                 ))}
                                             </motion.div>
+                                            {msg.thinking && <ThinkingBlock thinking={msg.thinking} isStreaming={store.sending && index === store.sessionmessage_docs.length - 1} />}
                                             <AiContent content={msg.content} />
                                         </div>
                                         {msg.content && (

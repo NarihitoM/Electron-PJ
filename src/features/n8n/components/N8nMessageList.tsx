@@ -9,6 +9,7 @@ import { AlertTriangle, Bot, Check, ChevronDown, Copy, Cpu, Dot, Loader2, Termin
 import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import { extractToolMessage } from "@/shared/utils/toolutils"
 import AiContent from "@/shared/components/layout/LayoutAiresponse"
+import ThinkingBlock from "@/shared/components/ui/ThinkingBlock"
 import { useUser } from "@/features/auth/hooks/useUser"
 import { n8nauthstore } from "../store/store"
 import { n8nauth } from "../api/api"
@@ -184,10 +185,10 @@ export const N8nMessageList = () => {
                                             {mes.content && (() => {
                                                 const extracted = extractToolMessage(mes.content)
                                                 if (extracted && !mes.toolsCall?.length) {
-                                                    return <div className="text-sm whitespace-pre-wrap break-words"><AiContent content={extracted} /></div>
+                                                    return <div className="text-sm whitespace-pre-wrap break-words">{mes.thinking && <ThinkingBlock thinking={mes.thinking} isStreaming={store.sending && index === store.sessionmessage.length - 1} />}<AiContent content={extracted} /></div>
                                                 }
                                                 return (
-                                                    <div className="text-sm whitespace-pre-wrap break-words">
+                                                    <div className="text-sm whitespace-pre-wrap break-words">{mes.thinking && <ThinkingBlock thinking={mes.thinking} isStreaming={store.sending && index === store.sessionmessage.length - 1} />}
                                                         <AiContent content={mes.content} />
                                                     </div>
                                                 )

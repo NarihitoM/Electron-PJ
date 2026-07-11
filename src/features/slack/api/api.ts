@@ -41,6 +41,7 @@ export const slackauth = {
         type: string,
         images: string[] | undefined,
         onChunk: (chunk: string) => void,
+        onThinking?: (chunk: string) => void,
         onStatus?: (status: { type: string; step: string; tool?: string; name?: string; input?: string; output?: string; id: string; query: string; result: string ; error : string }) => void,
         onApproval?: (approval: { thread_id: string; tool_calls: Array<{ name: string; query: any; id: string }> }) => void,
         onImage?: (url: string) => void,
@@ -83,6 +84,9 @@ export const slackauth = {
 
                     if (data.type === "text") {
                         onChunk(data.chunk);
+                    }
+                    else if (data.type === "thinking") {
+                        if (onThinking) onThinking(data.chunk);
                     }
                     else if (data.type === "status" || data.type === "chain") {
                         if (onStatus) onStatus(data);

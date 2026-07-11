@@ -6,6 +6,7 @@ import { motion } from "framer-motion"
 import { Bot, Check, Copy } from "lucide-react"
 import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import AiContent from "@/shared/components/layout/LayoutAiresponse"
+import ThinkingBlock from "@/shared/components/ui/ThinkingBlock"
 import { useUser } from "@/features/auth/hooks/useUser"
 import { useagentstore } from "../store/store"
 import { agentauth } from "../api/api"
@@ -145,6 +146,7 @@ export const AgentChatArea = () => {
 
                                     <div className={`py-2 rounded-2xl leading-relaxed text-[15px] whitespace-pre-wrap w-full overflow-hidden ${isUser ? "bg-muted text-foreground rounded-tr-none p-3" : "bg-transparent text-foreground rounded-tl-none"}`}>
                                         <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="wrap-break-word w-full">
+                                            {(msg as any).thinking && <ThinkingBlock thinking={(msg as any).thinking} />}
                                             <AiContent content={msg.content} />
                                         </motion.div>
                                     </div>

@@ -18,6 +18,7 @@ import { Spinner } from "@/shared/components/ui/spinner"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/components/ui/collapsible"
 import AiContent from "@/shared/components/layout/LayoutAiresponse"
+import ThinkingBlock from "@/shared/components/ui/ThinkingBlock"
 import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import { Telegramtool } from "@/shared/config/toolsselection"
 import { extractToolMessage } from "@/shared/utils/toolutils"
@@ -370,6 +371,7 @@ export const TelegramMessageList = () => {
                                             </Collapsible>
                                         ))}
                                     </motion.div>
+                                    {msg.thinking && <ThinkingBlock thinking={msg.thinking} isStreaming={store.sending && index === store.sessionmessage.length - 1} />}
                                     <AiContent content={msg.content} />
                                 </div>
                                 {msg.content && (

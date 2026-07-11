@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/co
 import { motion } from "framer-motion"
 import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import AiContent from "@/shared/components/layout/LayoutAiresponse"
+import ThinkingBlock from "@/shared/components/ui/ThinkingBlock"
 import { extractToolMessage } from "@/shared/utils/toolutils"
 import { Googlesheettool } from "@/shared/config/toolsselection"
 import { useUser } from "@/features/auth/hooks/useUser"
@@ -327,6 +328,7 @@ export const GoogleSheetMessageList = () => {
                                                         </Collapsible>
                                                     ))}
                                                 </motion.div>
+                                                {msg.thinking && <ThinkingBlock thinking={msg.thinking} isStreaming={store.sending && index === store.sessionmessage_sheet.length - 1} />}
                                                 <AiContent content={msg.content} />
                                             </div>
                                             {msg.content && (

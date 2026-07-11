@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/co
 import { Notiontool } from "@/shared/config/toolsselection"
 import { extractToolMessage } from "@/shared/utils/toolutils"
 import AiContent from "@/shared/components/layout/LayoutAiresponse"
+import ThinkingBlock from "@/shared/components/ui/ThinkingBlock"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar"
 import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import { useUser } from "@/features/auth/hooks/useUser"
@@ -299,6 +300,7 @@ export const NotionMessageList = () => {
                                                 </Collapsible>
                                             ))}
                                         </motion.div>
+                                        {msg.thinking && <ThinkingBlock thinking={msg.thinking} isStreaming={store.sending && index === store.sessionmessage.length - 1} />}
                                         <AiContent content={msg.content} />
                                     </div>
                                     {msg.content && (

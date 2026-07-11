@@ -7,6 +7,7 @@ import { Spinner } from "@/shared/components/ui/spinner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/components/ui/collapsible";
 import { motion } from "framer-motion";
 import AiContent from "@/shared/components/layout/LayoutAiresponse";
+import ThinkingBlock from "@/shared/components/ui/ThinkingBlock"
 import { BRAND_ASSETS } from "@/shared/config/providermodels";
 import { Slacktool } from "@/shared/config/toolsselection";
 import { extractToolMessage } from "@/shared/utils/toolutils";
@@ -362,6 +363,7 @@ export const SlackMessageList = () => {
                                             </Collapsible>
                                         ))}
                                     </motion.div>
+                                    {msg.thinking && <ThinkingBlock thinking={msg.thinking} isStreaming={store.sending && index === store.sessionmessage.length - 1} />}
                                     <AiContent content={msg.content} />
                                 </div>
                                 {msg.content && (
