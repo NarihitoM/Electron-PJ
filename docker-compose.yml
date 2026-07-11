@@ -1,0 +1,150 @@
+# =============================================================================
+# Multimate AI — Docker Compose Orchestration
+#
+# Services:
+#   postgres   — Database (PostgreSQL 16)
+#   redis      — Cache & rate limiting (Redis 7)
+#   backend    — Express.js API server
+#   frontend   — Next.js web application
+#   electron   — [Manual] Electron app Windows installer builder
+#
+# Usage:
+#   docker compose up -d                    # Start all services
+#   docker compose logs -f                  # Follow logs
+#   docker compose run --rm electron        # Build Windows installer
+#   docker compose down -v                  # Stop and delete volumes
+# =============================================================================
+
+services:
+  # ── PostgreSQL Database ────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: multimate-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-multimate}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-multimate_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-multimate}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - multimate-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-multimate} -d ${POSTGRES_DB:-multimate}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # ── Redis Cache ───────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: multimate-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - multimate-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── Backend API Server (Express.js + Prisma) ──────────────────────────────
+  backend:
+    build:
+      context: ../Ultimate-MultiAgentServer
+      dockerfile: Dockerfile
+    container_name: multimate-backend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_URL: postgresql://${POSTGRES_USER:-multimate}:${POSTGRES_PASSWORD:-multimate_secret}@postgres:5432/${POSTGRES_DB:-multimate}
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      BACKEND_URL: http://localhost:3001
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+    env_file:
+      - .env.docker
+    networks:
+      - multimate-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ── Next.js Frontend ──────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ../MultimateAi-Frontend
+      dockerfile: Dockerfile
+      args:
+        BACKEND_URL: http://backend:3001
+        GROQ_API_KEY: ${GROQ_API_KEY:-}
+    container_name: multimate-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      BACKEND_URL: http://backend:3001
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+    env_file:
+      - .env.docker
+    networks:
+      - multimate-net
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ── Electron App Builder (Manual Trigger) ─────────────────────────────────
+  electron:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BACKEND_URL: ${BACKEND_URL:-https://multimate-server.vercel.app}
+        VITE_SUPABASE: ${VITE_SUPABASE:-}
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-https://multimate-server.vercel.app}
+        VITE_CLIENTID: ${VITE_CLIENTID:-}
+    container_name: multimate-electron-builder
+    profiles:
+      - build-electron
+    networks:
+      - multimate-net
+    # Usage: docker compose run --rm electron
+
+# ── Networks & Volumes ─────────────────────────────────────────────────────
+networks:
+  multimate-net:
+    driver: bridge
+    name: multimate-net
+
+volumes:
+  postgres-data:
+    name: multimate-postgres-data
+  redis-data:
+    name: multimate-redis-data
