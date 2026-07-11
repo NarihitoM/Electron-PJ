@@ -5,7 +5,6 @@ export class BrowserManager {
     private static browser: any = null;
     private static activePage: any = null;
 
-
     private static getDynamicChromePath(): string | undefined {
         const platform = process.platform;
         if (platform !== 'win32') return undefined; 
@@ -22,43 +21,52 @@ export class BrowserManager {
 
         return undefined;
     }
+
     private static async patchPage(page: any) {
         await page.evaluateOnNewDocument(() => {
-            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-            (window as any).chrome = { runtime: {} };
-            Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
-            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+            Object.defineProperty(navigator, 'webdriver', { get: () => false });
         });
     }
 
     private static async getBrowser() {
         if (!this.browser) {
-            const path = this.getDynamicChromePath();
+            const chromePath = this.getDynamicChromePath();
 
+            // Build Chrome launch args — no --user-data-dir so Chrome
+            // automatically uses the user's default profile (with all logins).
+            const args = [
+                '--window-size=1200,900',
+                '--disable-blink-features=AutomationControlled',
+                '--disable-features=ChromeWhatsNewUI',
+                '--no-first-run'
+            ];
+
+            // KEY FIX: ignoreDefaultArgs removes "--enable-automation" which is
+            // the single flag that makes Chrome show "controlled by automated
+            // software" and blocks Google sign-in.  Puppeteer still gets full
+            // CDP control so keyboard / mouse / evaluate all work normally.
             this.browser = await puppeteer.launch({
                 headless: false,
-                executablePath: path || undefined,
+                executablePath: chromePath || undefined,
+                ignoreDefaultArgs: ['--enable-automation'],
                 defaultViewport: { width: 1200, height: 900 },
-                args: [
-                    '--window-size=1200,900',
-                    '--disable-blink-features=AutomationControlled',
-                    '--disable-features=ChromeWhatsNewUI',
-                    '--disable-sync',
-                    '--no-first-run'
-                ]
+                args,
             });
+
             this.browser.on('disconnected', () => {
                 this.browser = null;
                 this.activePage = null;
             });
             this.browser.on('targetcreated', async (target: any) => {
                 if (target.type() === 'page') {
-                    const page = await target.page();
-                    if (page) {
-                        await this.patchPage(page);
-                        this.activePage = page;
-                        await page.bringToFront();
-                    }
+                    try {
+                        const page = await target.page();
+                        if (page) {
+                            await this.patchPage(page);
+                            this.activePage = page;
+                            await page.bringToFront();
+                        }
+                    } catch {}
                 }
             });
         }
@@ -68,24 +76,26 @@ export class BrowserManager {
     static async getActivePage() {
         const browser = await this.getBrowser();
 
-        if (this.activePage && !this.activePage.isClosed()) {
-            await this.patchPage(this.activePage);
-            return this.activePage;
+        if (this.activePage) {
+            try {
+                if (!this.activePage.isClosed()) return this.activePage;
+            } catch { this.activePage = null; }
         }
 
-        const pages = await browser.pages();
+        try {
+            const pages = await browser.pages();
+            if (pages.length > 0) {
+                this.activePage = pages[pages.length - 1];
+                await this.activePage.bringToFront();
+                return this.activePage;
+            }
+        } catch {}
 
-        if (pages.length > 0) {
-            this.activePage = pages[pages.length - 1];
-        } else {
-            this.activePage = await browser.newPage();
-        }
-
-        await this.patchPage(this.activePage);
+        this.activePage = await browser.newPage();
         await this.activePage.bringToFront();
-
         return this.activePage;
     }
+
     static async getPageContent(page: any) {
         return await page.evaluate(() => ({
             title: document.title,
