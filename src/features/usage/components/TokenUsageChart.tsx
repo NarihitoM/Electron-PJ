@@ -12,18 +12,17 @@ const barChartConfig = {
 } satisfies ChartConfig;
 
 export const TokenUsageChart = () => {
-    const { data: stats, isFetching } = useUsageStats()
+    const { data: stats, isLoading } = useUsageStats()
     const { period } = usagestore()
     const data = stats?.byTime
-    const loading = isFetching
 
     return (
         <Card className="lg:col-span-2">
             <CardHeader>
-                {data && !loading ? <CardTitle className="text-base">Token Usage Over Time</CardTitle> : <Skeleton className="h-5 w-44" />}
+                {!isLoading ? <CardTitle className="text-base">Token Usage Over Time</CardTitle> : <Skeleton className="h-5 w-44" />}
             </CardHeader>
             <CardContent>
-                {data && !loading && data.length > 0 ? (
+                {data && !isLoading && data.length > 0 ? (
                     <ChartContainer config={barChartConfig} className="h-50 w-full">
                         <BarChart data={data} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -47,7 +46,7 @@ export const TokenUsageChart = () => {
                             <Bar dataKey="outputTokens" fill="var(--color-outputTokens)" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ChartContainer>
-                ) : loading || !data ? (
+                ) : isLoading ? (
                     <Skeleton className="h-50 w-full rounded-lg" />
                 ) : (
                     <div className="h-48 flex items-center justify-center text-muted-foreground text-sm">No data for this period</div>

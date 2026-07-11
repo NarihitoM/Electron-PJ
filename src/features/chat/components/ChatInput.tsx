@@ -64,6 +64,8 @@ export const ChatInput = () => {
 
     useEffect(() => () => abortControllerRef.current?.abort(), [])
 
+    const sendingRef = useRef(false)
+
     const handleSend = async () => {
         if (abortControllerRef.current) {
             abortControllerRef.current.abort()
@@ -71,6 +73,10 @@ export const ChatInput = () => {
         }
 
         if ((!store.input.trim() && store.pendingImages.length === 0) || !store.provider || !store.model) return
+
+        // Prevent double-send
+        if (sendingRef.current) return
+        sendingRef.current = true
 
         const controller = new AbortController()
         abortControllerRef.current = controller
@@ -122,6 +128,7 @@ export const ChatInput = () => {
 
         let chatId = id
         const isNewChat = !chatId
+        let sendSuccess = false
         if (!chatId) {
             try {
                 const newChat = await chatauth.createchat()
@@ -207,26 +214,48 @@ export const ChatInput = () => {
                 },
                 controller.signal,
             )
+            sendSuccess = true
         } catch (err: any) {
             if (err?.name === "AbortError") {
                 if (abortControllerRef.current === controller) store.setInput(lastSentInputRef.current)
                 return
             }
+            // Rollback optimistic messages on error
+            store.updateSessionMessages(prev => {
+                // Remove the optimistic user msg + empty assistant msg we added
+                const userIdx = prev.findIndex(m => m.role === "user" && m.content === currentInput)
+                if (userIdx !== -1) {
+                    const next = [...prev]
+                    // Remove user msg and the assistant placeholder after it
+                    next.splice(userIdx, 2)
+                    return next
+                }
+                return prev
+            })
+            // If it was a new chat with no messages sent, navigate back
+            if (isNewChat && !chatId) {
+                navigate(-1)
+            }
             toast.error(err?.response?.data?.message || err?.message || "An unexpected error occurred.")
         } finally {
+            sendingRef.current = false
             if (abortControllerRef.current === controller) {
                 store.setSending(false)
                 abortControllerRef.current = null
             }
-            if (!id && chatId) {
+            // Only navigate to new chat if send succeeded
+            if (sendSuccess && !id && chatId) {
                 navigate(`/chat/${chatId}`, { replace: true })
             }
-            queryClient.invalidateQueries({ queryKey: ["message", id ?? chatId] })
-            queryClient.invalidateQueries({ queryKey: ["chat"] })
-            queryClient.invalidateQueries({ queryKey: ["usage-stats"] })
-            queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })
-            queryClient.invalidateQueries({ queryKey: ["key"] })
-            queryClient.invalidateQueries({ queryKey: ["creditBalance"], refetchType: 'all' })
+            // Only invalidate queries if send succeeded (avoids creating empty chats)
+            if (sendSuccess) {
+                queryClient.invalidateQueries({ queryKey: ["message", id ?? chatId] })
+                queryClient.invalidateQueries({ queryKey: ["chat"] })
+                queryClient.invalidateQueries({ queryKey: ["usage-stats"] })
+                queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] })
+                queryClient.invalidateQueries({ queryKey: ["key"] })
+                queryClient.invalidateQueries({ queryKey: ["creditBalance"], refetchType: 'all' })
+            }
         }
     }
 

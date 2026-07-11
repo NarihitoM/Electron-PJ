@@ -85,18 +85,36 @@ export const ChatMessageList = () => {
         store.setloadingfetch(true)
         store.setloadingerror(false)
         store.setSending(false)
-        store.setsessionmessage([])
         store.setNextCursor(null)
         store.setHasMore(false)
+
+        // Keep existing session messages as fallback — only replace once server data arrives
+        const existingMessages = store.sessionmessage
+
         try {
             const response = await chatauth.fetchchatmessage(id)
             if (response.success && response.data) {
-                store.setsessionmessage(response.data.messages ?? [])
+                const serverMessages = response.data.messages ?? []
+                if (serverMessages.length > 0) {
+                    // Server has messages — use them
+                    store.setsessionmessage(serverMessages)
+                } else if (existingMessages.length > 0) {
+                    // Server is empty but we have local messages — keep them as fallback
+                    // (messages may not have been persisted yet due to stream interruption)
+                    store.setsessionmessage(existingMessages)
+                } else {
+                    store.setsessionmessage([])
+                }
                 store.setNextCursor(response.data.nextCursor)
                 store.setHasMore(response.data.hasMore)
+            } else {
+                // Server returned failure — keep local messages as fallback
+                if (existingMessages.length === 0) store.setsessionmessage([])
             }
         } catch (err: unknown) {
             store.setloadingerror(true)
+            // On network error, keep local messages as fallback
+            if (existingMessages.length === 0) store.setsessionmessage([])
             if (err instanceof Error) {
                 const Error = err as any
                 toast.error(Error.response?.data?.message || err.message)

@@ -4,7 +4,7 @@ import { AGENT_COLORS, AGENT_LABELS, formatNumber, formatCost } from "./usageHel
 import { useUsageStats } from "../hooks/useUsageStats"
 
 export const UsageByAgent = () => {
-    const { data: stats, isFetching } = useUsageStats()
+    const { data: stats, isLoading } = useUsageStats()
 
     const agentData = stats?.byAgent.map((a) => ({
         name: AGENT_LABELS[a.agent] || a.agent,
@@ -12,16 +12,14 @@ export const UsageByAgent = () => {
         cost: a.cost,
     })) ?? []
 
-    const loading = isFetching
-
     return (
         <div className="mx-auto w-full max-w-5xl mt-4">
             <Card>
                 <CardHeader>
-                    {agentData.length > 0 && !loading ? <CardTitle className="text-base">Usage by Agent</CardTitle> : <Skeleton className="h-5 w-32" />}
+                    {!isLoading ? <CardTitle className="text-base">Usage by Agent</CardTitle> : <Skeleton className="h-5 w-32" />}
                 </CardHeader>
                 <CardContent>
-                    {agentData.length > 0 && !loading ? (
+                    {agentData.length > 0 && !isLoading ? (
                         <div className="space-y-3">
                             {agentData.map((a, i) => (
                                 <div key={i} className="flex items-center gap-3">
@@ -40,7 +38,7 @@ export const UsageByAgent = () => {
                                 </div>
                             ))}
                         </div>
-                    ) : loading ? (
+                    ) : isLoading ? (
                         <div className="space-y-3">
                             {[1, 2, 3].map((i) => (
                                 <div key={i} className="flex items-center gap-3">

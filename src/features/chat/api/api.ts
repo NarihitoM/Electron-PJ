@@ -57,53 +57,78 @@ export const chatauth = {
     ): Promise<void> => {
         const token = await (window as any).api.getToken();
 
-        const response = await fetch(`${fetchurl}/chat/api/chatmessage`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": token ? `Bearer ${token}` : ""
-            },
-            body: JSON.stringify({ chatid, provider, model, content, type, images, reasoningLevel: reasoningLevel || undefined }),
-            signal,
-        });
+        // Create a timeout controller that races with the user's abort signal
+        const timeoutController = new AbortController();
+        const timeoutId = setTimeout(() => timeoutController.abort(), 60000); // 60s timeout
 
-        if (!response.ok) throw new Error("Failed to connect to stream");
-        if (!response.body) return;
+        // Merge user signal with timeout signal
+        const mergedController = new AbortController();
+        const onAbort = () => mergedController.abort();
+        if (signal) signal.addEventListener("abort", onAbort);
+        timeoutController.signal.addEventListener("abort", () => mergedController.abort());
 
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let buffer = "";
+        try {
+            const response = await fetch(`${fetchurl}/chat/api/chatmessage`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": token ? `Bearer ${token}` : ""
+                },
+                body: JSON.stringify({ chatid, provider, model, content, type, images, reasoningLevel: reasoningLevel || undefined }),
+                signal: mergedController.signal,
+            });
 
-        while (true) {
-            const { value, done } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-
-            const lines = buffer.split("\n");
-
-            buffer = lines.pop() || "";
-
-            for (const line of lines) {
-                if (!line.trim()) continue;
-
+            if (!response.ok) {
+                let errorMsg = "Failed to connect to stream";
                 try {
-                    const data = JSON.parse(line);
+                    const errBody = await response.json();
+                    errorMsg = errBody.message || errorMsg;
+                } catch {}
+                throw new Error(errorMsg);
+            }
+            if (!response.body) throw new Error("Server returned empty response — message may not have been stored");
 
-                    if (data.type === "text") {
-                        if (onChunk) onChunk(data.chunk, data.title);
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+
+                const lines = buffer.split("\n");
+
+                buffer = lines.pop() || "";
+
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+
+                    try {
+                        const data = JSON.parse(line);
+
+                        if (data.type === "text") {
+                            if (onChunk) onChunk(data.chunk, data.title);
+                        }
+                        else if (data.type === "status" || data.type === "chain") {
+                            if (onStatus) onStatus(data);
+                        } else if (data.type === "tool_approval_request") {
+                            if (onApproval) onApproval(data);
+                        } else if (data.type === "image") {
+                            if (onImage) onImage(data.url);
+                        } else if (data.type === "error") {
+                            throw new Error(data.message || data.error || "Server error during streaming");
+                        }
+                    } catch (e) {
+                        if (e instanceof Error && e.message.includes("Server error")) throw e;
+                        // skip malformed lines that aren't server errors
                     }
-                    else if (data.type === "status" || data.type === "chain") {
-                        if (onStatus) onStatus(data);
-                    } else if (data.type === "tool_approval_request") {
-                        if (onApproval) onApproval(data);
-                    } else if (data.type === "image") {
-                        if (onImage) onImage(data.url);
-                    }
-                } catch {
-                    // silently skip malformed lines
                 }
             }
+        } finally {
+            clearTimeout(timeoutId);
+            if (signal) signal.removeEventListener("abort", onAbort);
         }
     },
     fetchchatmessage: async (

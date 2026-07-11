@@ -8,7 +8,7 @@ import { PROVIDER_LABELS, AGENT_COLORS } from "./usageHelpers"
 const pieChartConfig = { tokens: { label: "Tokens" } } satisfies ChartConfig;
 
 export const ProviderPieChart = () => {
-    const { data: stats, isFetching } = useUsageStats()
+    const { data: stats, isLoading } = useUsageStats()
 
     const pieData = stats?.byProvider.map((p, i) => ({
         name: PROVIDER_LABELS[p.provider] || p.provider,
@@ -16,15 +16,13 @@ export const ProviderPieChart = () => {
         fill: AGENT_COLORS[i % AGENT_COLORS.length],
     })) ?? []
 
-    const loading = isFetching
-
     return (
         <Card>
             <CardHeader>
-                {pieData.length > 0 && !loading ? <CardTitle className="text-base">By Provider</CardTitle> : <Skeleton className="h-5 w-24" />}
+                {!isLoading ? <CardTitle className="text-base">By Provider</CardTitle> : <Skeleton className="h-5 w-24" />}
             </CardHeader>
             <CardContent>
-                {pieData.length > 0 && !loading ? (
+                {pieData.length > 0 && !isLoading ? (
                     <>
                         <ChartContainer config={pieChartConfig} className="h-50 w-full">
                             <PieChart>
@@ -45,7 +43,7 @@ export const ProviderPieChart = () => {
                             ))}
                         </div>
                     </>
-                ) : loading ? (
+                ) : isLoading ? (
                     <>
                         <Skeleton className="h-50 w-full rounded-lg" />
                         <div className="flex flex-wrap gap-2 mt-2">
