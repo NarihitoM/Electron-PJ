@@ -33,6 +33,12 @@ export const GoogleSheetMessageList = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "auto" })
     }
 
+    // Scroll to bottom on initial mount
+    useEffect(() => {
+        const timer = requestAnimationFrame(() => scrollToBottom())
+        return () => cancelAnimationFrame(timer)
+    }, [])
+
     useEffect(() => {
         const el = messagesEndRef.current
         if (!el) return
@@ -256,23 +262,25 @@ export const GoogleSheetMessageList = () => {
                                             )}
 
                                             <div
-                                                className={`rounded-2xl leading-relaxed text-[15px] whitespace-pre-wrap w-full overflow-hidden ${isUser
+                                                className={`rounded-2xl leading-relaxed text-[15px] whitespace-pre-wrap w-full overflow-hidden wrap-break-word min-w-0 ${isUser
                                                     ? "bg-muted text-foreground rounded-tr-none p-3"
                                                     : "bg-transparent text-foreground rounded-tl-none"
                                                     }`}
                                             >
+                                                {msg.thinking && <ThinkingBlock thinking={msg.thinking} isStreaming={store.sending_sheet && index === store.sessionmessage_sheet.length - 1} />}
                                                 <motion.div
                                                     initial={{ opacity: 0, y: 5 }}
                                                     animate={{ opacity: 1, y: 0 }}
                                                     transition={{ duration: 0.4 }}
-                                                    className="wrap-break-word p-1 w-full"
+                                                    className="wrap-break-word p-1"
                                                 >
+                                                <div className="grid grid-cols-1 gap-2 mb-1 w-fit">
                                                     {msg.toolsCall?.filter((t: any) => !t.isChain).map((tool: any) => (
                                                         <Collapsible key={tool.id} className="w-full space-y-2">
                                                             <CollapsibleTrigger asChild>
-                                                                <Button variant="ghost" className={`group flex items-center gap-2 px-3 py-1 rounded-full  text-[10px] font-bold transition-all active:scale-95 ${tool.status === "done"
-                                                                    ? "text-foreground shadow-sm"
-                                                                    : "text-foreground"
+                                                                <Button variant="ghost" className={`group flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium transition-all active:scale-95 ${tool.status === "done"
+                                                                    ? "text-muted-foreground shadow-sm"
+                                                                    : "text-muted-foreground"
                                                                     }`}>
                                                                     {tool.status === "loading" && (
                                                                         <Spinner className="w-4 h-4 animate-spin text-cyan-500 dark:text-white" />
@@ -290,7 +298,7 @@ export const GoogleSheetMessageList = () => {
                                                                         animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
                                                                         transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
                                                                         style={{
-                                                                            backgroundImage: "linear-gradient(90deg, #6b7280 0%, #f3f4f6 50%, #6b7280 100%)",
+                                                                            backgroundImage: "linear-gradient(90deg, #06b6d4 0%, #a5f3fc 50%, #06b6d4 100%)",
                                                                             backgroundSize: "200% 100%",
                                                                             WebkitBackgroundClip: "text",
                                                                             WebkitTextFillColor: "transparent",
@@ -307,7 +315,7 @@ export const GoogleSheetMessageList = () => {
                                                             </CollapsibleTrigger>
 
                                                             <CollapsibleContent className="animate-in fade-in slide-in-from-top-1 duration-200">
-                                                                <div className="flex flex-col rounded-xl border border-zinc-100 dark:border-zinc-800 bg-background overflow-hidden shadow-sm max-w-[95%]">
+                                                                <div className="flex flex-col rounded-xl border border-zinc-100 dark:border-zinc-800 bg-background overflow-hidden shadow-sm">
 
                                                                     <div className="border-b dark:border-zinc-800">
                                                                         <div className="px-3 py-1.5 flex items-center gap-2 bg-zinc-50/50 dark:bg-zinc-900/50">
@@ -337,9 +345,7 @@ export const GoogleSheetMessageList = () => {
                                                                 </div>
                                                             </CollapsibleContent>
                                                         </Collapsible>
-                                                    ))}
-                                                </motion.div>
-                                                {msg.thinking && <ThinkingBlock thinking={msg.thinking} isStreaming={store.sending_sheet && index === store.sessionmessage_sheet.length - 1} />}
+                                                    ))}                                                </div>                                                </motion.div>
                                                 <AiContent content={msg.content} />
                                             </div>
                                             {msg.content && (

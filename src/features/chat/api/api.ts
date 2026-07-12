@@ -118,6 +118,8 @@ export const chatauth = {
                         else if (data.type === "status" || data.type === "chain") {
                             if (onStatus) onStatus(data);
                         } else if (data.type === "tool_approval_request") {
+                            // Reset the 60s timeout — the user may take a while to decide
+                            clearTimeout(timeoutId);
                             if (onApproval) onApproval(data);
                         } else if (data.type === "image") {
                             if (onImage) onImage(data.url);
