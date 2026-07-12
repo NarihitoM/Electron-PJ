@@ -108,13 +108,29 @@ export const TelegramMessageList = () => {
         return () => observer.disconnect()
     }, [store.hasMore, store.loadingMore])
 
+    const isNearBottomRef = useRef(true)
+
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "auto" })
     }
 
     useEffect(() => {
+        const el = messagesEndRef.current
+        if (!el) return
+        const observer = new IntersectionObserver(([entry]) => {
+            isNearBottomRef.current = entry.isIntersecting
+        }, { threshold: 0.1 })
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [])
+
+    useEffect(() => {
+        if (isNearBottomRef.current) scrollToBottom()
+    }, [store.sessionmessage])
+
+    useEffect(() => {
         scrollToBottom()
-    }, [store.sessionmessage, store.sending])
+    }, [store.sending])
 
     const onCopyMessage = (index: number, content: string) => {
         navigator.clipboard.writeText(content)

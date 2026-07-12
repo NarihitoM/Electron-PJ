@@ -43,6 +43,8 @@ export const SlackMessageList = () => {
     const topSentinelRef = useRef<HTMLDivElement | null>(null);
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
+    const isNearBottomRef = useRef(true);
+
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
     };
@@ -50,6 +52,20 @@ export const SlackMessageList = () => {
     useEffect(() => {
         scrollToBottom();
     }, [sessionmessage, sending]);
+
+    useEffect(() => {
+        const el = messagesEndRef.current;
+        if (!el) return;
+        const observer = new IntersectionObserver(([entry]) => {
+            isNearBottomRef.current = entry.isIntersecting;
+        }, { threshold: 0.1 });
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    useEffect(() => {
+        if (isNearBottomRef.current) scrollToBottom();
+    }, [sessionmessage]);
 
     const loadMore = async () => {
         if (!nextCursor || !hasMore || loadingMore) return;

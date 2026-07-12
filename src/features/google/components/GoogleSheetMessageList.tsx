@@ -27,17 +27,28 @@ export const GoogleSheetMessageList = () => {
     const messagesEndRef = useRef<HTMLDivElement | null>(null)
     const topSentinelRef = useRef<HTMLDivElement | null>(null)
     const scrollContainerRef = useRef<HTMLDivElement | null>(null)
-    const prevMessageCountRef = useRef(store.sessionmessage_sheet.length)
+    const isNearBottomRef = useRef(true)
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" })
+    }
 
     useEffect(() => {
-        if (store.sessionmessage_sheet.length > prevMessageCountRef.current) {
-            messagesEndRef.current?.scrollIntoView({ behavior: "auto" })
-        }
-        prevMessageCountRef.current = store.sessionmessage_sheet.length
+        const el = messagesEndRef.current
+        if (!el) return
+        const observer = new IntersectionObserver(([entry]) => {
+            isNearBottomRef.current = entry.isIntersecting
+        }, { threshold: 0.1 })
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [])
+
+    useEffect(() => {
+        if (isNearBottomRef.current) scrollToBottom()
     }, [store.sessionmessage_sheet])
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "auto" })
+        scrollToBottom()
     }, [store.sending_sheet])
 
     const loadMore = async () => {

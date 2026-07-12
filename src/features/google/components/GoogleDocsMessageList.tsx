@@ -23,17 +23,28 @@ export const GoogleDocsMessageList = () => {
     const topSentinelRef = useRef<HTMLDivElement | null>(null)
     const scrollContainerRef = useRef<HTMLDivElement | null>(null)
     const messagesEndRef = useRef<HTMLDivElement | null>(null)
-    const prevMessageCountRef = useRef(store.sessionmessage_docs.length)
+    const isNearBottomRef = useRef(true)
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" })
+    }
 
     useEffect(() => {
-        if (store.sessionmessage_docs.length > prevMessageCountRef.current) {
-            messagesEndRef.current?.scrollIntoView({ behavior: "auto" })
-        }
-        prevMessageCountRef.current = store.sessionmessage_docs.length
+        const el = messagesEndRef.current
+        if (!el) return
+        const observer = new IntersectionObserver(([entry]) => {
+            isNearBottomRef.current = entry.isIntersecting
+        }, { threshold: 0.1 })
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [])
+
+    useEffect(() => {
+        if (isNearBottomRef.current) scrollToBottom()
     }, [store.sessionmessage_docs])
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "auto" })
+        scrollToBottom()
     }, [store.sending_docs])
 
     useEffect(() => {
