@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Brain } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/components/ui/collapsible"
 import { motion } from "framer-motion"
@@ -9,7 +9,15 @@ interface ThinkingBlockProps {
 }
 
 export default function ThinkingBlock({ thinking, isStreaming }: ThinkingBlockProps) {
-    const [open, setOpen] = useState(false)
+    const [open, setOpen] = useState(true)
+
+    // Auto-collapse when streaming finishes
+    useEffect(() => {
+        if (!isStreaming && thinking) {
+            const timer = setTimeout(() => setOpen(false), 300)
+            return () => clearTimeout(timer)
+        }
+    }, [isStreaming, thinking])
 
     if (!thinking) return null
 
