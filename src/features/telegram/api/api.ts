@@ -64,8 +64,11 @@ export const telegramauth = {
                         if (onApproval) onApproval(data);
                     } else if (data.type === "image") {
                         if (onImage) onImage(data.url);
+                    } else if (data.type === "error") {
+                        throw new Error(data.message || data.error || "Server error during streaming");
                     }
                 } catch (e) {
+                    if (e instanceof Error && e.message.includes("Server error")) throw e;
                     console.error("Error parsing NDJSON line:", e);
                 }
             }
