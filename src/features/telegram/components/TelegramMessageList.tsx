@@ -340,14 +340,9 @@ export const TelegramMessageList = () => {
                                                         )}
                                                         {tool.status === "loading" ? (
                                                             <motion.span
-                                                                animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
-                                                                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                                                                style={{
-                                                                    backgroundImage: "linear-gradient(90deg, #06b6d4 0%, #a5f3fc 50%, #06b6d4 100%)",
-                                                                    backgroundSize: "200% 100%",
-                                                                    WebkitBackgroundClip: "text",
-                                                                    WebkitTextFillColor: "transparent",
-                                                                }}
+                                                                animate={{ opacity: [1, 0.5, 1] }}
+                                                                transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                                                                className="text-foreground"
                                                             >
                                                                 {Telegramtool[tool.name.toLowerCase()]}
                                                             </motion.span>

@@ -295,14 +295,10 @@ export const GoogleSheetMessageList = () => {
                                                                         <XCircle size={12} className="text-red-500" />
                                                                     )}
                                                                     {tool.status === "loading" ? <motion.span
-                                                                        animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
-                                                                        transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                                                                        style={{
-                                                                            backgroundImage: "linear-gradient(90deg, #06b6d4 0%, #a5f3fc 50%, #06b6d4 100%)",
-                                                                            backgroundSize: "200% 100%",
-                                                                            WebkitBackgroundClip: "text",
-                                                                            WebkitTextFillColor: "transparent",
-                                                                        }}>{Googlesheettool[tool.name.toLowerCase()]}
+                                                                        animate={{ opacity: [1, 0.5, 1] }}
+                                                                        transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                                                                        className="text-foreground"
+                                                                    >{Googlesheettool[tool.name.toLowerCase()]}
                                                                     </motion.span > :
                                                                         <span>
                                                                             {Googlesheettool[tool.name.toLowerCase()]}
