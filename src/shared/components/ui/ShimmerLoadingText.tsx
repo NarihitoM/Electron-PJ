@@ -30,8 +30,18 @@ export default function ShimmerLoadingText({
         return () => clearInterval(timer)
     }, [phrases.length, interval])
 
+    const shimmerGradient = "linear-gradient(90deg, hsl(var(--foreground)) 0%, hsl(var(--foreground) / 0.4) 50%, hsl(var(--foreground)) 100%)"
+    const shimmerBase = {
+        backgroundImage: shimmerGradient,
+        backgroundSize: "200% 100%",
+        WebkitBackgroundClip: "text" as const,
+        WebkitTextFillColor: "transparent",
+        backgroundClip: "text" as const,
+        color: "transparent" as const,
+    }
+
     return (
-        <span className={`inline-flex items-center gap-1 text-sm ${className}`}>
+        <span className={`inline-flex items-center gap-1 text-sm text-foreground ${className}`}>
             <AnimatePresence mode="wait">
                 <motion.span
                     key={index}
@@ -39,27 +49,12 @@ export default function ShimmerLoadingText({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -3 }}
                     transition={{ duration: 0.2 }}
-                    style={{
-                        backgroundImage: "linear-gradient(90deg, #06b6d4 0%, #a5f3fc 50%, #06b6d4 100%)",
-                        backgroundSize: "200% 100%",
-                        WebkitBackgroundClip: "text",
-                        WebkitTextFillColor: "transparent",
-                        backgroundClip: "text",
-                        color: "transparent",
-                    }}
                     className="inline-block font-medium"
                 >
                     <motion.span
                         animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
                         transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                        style={{
-                            backgroundImage: "linear-gradient(90deg, #06b6d4 0%, #a5f3fc 50%, #06b6d4 100%)",
-                            backgroundSize: "200% 100%",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            backgroundClip: "text",
-                            color: "transparent",
-                        }}
+                        style={shimmerBase}
                     >
                         {phrases[index]}
                     </motion.span>
@@ -76,14 +71,7 @@ export default function ShimmerLoadingText({
                             delay: i * 0.3,
                             ease: "easeInOut",
                         }}
-                        style={{
-                            backgroundImage: "linear-gradient(90deg, #06b6d4 0%, #a5f3fc 50%, #06b6d4 100%)",
-                            backgroundSize: "200% 100%",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            backgroundClip: "text",
-                            color: "transparent",
-                        }}
+                        style={shimmerBase}
                         className="inline-block"
                     >
                         .
