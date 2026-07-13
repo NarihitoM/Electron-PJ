@@ -18,7 +18,7 @@ export default function ThinkingBlock({ thinking, isStreaming }: ThinkingBlockPr
         <Collapsible open={open} onOpenChange={setOpen} className="w-full mb-2">
             <CollapsibleTrigger asChild>
                 <Button variant="ghost" className="group flex items-center gap-2 px-3 py-1 rounded-full text-xs font-medium transition-all active:scale-95 text-muted-foreground">
-                    <Brain size={14} className="shrink-0 text-foreground" />
+                    <Brain size={14} className="shrink-0 text-cyan-500" />
                     {isStreaming ? (
                         <motion.span
                             animate={{ opacity: [1, 0.5, 1] }}
