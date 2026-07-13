@@ -30,16 +30,6 @@ export default function ShimmerLoadingText({
         return () => clearInterval(timer)
     }, [phrases.length, interval])
 
-    const shimmerGradient = "linear-gradient(90deg, hsl(var(--foreground)) 0%, hsl(var(--foreground) / 0.4) 50%, hsl(var(--foreground)) 100%)"
-    const shimmerBase = {
-        backgroundImage: shimmerGradient,
-        backgroundSize: "200% 100%",
-        WebkitBackgroundClip: "text" as const,
-        WebkitTextFillColor: "transparent",
-        backgroundClip: "text" as const,
-        color: "transparent" as const,
-    }
-
     return (
         <span className={`inline-flex items-center gap-1 text-sm text-foreground ${className}`}>
             <AnimatePresence mode="wait">
@@ -52,9 +42,9 @@ export default function ShimmerLoadingText({
                     className="inline-block font-medium"
                 >
                     <motion.span
-                        animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
-                        transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                        style={shimmerBase}
+                        animate={{ opacity: [1, 0.5, 1] }}
+                        transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                        className="text-foreground"
                     >
                         {phrases[index]}
                     </motion.span>
@@ -71,8 +61,7 @@ export default function ShimmerLoadingText({
                             delay: i * 0.3,
                             ease: "easeInOut",
                         }}
-                        style={shimmerBase}
-                        className="inline-block"
+                        className="inline-block text-foreground"
                     >
                         .
                     </motion.span>
