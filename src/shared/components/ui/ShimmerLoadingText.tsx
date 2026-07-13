@@ -31,27 +31,64 @@ export default function ShimmerLoadingText({
     }, [phrases.length, interval])
 
     return (
-        <span className={`inline-flex items-center gap-1 text-sm text-muted-foreground ${className}`}>
+        <span className={`inline-flex items-center gap-1 text-sm ${className}`}>
             <AnimatePresence mode="wait">
                 <motion.span
                     key={index}
-                    initial={{ opacity: 0, y: 4 }}
+                    initial={{ opacity: 0, y: 3 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.25 }}
-                    className="inline-block"
+                    exit={{ opacity: 0, y: -3 }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                        backgroundImage: "linear-gradient(90deg, #06b6d4 0%, #a5f3fc 50%, #06b6d4 100%)",
+                        backgroundSize: "200% 100%",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                        backgroundClip: "text",
+                        color: "transparent",
+                    }}
+                    className="inline-block font-medium"
                 >
-                    {phrases[index]}
+                    <motion.span
+                        animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
+                        transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                        style={{
+                            backgroundImage: "linear-gradient(90deg, #06b6d4 0%, #a5f3fc 50%, #06b6d4 100%)",
+                            backgroundSize: "200% 100%",
+                            WebkitBackgroundClip: "text",
+                            WebkitTextFillColor: "transparent",
+                            backgroundClip: "text",
+                            color: "transparent",
+                        }}
+                    >
+                        {phrases[index]}
+                    </motion.span>
                 </motion.span>
             </AnimatePresence>
-            <span className="inline-flex w-8 overflow-hidden">
-                <motion.span
-                    animate={{ x: ["0%", "120%", "0%"] }}
-                    transition={{ repeat: Infinity, duration: 1.8, ease: "easeInOut" }}
-                    className="inline-block text-muted-foreground"
-                >
-                    ...
-                </motion.span>
+            <span className="inline-flex overflow-hidden">
+                {[0, 1, 2].map((i) => (
+                    <motion.span
+                        key={i}
+                        animate={{ opacity: [0.2, 1, 0.2] }}
+                        transition={{
+                            repeat: Infinity,
+                            duration: 1.2,
+                            delay: i * 0.3,
+                            ease: "easeInOut",
+                        }}
+                        style={{
+                            backgroundImage: "linear-gradient(90deg, #06b6d4 0%, #a5f3fc 50%, #06b6d4 100%)",
+                            backgroundSize: "200% 100%",
+                            WebkitBackgroundClip: "text",
+                            WebkitTextFillColor: "transparent",
+                            backgroundClip: "text",
+                            color: "transparent",
+                        }}
+                        className="inline-block"
+                    >
+                        .
+                    </motion.span>
+                ))}
             </span>
         </span>
     )
