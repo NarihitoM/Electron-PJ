@@ -31,7 +31,7 @@ export default function ShimmerLoadingText({
     }, [phrases.length, interval])
 
     return (
-        <span className={`inline-flex items-center gap-1 text-sm text-foreground ${className}`}>
+        <span className={`inline-flex items-center gap-1 text-sm text-muted-foreground ${className}`}>
             <AnimatePresence mode="wait">
                 <motion.span
                     key={index}
@@ -44,7 +44,7 @@ export default function ShimmerLoadingText({
                     <motion.span
                         animate={{ opacity: [1, 0.5, 1] }}
                         transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                        className="text-foreground"
+                        className="text-muted-foreground"
                     >
                         {phrases[index]}
                     </motion.span>
@@ -61,7 +61,7 @@ export default function ShimmerLoadingText({
                             delay: i * 0.3,
                             ease: "easeInOut",
                         }}
-                        className="inline-block text-foreground"
+                        className="inline-block text-muted-foreground"
                     >
                         .
                     </motion.span>

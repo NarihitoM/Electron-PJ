@@ -303,7 +303,7 @@ export const GoogleDocsMessageList = () => {
                                                             </Button>
                                                         </CollapsibleTrigger>
                                                         <CollapsibleContent className="animate-in fade-in slide-in-from-top-1 duration-200">
-                                                            <div className="flex flex-col rounded-xl border border-zinc-100 dark:border-zinc-800 bg-background overflow-hidden shadow-sm">
+                                                            <div className="flex flex-col rounded-xl border border-zinc-100 dark:border-zinc-800 bg-background overflow-hidden shadow-sm max-w-[95%]">
                                                                 <div className="border-b dark:border-zinc-800">
                                                                     <div className="px-3 py-1.5 flex items-center gap-2 bg-zinc-50/50 dark:bg-zinc-900/50">
                                                                         <Terminal size={10} className="text-blue-400" />

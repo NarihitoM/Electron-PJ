@@ -91,7 +91,7 @@ export function ModelSelect({ modelList, provider, model, loading, disabled, onS
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                     {open && (
-                        <div className="absolute left-0 bottom-full mb-1 z-100 min-w-full w-max max-w-[90vw] rounded-lg border bg-popover text-popover-foreground shadow-md">
+                        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 z-100 w-max max-w-[90vw] rounded-lg border bg-popover text-popover-foreground shadow-md">
                             <div className="flex items-center gap-2 border-b px-3 py-2">
                                 <Search className="h-4 w-4 shrink-0 opacity-50" />
                                 <input
