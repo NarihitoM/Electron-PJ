@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { AlertTriangle, Bot, Check, CheckCircle2, ChevronDown, Copy, Cpu, Dot, Loader2, Terminal, XCircle } from "lucide-react"
+import { AlertTriangle, Bot, Check, CheckCircle2, ChevronDown, Copy, Cpu, Loader2, Terminal, XCircle } from "lucide-react"
 import { Spinner } from "@/shared/components/ui/spinner"
 import { Button } from "@/shared/components/ui/button"
 import { Skeleton } from "@/shared/components/ui/skeleton"
@@ -9,6 +9,7 @@ import { Notiontool } from "@/shared/config/toolsselection"
 import { extractToolMessage } from "@/shared/utils/toolutils"
 import AiContent from "@/shared/components/layout/LayoutAiresponse"
 import ThinkingBlock from "@/shared/components/ui/ThinkingBlock"
+import ShimmerLoadingText from "@/shared/components/ui/ShimmerLoadingText"
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar"
 import { BRAND_ASSETS } from "@/shared/config/providermodels"
 import { useUser } from "@/features/auth/hooks/useUser"
@@ -203,7 +204,7 @@ export const NotionMessageList = () => {
                                     ) : (
                                         <div className="relative flex items-center justify-center">
                                             {store.sending && isLastMessage && !msg.content && (!msg.toolsCall || msg.toolsCall.length === 0 || msg.toolsCall.some((t: any) => t.status === "loading")) ? (
-                                                <Dot className="h-15 w-15 ml-2 text-cyan-500 dark:text-white relative animate-pulse" />
+                                                <ShimmerLoadingText className="ml-2" />
                                             ) : msg.provider && BRAND_ASSETS[msg.provider] ? (
                                                 <img src={BRAND_ASSETS[msg.provider]} className="w-7 h-7 rounded bg-white dark:bg-card" />
                                             ) : (

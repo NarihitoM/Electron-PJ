@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Bot, Check, CheckCircle2, ChevronDown, Copy, Cpu, Dot, Loader2, Terminal, XCircle } from "lucide-react";
+import { AlertTriangle, Bot, Check, CheckCircle2, ChevronDown, Copy, Cpu, Loader2, Terminal, XCircle } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avatar";
 import { Skeleton } from "@/shared/components/ui/skeleton";
@@ -7,7 +7,8 @@ import { Spinner } from "@/shared/components/ui/spinner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/shared/components/ui/collapsible";
 import { motion } from "framer-motion";
 import AiContent from "@/shared/components/layout/LayoutAiresponse";
-import ThinkingBlock from "@/shared/components/ui/ThinkingBlock"
+import ThinkingBlock from "@/shared/components/ui/ThinkingBlock";
+import ShimmerLoadingText from "@/shared/components/ui/ShimmerLoadingText";
 import { BRAND_ASSETS } from "@/shared/config/providermodels";
 import { Slacktool } from "@/shared/config/toolsselection";
 import { extractToolMessage } from "@/shared/utils/toolutils";
@@ -238,7 +239,7 @@ export const SlackMessageList = () => {
                                 ) : (
                                     <div className="relative flex items-center justify-center">
                                         {sending && isLastMessage && !msg.content && (!msg.toolsCall || msg.toolsCall.length === 0 || msg.toolsCall.some((t: any) => t.status === "loading")) ? (
-                                            <Dot className="h-15 w-15 ml-2 text-cyan-500 dark:text-white relative animate-pulse" />
+                                            <ShimmerLoadingText className="ml-2" />
                                         ) : msg.provider && BRAND_ASSETS[msg.provider] ? (
                                             <img src={BRAND_ASSETS[msg.provider]} className="w-7 h-7 rounded bg-white dark:bg-card" alt="" />
                                         ) : (

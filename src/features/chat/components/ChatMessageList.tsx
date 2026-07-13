@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { AlertTriangle, Bot, CheckCircle2, XCircle, ChevronDown, Terminal, Cpu, Copy, Check, Loader2, Dot } from "lucide-react"
+import { AlertTriangle, Bot, CheckCircle2, XCircle, ChevronDown, Terminal, Cpu, Copy, Check, Loader2 } from "lucide-react"
 import { Button } from "@/shared/components/ui/button"
 import { Skeleton } from "@/shared/components/ui/skeleton"
 import { Spinner } from "@/shared/components/ui/spinner"
@@ -10,6 +10,7 @@ import { Chattool } from "@/shared/config/toolsselection"
 import { extractToolMessage } from "@/shared/utils/toolutils"
 import AiContent from "@/shared/components/layout/LayoutAiresponse"
 import ThinkingBlock from "@/shared/components/ui/ThinkingBlock"
+import ShimmerLoadingText from "@/shared/components/ui/ShimmerLoadingText"
 import { motion } from "framer-motion"
 import { toast } from "sonner"
 import { useUser } from "@/features/auth/hooks/useUser"
@@ -230,7 +231,7 @@ export const ChatMessageList = () => {
                                     ) : (
                                         <div className="relative flex items-center justify-center">
                                             {store.sending && isLastMessage && !msg.content && (!msg.toolsCall || msg.toolsCall.length === 0 || msg.toolsCall.some((t: { status: string }) => t.status === "loading")) ? (
-                                                <Dot className="h-15 w-15 ml-2 text-cyan-500 dark:text-white relative animate-pulse" />
+                                                <ShimmerLoadingText className="ml-2" />
                                             ) : msg.provider && BRAND_ASSETS[msg.provider] ? (
                                                 <img src={BRAND_ASSETS[msg.provider]} className="w-7 h-7 rounded bg-white dark:bg-card" />
                                             ) : (
