@@ -238,9 +238,7 @@ export const SlackMessageList = () => {
                                     </Avatar>
                                 ) : (
                                     <div className="relative flex items-center justify-center">
-                                        {sending && isLastMessage && !msg.content && (!msg.toolsCall || msg.toolsCall.length === 0 || msg.toolsCall.some((t: any) => t.status === "loading")) ? (
-                                            <ShimmerLoadingText className="ml-2" />
-                                        ) : msg.provider && BRAND_ASSETS[msg.provider] ? (
+                                        {msg.provider && BRAND_ASSETS[msg.provider] ? (
                                             <img src={BRAND_ASSETS[msg.provider]} className="w-7 h-7 rounded bg-white dark:bg-card" alt="" />
                                         ) : (
                                             <Bot className="w-7 h-7 text-muted-foreground" />
@@ -258,6 +256,9 @@ export const SlackMessageList = () => {
                                     <span className="text-[10px] font-mono text-muted-foreground/70">
                                         {msg.model}
                                     </span>
+                                )}
+                                {!isUser && sending && isLastMessage && !msg.content && (!msg.toolsCall || msg.toolsCall.length === 0 || msg.toolsCall.some((t: any) => t.status === "loading")) && (
+                                    <ShimmerLoadingText className="mt-0.5" />
                                 )}
                                 {isUser && msg.images && msg.images.length > 0 && (
                                     <div className="flex flex-wrap gap-1 mb-1">
