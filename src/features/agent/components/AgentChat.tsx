@@ -96,15 +96,21 @@ export const AgentChat = () => {
             });
 
             if (finishedNode) {
-                const finalContent = finishedNode.output || finishedNode.thinking || "";
+                const outputText = finishedNode.output || "";
+                const thinkingText = finishedNode.thinking || "";
+                const finalContent = outputText || thinkingText;
                 if (finalContent) {
-                    store.updateHistory((element) => [...element, {
+                    const msg: Record<string, any> = {
                         role: "assistant",
                         content: finalContent,
                         name: finishedNode.name,
                         provider: finishedNode.provider,
-                        model: finishedNode.model
-                    }]);
+                        model: finishedNode.model,
+                    };
+                    if (outputText && thinkingText) {
+                        msg.thinking = thinkingText;
+                    }
+                    store.updateHistory((element) => [...element, msg as any]);
 
                     agentauth.storeagentmessage(
                         "assistant", finalContent, finishedNode.name,

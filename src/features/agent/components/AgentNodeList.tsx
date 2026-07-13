@@ -130,7 +130,11 @@ export const AgentNodeList = () => {
                                             <AiContent content={element.output} />
                                         </>
                                     ) : element.thinking ? (
-                                        <ThinkingBlock thinking={element.thinking} isStreaming />
+                                        element.status === "running" ? (
+                                            <ThinkingBlock thinking={element.thinking} isStreaming />
+                                        ) : (
+                                            <AiContent content={element.thinking} />
+                                        )
                                     ) : element.activeTool ? null : (
                                         <motion.span
                                             animate={{ backgroundPosition: ["200% 0", "-200% 0"] }}
