@@ -422,6 +422,12 @@ export const TelegramInput = () => {
                                 <DropdownMenuItem onClick={() => store.settype("getinfo")}>
                                     <Box /> Get info
                                 </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => store.settype("listchats")}>
+                                    <Box /> List All Chats
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => store.settype("resolvechat")}>
+                                    <Box /> Resolve Username
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
 
@@ -471,6 +477,30 @@ export const TelegramInput = () => {
                             >
                                 {store.hover ? <X size={17} className="text-blue-400" /> : <Box size={17} className="text-blue-400" />}
                                 <span className="text-[13px] text-blue-400">Get info</span>
+                            </button>
+                        )}
+                        {store.type === "listchats" && (
+                            <button
+                                onClick={() => { store.settype(""); store.setHover(false) }}
+                                disabled={store.sending}
+                                onMouseEnter={() => store.setHover(true)}
+                                onMouseLeave={() => store.setHover(false)}
+                                className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
+                            >
+                                {store.hover ? <X size={17} className="text-blue-400" /> : <Box size={17} className="text-blue-400" />}
+                                <span className="text-[13px] text-blue-400">List All Chats</span>
+                            </button>
+                        )}
+                        {store.type === "resolvechat" && (
+                            <button
+                                onClick={() => { store.settype(""); store.setHover(false) }}
+                                disabled={store.sending}
+                                onMouseEnter={() => store.setHover(true)}
+                                onMouseLeave={() => store.setHover(false)}
+                                className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
+                            >
+                                {store.hover ? <X size={17} className="text-blue-400" /> : <Box size={17} className="text-blue-400" />}
+                                <span className="text-[13px] text-blue-400">Resolve Username</span>
                             </button>
                         )}
                     </div>

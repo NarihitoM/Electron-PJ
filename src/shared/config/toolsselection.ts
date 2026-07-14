@@ -28,6 +28,8 @@ export const Telegramtool: Record<string, string> = {
     "fetch_message": "Reading The Telegram Message",
     "fetch_chat_user": "Looking At The Members In Telegram",
     "get_info" : "Reading info",
+    "list_chats": "Listing All Telegram Chats",
+    "resolve_chat": "Resolving Telegram Username",
     "web_search": "Searching The Web",
     "web_scrape": "Scraping Web Page",
     "image_generation": "Generating Image",
