@@ -25,3 +25,6 @@ release
 *.njsproj
 *.sln
 *.sw?
+
+# Husky auto-generated scripts
+.husky/_

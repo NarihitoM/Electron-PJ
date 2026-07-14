@@ -1,0 +1,13 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "npx eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --quiet --no-error-on-unmatched-pattern 2>nul; if ($LASTEXITCODE -ne 0) { echo \"⚠️  ESLint warnings found — run 'npm run lint' to see details.\"; }",
+        "windows": "npx eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0 --quiet --no-error-on-unmatched-pattern 2>nul; if ($LASTEXITCODE -ne 0) { echo \"⚠️  ESLint warnings found — run 'npm run lint' to see details.\" }",
+        "timeout": 30,
+        "cwd": "${workspaceFolder}"
+      }
+    ]
+  }
+}
