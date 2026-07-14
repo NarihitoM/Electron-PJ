@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Prettier check
+        run: npx prettier --check "src/**/*.{ts,tsx,json,css,md}"
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
+          VITE_CLIENTID: ${{ vars.VITE_CLIENTID }}
+          VITE_NOTION_CLIENT_ID: ${{ vars.VITE_NOTION_CLIENT_ID }}
+          VITE_SLACK_CLIENT_ID: ${{ vars.VITE_SLACK_CLIENT_ID }}
+          VITE_SUPABASE: ${{ vars.VITE_SUPABASE }}
