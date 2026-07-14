@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  lint-and-build:
+  typecheck-and-format:
     runs-on: ubuntu-latest
 
     steps:
