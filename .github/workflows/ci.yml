@@ -28,11 +28,4 @@ jobs:
       - name: Prettier check
         run: npx prettier --check "src/**/*.{ts,tsx,json,css,md}"
 
-      - name: Build
-        run: npm run build
-        env:
-          VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
-          VITE_CLIENTID: ${{ vars.VITE_CLIENTID }}
-          VITE_NOTION_CLIENT_ID: ${{ vars.VITE_NOTION_CLIENT_ID }}
-          VITE_SLACK_CLIENT_ID: ${{ vars.VITE_SLACK_CLIENT_ID }}
-          VITE_SUPABASE: ${{ vars.VITE_SUPABASE }}
+      
