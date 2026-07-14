@@ -1,5 +1,5 @@
-import { SlackChat } from "@/features/slack/components/SlackChat"
+import { SlackChat } from "@/features/slack/components/SlackChat";
 
 export const Slack = () => {
-    return <SlackChat />
-}
+  return <SlackChat />;
+};

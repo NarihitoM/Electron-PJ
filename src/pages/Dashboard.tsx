@@ -1,5 +1,5 @@
-import { DashboardView } from "@/features/dashboard/components/DashboardView"
+import { DashboardView } from "@/features/dashboard/components/DashboardView";
 
 export const Dashboard = () => {
-    return <DashboardView />
-}
+  return <DashboardView />;
+};

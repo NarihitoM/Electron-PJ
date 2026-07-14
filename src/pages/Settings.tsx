@@ -1,5 +1,5 @@
-import { SettingsPage } from "@/features/account/components/SettingsPage"
+import { SettingsPage } from "@/features/account/components/SettingsPage";
 
 export const Settings = () => {
-    return <SettingsPage />
-}
+  return <SettingsPage />;
+};

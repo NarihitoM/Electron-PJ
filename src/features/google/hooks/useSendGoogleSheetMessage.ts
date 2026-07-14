@@ -1,3 +1,3 @@
-import { googleauth } from "../api/api"
+import { googleauth } from "../api/api";
 
-export const sendGoogleSheetMessage = googleauth.sendsheetmessage
+export const sendGoogleSheetMessage = googleauth.sendsheetmessage;

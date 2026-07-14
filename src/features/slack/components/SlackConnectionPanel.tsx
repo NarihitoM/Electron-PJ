@@ -8,104 +8,112 @@ import { useSlackAccount } from "../hooks/useSlackAccount";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const SlackConnectionPanel = () => {
-    const { isChecking, setIsChecking } = slackauthstore();
-    const { data: slackAccount } = useSlackAccount();
-    const queryClient = useQueryClient();
-    const workspace = (slackAccount as any)?.workspace ?? "";
+  const { isChecking, setIsChecking } = slackauthstore();
+  const { data: slackAccount } = useSlackAccount();
+  const queryClient = useQueryClient();
+  const workspace = (slackAccount as any)?.workspace ?? "";
 
-    const connectSlack = async () => {
-        const response = await slackauth.slackstate();
-        const stateId = response.stateId;
-        const clientid = import.meta.env.VITE_SLACK_CLIENT_ID;
-        if (!clientid) {
-            toast.error("Slack Client ID not configured.");
-            return;
+  const connectSlack = async () => {
+    const response = await slackauth.slackstate();
+    const stateId = response.stateId;
+    const clientid = import.meta.env.VITE_SLACK_CLIENT_ID;
+    if (!clientid) {
+      toast.error("Slack Client ID not configured.");
+      return;
+    }
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://multimate-server.vercel.app";
+    const redirecturi = encodeURIComponent(`${backendUrl}/slack/api/callback`);
+    const scopes = [
+      "channels:history",
+      "groups:history",
+      "im:history",
+      "mpim:history",
+      "users:read",
+      "chat:write",
+      "team:read",
+      "channels:read",
+      "groups:read",
+      "mpim:read",
+      "im:read",
+    ].join(",");
+    const url = `https://slack.com/oauth/v2/authorize?client_id=${clientid}&user_scope=${scopes}&redirect_uri=${redirecturi}&state=${stateId}&response_type=code`;
+    (window.ipcRenderer as any).openInBrowser(url);
+    setIsChecking(true);
+  };
+
+  useEffect(() => {
+    let interval: string | number | NodeJS.Timeout | undefined;
+    let fallbackTimeout: string | number | NodeJS.Timeout | undefined;
+    let pollingDelay = 1000;
+
+    const checkStatus = async () => {
+      try {
+        const response = await slackauth.slackcheckstatus();
+        if (response.success) {
+          setIsChecking(false);
+          await queryClient.invalidateQueries({ queryKey: ["slack"] });
+          if (interval) clearInterval(interval);
+          if (fallbackTimeout) clearTimeout(fallbackTimeout);
         }
-        const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://multimate-server.vercel.app";
-        const redirecturi = encodeURIComponent(`${backendUrl}/slack/api/callback`);
-        const scopes = [
-            "channels:history", "groups:history", "im:history", "mpim:history",
-            "users:read", "chat:write", "team:read", "channels:read",
-            "groups:read", "mpim:read", "im:read"
-        ].join(",");
-        const url = `https://slack.com/oauth/v2/authorize?client_id=${clientid}&user_scope=${scopes}&redirect_uri=${redirecturi}&state=${stateId}&response_type=code`;
-        (window.ipcRenderer as any).openInBrowser(url);
-        setIsChecking(true);
+      } catch (err) {
+        console.error("Polling error", err);
+      }
     };
 
-    useEffect(() => {
-        let interval: string | number | NodeJS.Timeout | undefined;
-        let fallbackTimeout: string | number | NodeJS.Timeout | undefined;
-        let pollingDelay = 1000;
-
-        const checkStatus = async () => {
-            try {
-                const response = await slackauth.slackcheckstatus();
-                if (response.success) {
-                    setIsChecking(false);
-                    await queryClient.invalidateQueries({ queryKey: ["slack"] });
-                    if (interval) clearInterval(interval);
-                    if (fallbackTimeout) clearTimeout(fallbackTimeout);
-                }
-            } catch (err) {
-                console.error("Polling error", err);
-            }
-        };
-
-        const stopPolling = async () => {
-            if (interval) clearInterval(interval);
-            if (fallbackTimeout) clearTimeout(fallbackTimeout);
-            try {
-                const response = await slackauth.slackcheckstatus();
-                if (response.success) {
-                    await queryClient.invalidateQueries({ queryKey: ["slack"] });
-                }
-            } catch (err) {
-                console.error("Final check error", err);
-            }
-            setIsChecking(false);
-        };
-
-        const onVisibilityChange = () => {
-            if (document.visibilityState === 'visible') {
-                checkStatus();
-                if (interval) clearInterval(interval);
-                pollingDelay = 1000;
-                interval = setInterval(checkStatus, pollingDelay);
-            } else {
-                pollingDelay = 5000;
-                if (interval) clearInterval(interval);
-                interval = setInterval(checkStatus, pollingDelay);
-            }
-        };
-
-        if (isChecking) {
-            document.addEventListener('visibilitychange', onVisibilityChange);
-            fallbackTimeout = setTimeout(stopPolling, 180000);
-            interval = setInterval(checkStatus, pollingDelay);
-            return () => {
-                document.removeEventListener('visibilitychange', onVisibilityChange);
-                if (interval) clearInterval(interval);
-                if (fallbackTimeout) clearTimeout(fallbackTimeout);
-            };
+    const stopPolling = async () => {
+      if (interval) clearInterval(interval);
+      if (fallbackTimeout) clearTimeout(fallbackTimeout);
+      try {
+        const response = await slackauth.slackcheckstatus();
+        if (response.success) {
+          await queryClient.invalidateQueries({ queryKey: ["slack"] });
         }
-        return () => {
-            if (interval) clearInterval(interval);
-            if (fallbackTimeout) clearTimeout(fallbackTimeout);
-        };
-    }, [isChecking]);
+      } catch (err) {
+        console.error("Final check error", err);
+      }
+      setIsChecking(false);
+    };
 
-    return (
-        <div className="min-h-[50vh] flex flex-col gap-2 justify-center items-center">
-            <h1 className="text-3xl">Slack Agenting</h1>
-            <p className="text-sm text-muted-foreground">Send Message To Get Started Slack Agenting.</p>
-            {workspace ? (
-                ""
-            ) : (
-                <Button disabled={isChecking} className="bg-cyan-500 dark:bg-white" onClick={connectSlack}>
-                    {isChecking ? <Spinner /> : "Connect Slack"}
-                </Button>
-            )}
-        </div>
-    );
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        checkStatus();
+        if (interval) clearInterval(interval);
+        pollingDelay = 1000;
+        interval = setInterval(checkStatus, pollingDelay);
+      } else {
+        pollingDelay = 5000;
+        if (interval) clearInterval(interval);
+        interval = setInterval(checkStatus, pollingDelay);
+      }
+    };
+
+    if (isChecking) {
+      document.addEventListener("visibilitychange", onVisibilityChange);
+      fallbackTimeout = setTimeout(stopPolling, 180000);
+      interval = setInterval(checkStatus, pollingDelay);
+      return () => {
+        document.removeEventListener("visibilitychange", onVisibilityChange);
+        if (interval) clearInterval(interval);
+        if (fallbackTimeout) clearTimeout(fallbackTimeout);
+      };
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+      if (fallbackTimeout) clearTimeout(fallbackTimeout);
+    };
+  }, [isChecking]);
+
+  return (
+    <div className="min-h-[50vh] flex flex-col gap-2 justify-center items-center">
+      <h1 className="text-3xl">Slack Agenting</h1>
+      <p className="text-sm text-muted-foreground">Send Message To Get Started Slack Agenting.</p>
+      {workspace ? (
+        ""
+      ) : (
+        <Button disabled={isChecking} className="bg-cyan-500 dark:bg-white" onClick={connectSlack}>
+          {isChecking ? <Spinner /> : "Connect Slack"}
+        </Button>
+      )}
+    </div>
+  );
 };

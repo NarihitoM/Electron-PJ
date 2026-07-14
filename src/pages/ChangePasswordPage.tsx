@@ -3,13 +3,13 @@ import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordFor
 import { useParams } from "react-router-dom";
 
 export const Passwordchange = () => {
-    const { stateid } = useParams();
+  const { stateid } = useParams();
 
-    if (!stateid) return null;
+  if (!stateid) return null;
 
-    return (
-        <AuthLayout title="New Password">
-            <ChangePasswordForm stateid={stateid} />
-        </AuthLayout>
-    );
+  return (
+    <AuthLayout title="New Password">
+      <ChangePasswordForm stateid={stateid} />
+    </AuthLayout>
+  );
 };

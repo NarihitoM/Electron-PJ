@@ -1,10 +1,10 @@
-import { create } from "zustand"
+import { create } from "zustand";
 
 interface CreditClientState {
-  page: number
-  limit: number
-  setPage: (page: number) => void
-  setLimit: (limit: number) => void
+  page: number;
+  limit: number;
+  setPage: (page: number) => void;
+  setLimit: (limit: number) => void;
 }
 
 export const creditstore = create<CreditClientState>((set) => ({
@@ -12,4 +12,4 @@ export const creditstore = create<CreditClientState>((set) => ({
   limit: 20,
   setPage: (page) => set({ page }),
   setLimit: (limit) => set({ limit, page: 1 }),
-}))
+}));

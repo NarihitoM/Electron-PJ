@@ -1,2 +1,2 @@
-import { telegramauth } from "../api/api"
-export const sendTelegramMessage = telegramauth.sendmessage
+import { telegramauth } from "../api/api";
+export const sendTelegramMessage = telegramauth.sendmessage;

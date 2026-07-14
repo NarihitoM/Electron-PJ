@@ -1,5 +1,5 @@
-import { NotionChat } from "@/features/notion"
+import { NotionChat } from "@/features/notion";
 
 export const Notion = () => {
-    return <NotionChat />
-}
+  return <NotionChat />;
+};

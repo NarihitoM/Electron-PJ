@@ -1,124 +1,144 @@
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card"
-import { Skeleton } from "@/shared/components/ui/skeleton"
-import { BarChart3, Coins, Activity, Clock } from "lucide-react"
-import { formatNumber, formatCost, formatLatency } from "./usageHelpers"
-import { useUsageStats } from "../hooks/useUsageStats"
-import { useCreditBalance } from "../../credits/hooks/useCredits"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
+import { Skeleton } from "@/shared/components/ui/skeleton";
+import { BarChart3, Coins, Activity, Clock } from "lucide-react";
+import { formatNumber, formatCost, formatLatency } from "./usageHelpers";
+import { useUsageStats } from "../hooks/useUsageStats";
+import { useCreditBalance } from "../../credits/hooks/useCredits";
 
 const CreditBalanceCard = () => {
-    const { data: balanceData, isFetching: balanceLoading } = useCreditBalance()
-    const balance = balanceData?.data?.credits ?? 0
+  const { data: balanceData, isFetching: balanceLoading } = useCreditBalance();
+  const balance = balanceData?.data?.credits ?? 0;
 
-    let balanceColor = "text-green-500"
-    let balanceLabel = "Credits remaining"
-    if (balance <= 10 && balance > 0) {
-        balanceColor = "text-yellow-500"
-        balanceLabel = "Low on credits"
-    } else if (balance <= 0) {
-        balanceColor = "text-red-500"
-        balanceLabel = "Out of credits"
-    }
+  let balanceColor = "text-green-500";
+  let balanceLabel = "Credits remaining";
+  if (balance <= 10 && balance > 0) {
+    balanceColor = "text-yellow-500";
+    balanceLabel = "Low on credits";
+  } else if (balance <= 0) {
+    balanceColor = "text-red-500";
+    balanceLabel = "Out of credits";
+  }
 
-    return (
-        <Card>
-            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                <div className="space-y-1">
-                    <CardTitle className="text-sm font-medium">Credits</CardTitle>
-                    <CardDescription>Free tier balance</CardDescription>
-                </div>
-                <CardAction><Coins className="w-5 h-5 text-cyan-500 dark:text-white" /></CardAction>
-            </CardHeader>
-            <CardContent>
-                {balanceLoading ? (
-                    <Skeleton className="h-10 w-16 rounded-lg" />
-                ) : (
-                    <div className={`text-2xl font-bold ${balanceColor}`}>{balance}</div>
-                )}
-                <p className={`text-xs mt-1 ${balanceColor}`}>{balanceLabel}</p>
-            </CardContent>
-        </Card>
-    )
-}
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+        <div className="space-y-1">
+          <CardTitle className="text-sm font-medium">Credits</CardTitle>
+          <CardDescription>Free tier balance</CardDescription>
+        </div>
+        <CardAction>
+          <Coins className="w-5 h-5 text-cyan-500 dark:text-white" />
+        </CardAction>
+      </CardHeader>
+      <CardContent>
+        {balanceLoading ? (
+          <Skeleton className="h-10 w-16 rounded-lg" />
+        ) : (
+          <div className={`text-2xl font-bold ${balanceColor}`}>{balance}</div>
+        )}
+        <p className={`text-xs mt-1 ${balanceColor}`}>{balanceLabel}</p>
+      </CardContent>
+    </Card>
+  );
+};
 
 export const SummaryCards = () => {
-    const { data: stats, isLoading } = useUsageStats()
-    const s = stats?.summary
+  const { data: stats, isLoading } = useUsageStats();
+  const s = stats?.summary;
 
-    if (isLoading) {
-        return (
-            <>
-                <CreditBalanceCard />
-                {[1, 2, 3, 4].map((i) => (
-                    <Card key={i}>
-                        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                            <div className="space-y-2 w-full">
-                                <Skeleton className="h-5 w-2/3" />
-                                <Skeleton className="h-3 w-1/2" />
-                            </div>
-                            <Skeleton className="h-8 w-8 rounded-lg" />
-                        </CardHeader>
-                        <CardContent>
-                            <Skeleton className="h-10 w-16 rounded-lg" />
-                        </CardContent>
-                    </Card>
-                ))}
-            </>
-        );
-    }
-
+  if (isLoading) {
     return (
-        <>
-            <CreditBalanceCard />
-            <Card>
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                    <div className="space-y-1">
-                        <CardTitle className="text-sm font-medium">Total Tokens</CardTitle>
-                        <CardDescription>All providers combined</CardDescription>
-                    </div>
-                    <CardAction><BarChart3 className="w-5 h-5 text-cyan-500 dark:text-white" /></CardAction>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{formatNumber(s?.totalTokens ?? 0)}</div>
-                    <p className="text-xs text-muted-foreground mt-1">{formatNumber(s?.totalInputTokens ?? 0)} in / {formatNumber(s?.totalOutputTokens ?? 0)} out</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                    <div className="space-y-1">
-                        <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
-                        <CardDescription>Estimated spend</CardDescription>
-                    </div>
-                    <CardAction><Coins className="w-5 h-5 text-cyan-500 dark:text-white" /></CardAction>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{formatCost(s?.totalCost ?? 0)}</div>
-                    <p className="text-xs text-muted-foreground mt-1">Can Vary Depending On Providers</p>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                    <div className="space-y-1">
-                        <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
-                        <CardDescription>LLM API calls</CardDescription>
-                    </div>
-                    <CardAction><Activity className="w-5 h-5 text-cyan-500 dark:text-white" /></CardAction>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{s?.totalRequests ?? 0}</div>
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                    <div className="space-y-1">
-                        <CardTitle className="text-sm font-medium">Avg Latency</CardTitle>
-                        <CardDescription>Response time</CardDescription>
-                    </div>
-                    <CardAction><Clock className="w-5 h-5 text-cyan-500 dark:text-white" /></CardAction>
-                </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">{formatLatency(s?.avgLatency ?? 0)}</div>
-                </CardContent>
-            </Card>
-        </>
+      <>
+        <CreditBalanceCard />
+        {[1, 2, 3, 4].map((i) => (
+          <Card key={i}>
+            <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+              <div className="space-y-2 w-full">
+                <Skeleton className="h-5 w-2/3" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+              <Skeleton className="h-8 w-8 rounded-lg" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-10 w-16 rounded-lg" />
+            </CardContent>
+          </Card>
+        ))}
+      </>
     );
+  }
+
+  return (
+    <>
+      <CreditBalanceCard />
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+          <div className="space-y-1">
+            <CardTitle className="text-sm font-medium">Total Tokens</CardTitle>
+            <CardDescription>All providers combined</CardDescription>
+          </div>
+          <CardAction>
+            <BarChart3 className="w-5 h-5 text-cyan-500 dark:text-white" />
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{formatNumber(s?.totalTokens ?? 0)}</div>
+          <p className="text-xs text-muted-foreground mt-1">
+            {formatNumber(s?.totalInputTokens ?? 0)} in / {formatNumber(s?.totalOutputTokens ?? 0)}{" "}
+            out
+          </p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+          <div className="space-y-1">
+            <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
+            <CardDescription>Estimated spend</CardDescription>
+          </div>
+          <CardAction>
+            <Coins className="w-5 h-5 text-cyan-500 dark:text-white" />
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{formatCost(s?.totalCost ?? 0)}</div>
+          <p className="text-xs text-muted-foreground mt-1">Can Vary Depending On Providers</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+          <div className="space-y-1">
+            <CardTitle className="text-sm font-medium">Total Requests</CardTitle>
+            <CardDescription>LLM API calls</CardDescription>
+          </div>
+          <CardAction>
+            <Activity className="w-5 h-5 text-cyan-500 dark:text-white" />
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{s?.totalRequests ?? 0}</div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+          <div className="space-y-1">
+            <CardTitle className="text-sm font-medium">Avg Latency</CardTitle>
+            <CardDescription>Response time</CardDescription>
+          </div>
+          <CardAction>
+            <Clock className="w-5 h-5 text-cyan-500 dark:text-white" />
+          </CardAction>
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{formatLatency(s?.avgLatency ?? 0)}</div>
+        </CardContent>
+      </Card>
+    </>
+  );
 };

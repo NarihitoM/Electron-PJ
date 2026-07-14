@@ -1,5 +1,5 @@
-import { UsageView } from "@/features/usage/components/UsageView"
+import { UsageView } from "@/features/usage/components/UsageView";
 
 export const Usage = () => {
-    return <UsageView />
-}
+  return <UsageView />;
+};

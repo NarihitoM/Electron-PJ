@@ -4,20 +4,20 @@ import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 export const Verify = () => {
-    const { stateid } = useParams();
-    const navigate = useNavigate();
+  const { stateid } = useParams();
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        if (!stateid) {
-            navigate("/signup", { replace: true });
-        }
-    }, [stateid, navigate]);
+  useEffect(() => {
+    if (!stateid) {
+      navigate("/signup", { replace: true });
+    }
+  }, [stateid, navigate]);
 
-    if (!stateid) return null;
+  if (!stateid) return null;
 
-    return (
-        <AuthLayout title="Account Verification">
-            <VerifyCodeForm stateid={stateid} />
-        </AuthLayout>
-    );
+  return (
+    <AuthLayout title="Account Verification">
+      <VerifyCodeForm stateid={stateid} />
+    </AuthLayout>
+  );
 };

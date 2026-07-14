@@ -26,16 +26,47 @@ export const ServiceIntegrationList = () => {
   const n8nConnected = !!((n8nConfig as any)?.connected ?? false);
 
   const connectedServices: ServiceCardData[] = [
-    { id: "telegram", name: "Telegram", icon: "https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg", description: "Configure your Telegram Account.", isActive: !!userdata },
-    { id: "google", name: "Google Service", icon: null, description: "Configure your Google service Account.", isActive: !!serviceemail },
-    { id: "notion", name: "Notion", icon: "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png", description: "Configure your Notion workspace account.", isActive: !!workspacename },
-    { id: "slack", name: "Slack", icon: "https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg", description: "Configure your Slack workspace account.", isActive: !!workspace },
-    { id: "n8n", name: "n8n", icon: "https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg", description: "Configure your n8n workflow automation.", isActive: n8nConnected },
+    {
+      id: "telegram",
+      name: "Telegram",
+      icon: "https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg",
+      description: "Configure your Telegram Account.",
+      isActive: !!userdata,
+    },
+    {
+      id: "google",
+      name: "Google Service",
+      icon: null,
+      description: "Configure your Google service Account.",
+      isActive: !!serviceemail,
+    },
+    {
+      id: "notion",
+      name: "Notion",
+      icon: "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png",
+      description: "Configure your Notion workspace account.",
+      isActive: !!workspacename,
+    },
+    {
+      id: "slack",
+      name: "Slack",
+      icon: "https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg",
+      description: "Configure your Slack workspace account.",
+      isActive: !!workspace,
+    },
+    {
+      id: "n8n",
+      name: "n8n",
+      icon: "https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg",
+      description: "Configure your n8n workflow automation.",
+      isActive: n8nConnected,
+    },
   ];
 
-  const filteredServices = connectedServices.filter(s =>
-    s.name.toLowerCase().includes(search.toLowerCase()) ||
-    s.description.toLowerCase().includes(search.toLowerCase())
+  const filteredServices = connectedServices.filter(
+    (s) =>
+      s.name.toLowerCase().includes(search.toLowerCase()) ||
+      s.description.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -57,11 +88,7 @@ export const ServiceIntegrationList = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredServices.map((service) => (
-          <ServiceCard
-            key={service.id}
-            service={service}
-            onClick={setDialogService}
-          />
+          <ServiceCard key={service.id} service={service} onClick={setDialogService} />
         ))}
 
         {filteredServices.length === 0 && (

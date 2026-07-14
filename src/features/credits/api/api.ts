@@ -7,19 +7,12 @@ export const creditApi = {
     return response.data;
   },
 
-  getHistory: async (
-    page: number = 1,
-    limit: number = 20
-  ): Promise<CreditHistoryResponse> => {
-    const response = await Server.get(
-      `/credits/history?page=${page}&limit=${limit}`
-    );
+  getHistory: async (page: number = 1, limit: number = 20): Promise<CreditHistoryResponse> => {
+    const response = await Server.get(`/credits/history?page=${page}&limit=${limit}`);
     return response.data;
   },
 
-  purchaseCredits: async (
-    amount: number
-  ): Promise<{ success: boolean; message: string }> => {
+  purchaseCredits: async (amount: number): Promise<{ success: boolean; message: string }> => {
     const response = await Server.post("/credits/purchase", { amount });
     return response.data;
   },

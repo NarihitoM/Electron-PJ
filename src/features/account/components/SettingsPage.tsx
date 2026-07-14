@@ -20,7 +20,10 @@ export const SettingsPage = () => {
 
         <div className="flex gap-2 mb-4">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="h-10 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-20 animate-pulse" />
+            <div
+              key={i}
+              className="h-10 bg-zinc-200 dark:bg-zinc-800 rounded-lg w-20 animate-pulse"
+            />
           ))}
         </div>
 
@@ -72,8 +75,12 @@ export const SettingsPage = () => {
       <div className="flex h-[calc(100vh-40px)] w-full flex-col gap-2 items-center justify-center py-16">
         <AlertTriangle className="w-10 h-10 text-red-500" />
         <h2 className="text-xl font-semibold">Failed to load providers</h2>
-        <p className="text-sm text-muted-foreground">There was a problem connecting to the server.</p>
-        <Button onClick={() => refetch()} className="bg-cyan-500 dark:bg-white">Retry</Button>
+        <p className="text-sm text-muted-foreground">
+          There was a problem connecting to the server.
+        </p>
+        <Button onClick={() => refetch()} className="bg-cyan-500 dark:bg-white">
+          Retry
+        </Button>
       </div>
     );
   }

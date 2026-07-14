@@ -1,5 +1,5 @@
-import { GoogleSheetChat } from "@/features/google/components/GoogleSheetChat"
+import { GoogleSheetChat } from "@/features/google/components/GoogleSheetChat";
 
 export const Googlesheet = () => {
-    return <GoogleSheetChat />
-}
+  return <GoogleSheetChat />;
+};

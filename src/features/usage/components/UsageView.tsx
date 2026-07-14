@@ -1,223 +1,272 @@
 import { Tabs, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { usagestore } from "../store/store";
 import { useUsageStats } from "../hooks/useUsageStats";
 import { useCreditHistory } from "../../credits/hooks/useCredits";
-import { BarChart3, ArrowDownCircle, ArrowUpCircle, RefreshCw, AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  BarChart3,
+  ArrowDownCircle,
+  ArrowUpCircle,
+  RefreshCw,
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { SummaryCards } from "./SummaryCards";
 import { TokenUsageChart } from "./TokenUsageChart";
 import { ProviderPieChart } from "./ProviderPieChart";
 import { UsageByAgent } from "./UsageByAgent";
 import { RecentActivity } from "./RecentActivity";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/shared/components/ui/card";
 import { useState } from "react";
 
 const CreditTransactionHistory = () => {
-    const [page, setPage] = useState(1);
-    const limit = 10;
-    const { data: historyData, isFetching: historyLoading } = useCreditHistory(page, limit);
-    const transactions = historyData?.transactions ?? [];
-    const pagination = historyData?.pagination;
-    const totalPages = pagination?.totalPages ?? 0;
-    const total = pagination?.total ?? 0;
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const { data: historyData, isFetching: historyLoading } = useCreditHistory(page, limit);
+  const transactions = historyData?.transactions ?? [];
+  const pagination = historyData?.pagination;
+  const totalPages = pagination?.totalPages ?? 0;
+  const total = pagination?.total ?? 0;
 
-    const getPageNumbers = () => {
-        const pages: (number | "...")[] = [];
-        if (totalPages <= 5) {
-            for (let i = 1; i <= totalPages; i++) pages.push(i);
-        } else {
-            pages.push(1);
-            if (page > 3) pages.push("...");
-            for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
-                pages.push(i);
-            }
-            if (page < totalPages - 2) pages.push("...");
-            pages.push(totalPages);
-        }
-        return pages;
-    };
+  const getPageNumbers = () => {
+    const pages: (number | "...")[] = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push("...");
+      for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) {
+        pages.push(i);
+      }
+      if (page < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
-    return (
-        <div className="mx-auto w-full max-w-5xl mt-4">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-base flex items-center gap-2">
-                        <ArrowDownCircle className="w-4 h-4 text-cyan-500" />
-                        Credit Transaction History
-                    </CardTitle>
-                    <CardDescription>
-                        Track your credit usage and grants. Credits are displayed in the summary cards above.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {historyLoading ? (
-                        <div className="space-y-2 py-4">
-                            {[1, 2, 3, 4, 5].map((i) => (
-                                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-muted/50 animate-pulse">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-4 h-4 rounded-full bg-muted-foreground/20" />
-                                        <div className="space-y-2">
-                                            <div className="h-4 w-32 rounded bg-muted-foreground/20" />
-                                            <div className="h-3 w-20 rounded bg-muted-foreground/20" />
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2 text-right">
-                                        <div className="h-4 w-12 rounded bg-muted-foreground/20" />
-                                        <div className="h-3 w-16 rounded bg-muted-foreground/20" />
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : transactions.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                            No transactions yet.
-                        </p>
+  return (
+    <div className="mx-auto w-full max-w-5xl mt-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <ArrowDownCircle className="w-4 h-4 text-cyan-500" />
+            Credit Transaction History
+          </CardTitle>
+          <CardDescription>
+            Track your credit usage and grants. Credits are displayed in the summary cards above.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {historyLoading ? (
+            <div className="space-y-2 py-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50 animate-pulse"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-4 h-4 rounded-full bg-muted-foreground/20" />
+                    <div className="space-y-2">
+                      <div className="h-4 w-32 rounded bg-muted-foreground/20" />
+                      <div className="h-3 w-20 rounded bg-muted-foreground/20" />
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-right">
+                    <div className="h-4 w-12 rounded bg-muted-foreground/20" />
+                    <div className="h-3 w-16 rounded bg-muted-foreground/20" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : transactions.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No transactions yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {transactions.map((tx) => (
+                <div
+                  key={tx.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                >
+                  <div className="flex items-center gap-3">
+                    {tx.type === "grant" || tx.type === "purchase" ? (
+                      <ArrowUpCircle className="w-4 h-4 text-green-500" />
                     ) : (
-                        <div className="space-y-2">
-                            {transactions.map((tx) => (
-                                <div
-                                    key={tx.id}
-                                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        {tx.type === "grant" || tx.type === "purchase" ? (
-                                            <ArrowUpCircle className="w-4 h-4 text-green-500" />
-                                        ) : (
-                                            <ArrowDownCircle className="w-4 h-4 text-red-500" />
-                                        )}
-                                        <div>
-                                            <p className="text-sm font-medium">
-                                                {tx.description || tx.type}
-                                            </p>
-                                            <p className="text-xs text-muted-foreground">
-                                                {new Date(tx.createdAt).toLocaleDateString(undefined, {
-                                                    year: "numeric",
-                                                    month: "short",
-                                                    day: "numeric",
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                })}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <p
-                                            className={`text-sm font-medium ${tx.amount > 0 ? "text-green-500" : "text-red-500"
-                                                }`}
-                                        >
-                                            {tx.amount > 0 ? "+" : ""}
-                                            {tx.amount}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            Balance: {tx.balanceAfter}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-
-                            {totalPages > 1 && (
-                                <div className="flex items-center justify-between pt-4">
-                                    <p className="text-xs text-muted-foreground">
-                                        Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
-                                    </p>
-                                    <div className="flex items-center gap-1">
-                                        <Button size="icon" variant="outline" onClick={() => setPage(Math.max(1, page - 1))} disabled={page === 1}>
-                                            <ChevronLeft className="h-4 w-4" />
-                                        </Button>
-                                        {getPageNumbers().map((p, i) =>
-                                            p === "..." ? (
-                                                <span key={`dots-${i}`} className="px-2 text-muted-foreground text-sm">...</span>
-                                            ) : (
-                                                <Button
-                                                    key={p}
-                                                    size="icon"
-                                                    variant={page === p ? "default" : "outline"}
-                                                    className={page === p ? "bg-cyan-500 text-white dark:bg-white dark:text-black" : ""}
-                                                    onClick={() => setPage(p as number)}
-                                                >
-                                                    {p}
-                                                </Button>
-                                            )
-                                        )}
-                                        <Button size="icon" variant="outline" onClick={() => setPage(Math.min(totalPages, page + 1))} disabled={page === totalPages}>
-                                            <ChevronRight className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+                      <ArrowDownCircle className="w-4 h-4 text-red-500" />
                     )}
-                </CardContent>
-            </Card>
-        </div>
-    );
+                    <div>
+                      <p className="text-sm font-medium">{tx.description || tx.type}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(tx.createdAt).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p
+                      className={`text-sm font-medium ${
+                        tx.amount > 0 ? "text-green-500" : "text-red-500"
+                      }`}
+                    >
+                      {tx.amount > 0 ? "+" : ""}
+                      {tx.amount}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Balance: {tx.balanceAfter}</p>
+                  </div>
+                </div>
+              ))}
+
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4">
+                  <p className="text-xs text-muted-foreground">
+                    Showing {(page - 1) * limit + 1}–{Math.min(page * limit, total)} of {total}
+                  </p>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => setPage(Math.max(1, page - 1))}
+                      disabled={page === 1}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    {getPageNumbers().map((p, i) =>
+                      p === "..." ? (
+                        <span key={`dots-${i}`} className="px-2 text-muted-foreground text-sm">
+                          ...
+                        </span>
+                      ) : (
+                        <Button
+                          key={p}
+                          size="icon"
+                          variant={page === p ? "default" : "outline"}
+                          className={
+                            page === p ? "bg-cyan-500 text-white dark:bg-white dark:text-black" : ""
+                          }
+                          onClick={() => setPage(p as number)}
+                        >
+                          {p}
+                        </Button>
+                      ),
+                    )}
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      onClick={() => setPage(Math.min(totalPages, page + 1))}
+                      disabled={page === totalPages}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
 };
 
 export const UsageView = () => {
-    const { period, setPeriod, selectedYear, setSelectedYear } = usagestore();
-    const { data: stats, isFetching, isError, refetch } = useUsageStats();
+  const { period, setPeriod, selectedYear, setSelectedYear } = usagestore();
+  const { data: stats, isFetching, isError, refetch } = useUsageStats();
 
-    if (isError && !stats) {
-        return (
-            <div className="flex h-[92vh] w-full flex-col bg-background">
-                <div className="flex-1 flex items-center justify-center">
-                    <div className="flex flex-col gap-3 justify-center items-center">
-                        <AlertTriangle className="w-10 h-10 text-red-500" />
-                        <h1 className="text-2xl font-semibold">Fail To Load Usage Data</h1>
-                        <p className="text-sm text-muted-foreground">There was a problem connecting to the server.</p>
-                        <Button onClick={() => refetch()} className="bg-cyan-500 dark:bg-white">Retry</Button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
+  if (isError && !stats) {
     return (
-        <div className="flex h-[92vh] w-full flex-col bg-background">
-            <div className="mx-auto w-full max-w-5xl flex justify-between items-center gap-1">
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-bold flex items-center gap-3"><BarChart3 className="w-7 h-7 text-cyan-500 dark:text-white" />Analytics Dashboard</h1>
-                    <p className="text-muted-foreground">Track token usage, costs, and performance across all ai providers.</p>
-                </div>
-                <div className="flex items-center gap-2">
-                    {stats?.availableYears ? (
-                        <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
-                            <SelectTrigger className="w-24">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Array.from({ length: stats.availableYears.max - stats.availableYears.min + 1 }, (_, i) => stats.availableYears.min + i).map((y) => (
-                                    <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    ) : (
-                        <div className="h-10 w-24 rounded-md bg-muted animate-pulse" />
-                    )}
-                    <Button size="icon" variant="outline" onClick={() => refetch()} disabled={isFetching}>
-                        <RefreshCw className={`h-4 w-4 ${isFetching ? 'animate-spin' : ''}`} />
-                    </Button>
-                    <Tabs value={period} onValueChange={(v) => setPeriod(v as "day" | "week" | "month" | "year")}>
-                        <TabsList>
-                            <TabsTrigger value="day">Day</TabsTrigger>
-                            <TabsTrigger value="week">Week</TabsTrigger>
-                            <TabsTrigger value="month">Month</TabsTrigger>
-                            <TabsTrigger value="year">Year</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-                </div>
-            </div>
-            <div className="mx-auto w-full max-w-5xl grid grid-cols-3 lg:grid-cols-5 mt-4 gap-2">
-                <SummaryCards />
-            </div>
-            <div className="mx-auto w-full max-w-5xl grid grid-cols-1 lg:grid-cols-3 mt-4 gap-3">
-                <TokenUsageChart />
-                <ProviderPieChart />
-            </div>
-            <UsageByAgent />
-            <RecentActivity />
-            <CreditTransactionHistory />
+      <div className="flex h-[92vh] w-full flex-col bg-background">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="flex flex-col gap-3 justify-center items-center">
+            <AlertTriangle className="w-10 h-10 text-red-500" />
+            <h1 className="text-2xl font-semibold">Fail To Load Usage Data</h1>
+            <p className="text-sm text-muted-foreground">
+              There was a problem connecting to the server.
+            </p>
+            <Button onClick={() => refetch()} className="bg-cyan-500 dark:bg-white">
+              Retry
+            </Button>
+          </div>
         </div>
+      </div>
     );
+  }
+
+  return (
+    <div className="flex h-[92vh] w-full flex-col bg-background">
+      <div className="mx-auto w-full max-w-5xl flex justify-between items-center gap-1">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold flex items-center gap-3">
+            <BarChart3 className="w-7 h-7 text-cyan-500 dark:text-white" />
+            Analytics Dashboard
+          </h1>
+          <p className="text-muted-foreground">
+            Track token usage, costs, and performance across all ai providers.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {stats?.availableYears ? (
+            <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(Number(v))}>
+              <SelectTrigger className="w-24">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from(
+                  { length: stats.availableYears.max - stats.availableYears.min + 1 },
+                  (_, i) => stats.availableYears.min + i,
+                ).map((y) => (
+                  <SelectItem key={y} value={String(y)}>
+                    {y}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <div className="h-10 w-24 rounded-md bg-muted animate-pulse" />
+          )}
+          <Button size="icon" variant="outline" onClick={() => refetch()} disabled={isFetching}>
+            <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+          </Button>
+          <Tabs
+            value={period}
+            onValueChange={(v) => setPeriod(v as "day" | "week" | "month" | "year")}
+          >
+            <TabsList>
+              <TabsTrigger value="day">Day</TabsTrigger>
+              <TabsTrigger value="week">Week</TabsTrigger>
+              <TabsTrigger value="month">Month</TabsTrigger>
+              <TabsTrigger value="year">Year</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      </div>
+      <div className="mx-auto w-full max-w-5xl grid grid-cols-3 lg:grid-cols-5 mt-4 gap-2">
+        <SummaryCards />
+      </div>
+      <div className="mx-auto w-full max-w-5xl grid grid-cols-1 lg:grid-cols-3 mt-4 gap-3">
+        <TokenUsageChart />
+        <ProviderPieChart />
+      </div>
+      <UsageByAgent />
+      <RecentActivity />
+      <CreditTransactionHistory />
+    </div>
+  );
 };

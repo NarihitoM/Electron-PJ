@@ -1,10 +1,22 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/shared/components/ui/dialog";
 import { Button } from "@/shared/components/ui/button";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { AlertTriangle } from "lucide-react";
 import { GoogleIcon } from "@/shared/components/ui/googleicon";
-import { TelegramForm, GoogleForm, NotionForm, SlackForm, N8nForm } from "@/features/services/components/ServiceConfigDialog";
+import {
+  TelegramForm,
+  GoogleForm,
+  NotionForm,
+  SlackForm,
+  N8nForm,
+} from "@/features/services/components/ServiceConfigDialog";
 import { toast } from "sonner";
 import { ServiceCardData } from "./ServiceCard";
 import { useTelegramAccount } from "@/features/telegram/hooks/useTelegramAccount";
@@ -23,11 +35,36 @@ export const ServiceDetailPanel = () => {
   const dialogService = accountstore((s) => s.dialogService);
   const setDialogService = accountstore((s) => s.setDialogService);
 
-  const { data: telegramData, isLoading: telegramfetch, isError: telegramError, refetch: telegramRefetch } = useTelegramAccount();
-  const { data: googleServiceData, isLoading: googlefetch, isError: googleError, refetch: googleRefetch } = useGoogleService();
-  const { data: notionAccount, isLoading: loadingnotion, isError: notionError, refetch: notionRefetch } = useNotionAccount();
-  const { data: slackAccount, isLoading: loadingslack, isError: slackError, refetch: slackRefetch } = useSlackAccount();
-  const { data: n8nConfig, isLoading: loadingn8n, isError: n8nError, refetch: n8nRefetch } = useN8nConfig();
+  const {
+    data: telegramData,
+    isLoading: telegramfetch,
+    isError: telegramError,
+    refetch: telegramRefetch,
+  } = useTelegramAccount();
+  const {
+    data: googleServiceData,
+    isLoading: googlefetch,
+    isError: googleError,
+    refetch: googleRefetch,
+  } = useGoogleService();
+  const {
+    data: notionAccount,
+    isLoading: loadingnotion,
+    isError: notionError,
+    refetch: notionRefetch,
+  } = useNotionAccount();
+  const {
+    data: slackAccount,
+    isLoading: loadingslack,
+    isError: slackError,
+    refetch: slackRefetch,
+  } = useSlackAccount();
+  const {
+    data: n8nConfig,
+    isLoading: loadingn8n,
+    isError: n8nError,
+    refetch: n8nRefetch,
+  } = useN8nConfig();
 
   const userdata = telegramData;
   const serviceemail = (googleServiceData as any)?.serviceemail ?? "";
@@ -41,11 +78,41 @@ export const ServiceDetailPanel = () => {
   const [deletingNotion, setDeletingNotion] = useState(false);
 
   const connectedServices: ServiceCardData[] = [
-    { id: "telegram", name: "Telegram", icon: "https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg", description: "Configure your Telegram Account.", isActive: !!userdata },
-    { id: "google", name: "Google Service", icon: null, description: "Configure your Google service Account.", isActive: !!serviceemail },
-    { id: "notion", name: "Notion", icon: "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png", description: "Configure your Notion workspace account.", isActive: !!workspacename },
-    { id: "slack", name: "Slack", icon: "https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg", description: "Configure your Slack workspace account.", isActive: !!workspace },
-    { id: "n8n", name: "n8n", icon: "https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg", description: "Configure your n8n workflow automation.", isActive: n8nConnected },
+    {
+      id: "telegram",
+      name: "Telegram",
+      icon: "https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg",
+      description: "Configure your Telegram Account.",
+      isActive: !!userdata,
+    },
+    {
+      id: "google",
+      name: "Google Service",
+      icon: null,
+      description: "Configure your Google service Account.",
+      isActive: !!serviceemail,
+    },
+    {
+      id: "notion",
+      name: "Notion",
+      icon: "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png",
+      description: "Configure your Notion workspace account.",
+      isActive: !!workspacename,
+    },
+    {
+      id: "slack",
+      name: "Slack",
+      icon: "https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg",
+      description: "Configure your Slack workspace account.",
+      isActive: !!workspace,
+    },
+    {
+      id: "n8n",
+      name: "n8n",
+      icon: "https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg",
+      description: "Configure your n8n workflow automation.",
+      isActive: n8nConnected,
+    },
   ];
 
   const deletetelegram = async () => {
@@ -61,12 +128,12 @@ export const ServiceDetailPanel = () => {
         const Error = err as any;
         toast.error(Error.response?.data?.message || err.message);
       } else {
-        toast.error("An unexpected error occurred.")
+        toast.error("An unexpected error occurred.");
       }
     } finally {
       setDeletingTelegram(false);
     }
-  }
+  };
 
   const deletegoogle = async () => {
     setDeletingGoogle(true);
@@ -81,12 +148,12 @@ export const ServiceDetailPanel = () => {
         const Error = err as any;
         toast.error(Error.response?.data?.message || err.message);
       } else {
-        toast.error("An unexpected error occurred.")
+        toast.error("An unexpected error occurred.");
       }
     } finally {
       setDeletingGoogle(false);
     }
-  }
+  };
 
   const deletenotion = async () => {
     setDeletingNotion(true);
@@ -101,12 +168,12 @@ export const ServiceDetailPanel = () => {
         const Error = err as any;
         toast.error(Error.response?.data?.message || err.message);
       } else {
-        toast.error("An unexpected error occurred.")
+        toast.error("An unexpected error occurred.");
       }
     } finally {
       setDeletingNotion(false);
     }
-  }
+  };
 
   const deleteslack = async () => {
     try {
@@ -120,10 +187,10 @@ export const ServiceDetailPanel = () => {
         const Error = err as any;
         toast.error(Error.response?.data?.message || err.message);
       } else {
-        toast.error("An unexpected error occurred.")
+        toast.error("An unexpected error occurred.");
       }
     }
-  }
+  };
 
   const deleten8n = async () => {
     try {
@@ -137,29 +204,39 @@ export const ServiceDetailPanel = () => {
         const Error = err as any;
         toast.error(Error.response?.data?.message || err.message);
       } else {
-        toast.error("An unexpected error occurred.")
+        toast.error("An unexpected error occurred.");
       }
     }
-  }
+  };
 
   return (
-    <Dialog open={!!dialogService} onOpenChange={(open) => { if (!open) setDialogService(null); }}>
+    <Dialog
+      open={!!dialogService}
+      onOpenChange={(open) => {
+        if (!open) setDialogService(null);
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {dialogService && (() => {
-              const svc = connectedServices.find(s => s.id === dialogService);
-              if (!svc) return null;
-              return (
-                <>
-                  {svc.icon ? <img src={svc.icon} className="h-5 w-5 object-contain" alt="" /> : <GoogleIcon />}
-                  {svc.name}
-                </>
-              );
-            })()}
+            {dialogService &&
+              (() => {
+                const svc = connectedServices.find((s) => s.id === dialogService);
+                if (!svc) return null;
+                return (
+                  <>
+                    {svc.icon ? (
+                      <img src={svc.icon} className="h-5 w-5 object-contain" alt="" />
+                    ) : (
+                      <GoogleIcon />
+                    )}
+                    {svc.name}
+                  </>
+                );
+              })()}
           </DialogTitle>
           <DialogDescription>
-            {dialogService && connectedServices.find(s => s.id === dialogService)?.description}
+            {dialogService && connectedServices.find((s) => s.id === dialogService)?.description}
           </DialogDescription>
         </DialogHeader>
 
@@ -174,19 +251,37 @@ export const ServiceDetailPanel = () => {
               ) : telegramError ? (
                 <div className="flex flex-col gap-2 items-center justify-center py-4">
                   <AlertTriangle className="w-8 h-8 text-red-500" />
-                  <p className="text-sm text-red-500 font-medium">Failed to load Telegram service</p>
-                  <Button size="sm" onClick={() => telegramRefetch()} className="bg-cyan-500 dark:bg-white">Retry</Button>
+                  <p className="text-sm text-red-500 font-medium">
+                    Failed to load Telegram service
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={() => telegramRefetch()}
+                    className="bg-cyan-500 dark:bg-white"
+                  >
+                    Retry
+                  </Button>
                 </div>
               ) : userdata ? (
                 <div className="flex items-center gap-4 w-full">
                   <div className="h-12 w-12 rounded-full flex items-center justify-center">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="icon" />
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg"
+                      alt="icon"
+                    />
                   </div>
                   <div className="flex flex-col text-left">
                     <p className="text-sm font-medium">Connected Account</p>
-                    <h3 className="text-lg font-semibold">{userdata.firstName} {userdata.lastName}</h3>
+                    <h3 className="text-lg font-semibold">
+                      {userdata.firstName} {userdata.lastName}
+                    </h3>
                   </div>
-                  <Button onClick={deletetelegram} disabled={deletingTelegram} variant="destructive" className="ml-auto">
+                  <Button
+                    onClick={deletetelegram}
+                    disabled={deletingTelegram}
+                    variant="destructive"
+                    className="ml-auto"
+                  >
                     {deletingTelegram ? <Spinner /> : "Disconnect"}
                   </Button>
                 </div>
@@ -194,13 +289,18 @@ export const ServiceDetailPanel = () => {
                 <div className="flex flex-col items-center justify-center text-center py-4">
                   <div className="space-y-4 w-full">
                     <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="icon" />
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg"
+                        alt="icon"
+                      />
                     </div>
-                    <TelegramForm onComplete={async () => {
-                      await telegramRefetch();
-                      setDialogService(null);
-                      toast.success("Telegram connected!");
-                    }} />
+                    <TelegramForm
+                      onComplete={async () => {
+                        await telegramRefetch();
+                        setDialogService(null);
+                        toast.success("Telegram connected!");
+                      }}
+                    />
                   </div>
                 </div>
               )}
@@ -212,13 +312,21 @@ export const ServiceDetailPanel = () => {
               {googlefetch ? (
                 <div className="flex flex-col items-center gap-2">
                   <Spinner className="w-8 h-8 animate-spin text-cyan-500 dark:text-white" />
-                  <p className="text-sm text-muted-foreground animate-pulse">Loading Google Service...</p>
+                  <p className="text-sm text-muted-foreground animate-pulse">
+                    Loading Google Service...
+                  </p>
                 </div>
               ) : googleError ? (
                 <div className="flex flex-col gap-2 items-center justify-center py-4">
                   <AlertTriangle className="w-8 h-8 text-red-500" />
                   <p className="text-sm text-red-500 font-medium">Failed to load Google service</p>
-                  <Button size="sm" onClick={() => googleRefetch()} className="bg-cyan-500 dark:bg-white">Retry</Button>
+                  <Button
+                    size="sm"
+                    onClick={() => googleRefetch()}
+                    className="bg-cyan-500 dark:bg-white"
+                  >
+                    Retry
+                  </Button>
                 </div>
               ) : serviceemail ? (
                 <div className="flex items-center gap-4 w-full">
@@ -229,7 +337,12 @@ export const ServiceDetailPanel = () => {
                     <p className="text-sm font-medium">Connected Service Account</p>
                     <h3 className="text-lg font-semibold">{serviceemail}</h3>
                   </div>
-                  <Button onClick={deletegoogle} disabled={deletingGoogle} variant="destructive" className="ml-auto">
+                  <Button
+                    onClick={deletegoogle}
+                    disabled={deletingGoogle}
+                    variant="destructive"
+                    className="ml-auto"
+                  >
                     {deletingGoogle ? <Spinner /> : "Disconnect"}
                   </Button>
                 </div>
@@ -239,11 +352,13 @@ export const ServiceDetailPanel = () => {
                     <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
                       <GoogleIcon />
                     </div>
-                    <GoogleForm onComplete={async () => {
-                      await googleRefetch();
-                      setDialogService(null);
-                      toast.success("Google service connected!");
-                    }} />
+                    <GoogleForm
+                      onComplete={async () => {
+                        await googleRefetch();
+                        setDialogService(null);
+                        toast.success("Google service connected!");
+                      }}
+                    />
                   </div>
                 </div>
               )}
@@ -255,24 +370,40 @@ export const ServiceDetailPanel = () => {
               {loadingnotion ? (
                 <div className="flex flex-col items-center gap-2">
                   <Spinner className="w-8 h-8 animate-spin text-cyan-500 dark:text-white" />
-                  <p className="text-sm text-muted-foreground animate-pulse">Loading Notion Service...</p>
+                  <p className="text-sm text-muted-foreground animate-pulse">
+                    Loading Notion Service...
+                  </p>
                 </div>
               ) : notionError ? (
                 <div className="flex flex-col gap-2 items-center justify-center py-4">
                   <AlertTriangle className="w-8 h-8 text-red-500" />
                   <p className="text-sm text-red-500 font-medium">Failed to load Notion service</p>
-                  <Button size="sm" onClick={() => notionRefetch()} className="bg-cyan-500 dark:bg-white">Retry</Button>
+                  <Button
+                    size="sm"
+                    onClick={() => notionRefetch()}
+                    className="bg-cyan-500 dark:bg-white"
+                  >
+                    Retry
+                  </Button>
                 </div>
               ) : workspacename ? (
                 <div className="flex items-center gap-4 w-full">
                   <div className="h-12 w-12 rounded-full flex items-center justify-center">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" alt="icon" />
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png"
+                      alt="icon"
+                    />
                   </div>
                   <div className="flex flex-col text-left">
                     <p className="text-sm font-medium">Connected Notion Workspace Account</p>
                     <h3 className="text-lg font-semibold">{workspacename}</h3>
                   </div>
-                  <Button onClick={deletenotion} disabled={deletingNotion} variant="destructive" className="ml-auto">
+                  <Button
+                    onClick={deletenotion}
+                    disabled={deletingNotion}
+                    variant="destructive"
+                    className="ml-auto"
+                  >
                     {deletingNotion ? <Spinner /> : "Disconnect"}
                   </Button>
                 </div>
@@ -280,13 +411,18 @@ export const ServiceDetailPanel = () => {
                 <div className="flex flex-col items-center justify-center text-center py-4">
                   <div className="space-y-4 w-full">
                     <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png" alt="icon" />
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png"
+                        alt="icon"
+                      />
                     </div>
-                    <NotionForm onComplete={async () => {
-                      await notionRefetch();
-                      setDialogService(null);
-                      toast.success("Notion connected!");
-                    }} />
+                    <NotionForm
+                      onComplete={async () => {
+                        await notionRefetch();
+                        setDialogService(null);
+                        toast.success("Notion connected!");
+                      }}
+                    />
                   </div>
                 </div>
               )}
@@ -298,18 +434,29 @@ export const ServiceDetailPanel = () => {
               {loadingslack ? (
                 <div className="flex flex-col items-center gap-2">
                   <Spinner className="w-8 h-8 animate-spin text-cyan-500 dark:text-white" />
-                  <p className="text-sm text-muted-foreground animate-pulse">Loading Slack Service...</p>
+                  <p className="text-sm text-muted-foreground animate-pulse">
+                    Loading Slack Service...
+                  </p>
                 </div>
               ) : slackError ? (
                 <div className="flex flex-col gap-2 items-center justify-center py-4">
                   <AlertTriangle className="w-8 h-8 text-red-500" />
                   <p className="text-sm text-red-500 font-medium">Failed to load Slack service</p>
-                  <Button size="sm" onClick={() => slackRefetch()} className="bg-cyan-500 dark:bg-white">Retry</Button>
+                  <Button
+                    size="sm"
+                    onClick={() => slackRefetch()}
+                    className="bg-cyan-500 dark:bg-white"
+                  >
+                    Retry
+                  </Button>
                 </div>
               ) : workspace ? (
                 <div className="flex items-center gap-4 w-full">
                   <div className="h-12 w-12 rounded-full flex items-center justify-center">
-                    <img src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg" alt="icon" />
+                    <img
+                      src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg"
+                      alt="icon"
+                    />
                   </div>
                   <div className="flex flex-col text-left">
                     <p className="text-sm font-medium">Connected Slack Workspace Account</p>
@@ -323,13 +470,18 @@ export const ServiceDetailPanel = () => {
                 <div className="flex flex-col items-center justify-center text-center py-4">
                   <div className="space-y-4 w-full">
                     <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
-                      <img src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg" alt="icon" />
+                      <img
+                        src="https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg"
+                        alt="icon"
+                      />
                     </div>
-                    <SlackForm onComplete={async () => {
-                      await slackRefetch();
-                      setDialogService(null);
-                      toast.success("Slack connected!");
-                    }} />
+                    <SlackForm
+                      onComplete={async () => {
+                        await slackRefetch();
+                        setDialogService(null);
+                        toast.success("Slack connected!");
+                      }}
+                    />
                   </div>
                 </div>
               )}
@@ -341,18 +493,29 @@ export const ServiceDetailPanel = () => {
               {loadingn8n ? (
                 <div className="flex flex-col items-center gap-2">
                   <Spinner className="w-8 h-8 animate-spin text-cyan-500 dark:text-white" />
-                  <p className="text-sm text-muted-foreground animate-pulse">Loading n8n Service...</p>
+                  <p className="text-sm text-muted-foreground animate-pulse">
+                    Loading n8n Service...
+                  </p>
                 </div>
               ) : n8nError ? (
                 <div className="flex flex-col gap-2 items-center justify-center py-4">
                   <AlertTriangle className="w-8 h-8 text-red-500" />
                   <p className="text-sm text-red-500 font-medium">Failed to load n8n service</p>
-                  <Button size="sm" onClick={() => n8nRefetch()} className="bg-cyan-500 dark:bg-white">Retry</Button>
+                  <Button
+                    size="sm"
+                    onClick={() => n8nRefetch()}
+                    className="bg-cyan-500 dark:bg-white"
+                  >
+                    Retry
+                  </Button>
                 </div>
               ) : n8nConnected ? (
                 <div className="flex items-center gap-4 w-full">
                   <div className="h-12 w-12 rounded-full flex items-center justify-center">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg" alt="icon" />
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg"
+                      alt="icon"
+                    />
                   </div>
                   <div className="flex flex-col text-left">
                     <p className="text-sm font-medium">Connected n8n Instance</p>
@@ -366,13 +529,18 @@ export const ServiceDetailPanel = () => {
                 <div className="flex flex-col items-center justify-center text-center py-4">
                   <div className="space-y-4 w-full">
                     <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
-                      <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg" alt="icon" />
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg"
+                        alt="icon"
+                      />
                     </div>
-                    <N8nForm onComplete={async () => {
-                      await n8nRefetch();
-                      setDialogService(null);
-                      toast.success("n8n connected!");
-                    }} />
+                    <N8nForm
+                      onComplete={async () => {
+                        await n8nRefetch();
+                        setDialogService(null);
+                        toast.success("n8n connected!");
+                      }}
+                    />
                   </div>
                 </div>
               )}

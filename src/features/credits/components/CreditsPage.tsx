@@ -48,9 +48,7 @@ export const CreditsPage = () => {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <span className={`text-4xl font-bold ${balanceColor}`}>
-                {balance}
-              </span>
+              <span className={`text-4xl font-bold ${balanceColor}`}>{balance}</span>
               <span className="text-muted-foreground">credits remaining</span>
             </div>
           )}
@@ -64,19 +62,14 @@ export const CreditsPage = () => {
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>
-            You receive <strong>50 free credits</strong> every month that reset
-            automatically. Each AI request costs <strong>1 credit</strong> when
-            using the free tier.
+            You receive <strong>50 free credits</strong> every month that reset automatically. Each
+            AI request costs <strong>1 credit</strong> when using the free tier.
           </p>
           <p>
-            If you add your own API key in{" "}
-            <strong>Service Settings</strong>, you can bypass credits entirely
-            and use your own billing.
+            If you add your own API key in <strong>Service Settings</strong>, you can bypass credits
+            entirely and use your own billing.
           </p>
-          <p>
-            Running out of credits? Add an API key or check back next month for
-            a fresh batch.
-          </p>
+          <p>Running out of credits? Add an API key or check back next month for a fresh batch.</p>
         </CardContent>
       </Card>
 
@@ -94,9 +87,7 @@ export const CreditsPage = () => {
               <Spinner className="h-6 w-6" />
             </div>
           ) : transactions.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No transactions yet.
-            </p>
+            <p className="text-sm text-muted-foreground text-center py-4">No transactions yet.</p>
           ) : (
             <div className="space-y-2">
               {transactions.map((tx) => (
@@ -111,9 +102,7 @@ export const CreditsPage = () => {
                       <ArrowDownCircle className="w-4 h-4 text-red-500" />
                     )}
                     <div>
-                      <p className="text-sm font-medium">
-                        {tx.description || tx.type}
-                      </p>
+                      <p className="text-sm font-medium">{tx.description || tx.type}</p>
                       <p className="text-xs text-muted-foreground">
                         {new Date(tx.createdAt).toLocaleDateString(undefined, {
                           year: "numeric",
@@ -134,9 +123,7 @@ export const CreditsPage = () => {
                       {tx.amount > 0 ? "+" : ""}
                       {tx.amount}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      Balance: {tx.balanceAfter}
-                    </p>
+                    <p className="text-xs text-muted-foreground">Balance: {tx.balanceAfter}</p>
                   </div>
                 </div>
               ))}

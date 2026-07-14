@@ -1,6 +1,6 @@
-import { useRef, useMemo } from 'react';
-import { Canvas, useFrame, useLoader } from '@react-three/fiber';
-import * as THREE from 'three';
+import { useRef, useMemo } from "react";
+import { Canvas, useFrame, useLoader } from "@react-three/fiber";
+import * as THREE from "three";
 import MultimateLogo from "../../assets/Multimate.png";
 
 function ParticleField({ isDark }: { isDark: boolean }) {
@@ -48,7 +48,9 @@ function ParticleField({ isDark }: { isDark: boolean }) {
       const radius = Math.sqrt(x * x + y * y + z * z);
       if (radius > 10) {
         const norm = 10 / radius;
-        x *= norm; y *= norm; z *= norm;
+        x *= norm;
+        y *= norm;
+        z *= norm;
       }
 
       attr.setXYZ(i, x, y, z);
@@ -138,12 +140,7 @@ function BrandLogo() {
     <group position={[0, 0, 0]}>
       <mesh ref={ref} position={[0, 0, 0]}>
         <planeGeometry args={[2 * aspect, 2]} />
-        <meshBasicMaterial
-          map={texture}
-          transparent
-          depthWrite={false}
-          toneMapped={false}
-        />
+        <meshBasicMaterial map={texture} transparent depthWrite={false} toneMapped={false} />
       </mesh>
     </group>
   );
@@ -160,8 +157,12 @@ function ConnectingLines({ isDark }: { isDark: boolean }) {
       const r1 = 1.5 + Math.random() * 0.5;
       const r2 = 2.5 + Math.random() * 0.5;
       pts.push(
-        Math.cos(a) * r1, Math.sin(a) * r1, 0,
-        Math.cos(a + 0.1) * r2, Math.sin(a + 0.1) * r2, 0
+        Math.cos(a) * r1,
+        Math.sin(a) * r1,
+        0,
+        Math.cos(a + 0.1) * r2,
+        Math.sin(a + 0.1) * r2,
+        0,
       );
     }
     return new Float32Array(pts);
@@ -195,7 +196,7 @@ export const AiWaveformScene = ({ theme = "light" }: { theme?: string }) => {
       <Canvas camera={{ position: [0, 0, 7], fov: 50, near: 0.1, far: 30 }}>
         <color attach="background" args={[isDark ? "#0a0a0f" : "#f8fafc"]} />
 
-              <BrandLogo />
+        <BrandLogo />
         <ConnectingLines isDark={isDark} />
 
         <FloatingShape
