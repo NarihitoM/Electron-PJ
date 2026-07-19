@@ -86,6 +86,7 @@ export const ChatMessageList = () => {
     const el = topSentinelRef.current;
     if (el) observer.observe(el);
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.hasMore, store.loadingMore]);
 
   const loadMore = async () => {
@@ -168,6 +169,7 @@ export const ChatMessageList = () => {
 
   useEffect(() => {
     fetchMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   if (store.loadingfetch) {
@@ -305,7 +307,7 @@ export const ChatMessageList = () => {
                     (!msg.toolsCall ||
                       msg.toolsCall.length === 0 ||
                       msg.toolsCall.some((t: { status: string }) => t.status === "loading")) && (
-                      <ShimmerLoadingText className="mt-0.5" />
+                      <ShimmerLoadingText phrases={["Thinking"]} className="mt-0.5" />
                     )}
                   {isUser && msg.images && msg.images.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-1">
