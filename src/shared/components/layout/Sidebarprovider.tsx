@@ -65,6 +65,8 @@ import { datafetch } from "../../config/tanstackqueryconfig";
 import { Spinner } from "../ui/spinner";
 import { Button } from "../ui/button";
 import { CreditBadge } from "../../../features/credits/components/CreditBadge";
+import { useAddServiceKey } from "../../../features/services/hooks/useAddServiceKey";
+import { clearModelCache } from "../../config/providermodels";
 
 const IconRenderer = ({ icon: Icon }: { icon: any }) => {
   if (typeof Icon === "string") {
@@ -107,6 +109,8 @@ export const Sidebarprovider = () => {
 
   const { data: n8nConfig } = useN8nConfig();
   const n8nConnected = !!(n8nConfig as any)?.connected;
+
+  const ollamaResyncMutation = useAddServiceKey();
 
   //Theme
   const { theme, setTheme } = useTheme();
@@ -219,6 +223,29 @@ export const Sidebarprovider = () => {
 
     // Services are fetched automatically by hooks
     setLoadingServices(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // A local Ollama tunnel dies whenever the app restarts, so silently
+  // re-open it and resync the new URL with the backend on every launch.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const persistedHost = await (window as any).api?.getOllamaLocalHost?.();
+        if (!persistedHost || cancelled) return;
+        const tunnelUrl = await (window as any).api.ensureOllamaTunnel(persistedHost);
+        if (cancelled) return;
+        await ollamaResyncMutation.mutateAsync({ provider: "ollama", key: "", host: tunnelUrl });
+        clearModelCache("ollama");
+      } catch (err) {
+        console.error("Ollama tunnel resync failed:", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   //Data
@@ -254,6 +281,7 @@ export const Sidebarprovider = () => {
         }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [chatHasMore, chatLoadingMore, chatNextCursor, ChatFromStore],
   );
 

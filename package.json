@@ -48,6 +48,7 @@
     "embla-carousel-react": "^8.6.0",
     "framer-motion": "^12.38.0",
     "input-otp": "^1.4.2",
+    "localtunnel": "^2.0.2",
     "lucide-react": "^1.7.0",
     "next-themes": "^0.4.6",
     "puppeteer": "^24.43.1",
@@ -74,6 +75,7 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
+    "@types/localtunnel": "^2.0.4",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
     "@types/react-syntax-highlighter": "^15.5.13",

@@ -197,20 +197,45 @@ const ProviderUI = ({ name, placeholder }: { name: string; placeholder: string }
   );
 };
 
+const LOCAL_HOST_PATTERN =
+  /^(localhost|127\.0\.0\.1|0\.0\.0\.0|::1|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+|172\.(1[6-9]|2\d|3[01])\.\d+\.\d+)$/i;
+
+const isLocalOllamaHost = (url: string): boolean => {
+  try {
+    return LOCAL_HOST_PATTERN.test(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+};
+
 const OllamaUI = () => {
   const { data: Api } = useServiceKeys();
   const addMutation = useAddServiceKey();
   const deleteMutation = useDeleteServiceKey();
   const [host, setHost] = useState("");
   const [apiKey, setApiKey] = useState("");
+  const [isTunneling, setIsTunneling] = useState(false);
   const savedConfig = Api?.find((s) => s.provider.toLowerCase() === "ollama");
 
   const addkey = async () => {
     try {
+      let resolvedHost = host || undefined;
+
+      // Our backend runs on Vercel and can't reach the user's own localhost,
+      // so a local Ollama host needs to be tunneled to a public URL first.
+      if (resolvedHost && isLocalOllamaHost(resolvedHost)) {
+        setIsTunneling(true);
+        try {
+          resolvedHost = await (window as any).api.ensureOllamaTunnel(resolvedHost);
+        } finally {
+          setIsTunneling(false);
+        }
+      }
+
       const response = await addMutation.mutateAsync({
         provider: "ollama",
         key: apiKey,
-        host: host || undefined,
+        host: resolvedHost,
       });
       if (response.success) {
         toast.success(response.message);
@@ -302,11 +327,16 @@ const OllamaUI = () => {
 
         <div className="flex flex-row gap-3">
           <Button
-            disabled={addMutation.isPending}
+            disabled={addMutation.isPending || isTunneling}
             onClick={addkey}
             className="h-12 px-8 rounded-xl font-semibold shadow-lg bg-cyan-500 dark:bg-white shadow-primary/10 hover:shadow-primary/20 transition-all"
           >
-            {addMutation.isPending ? (
+            {isTunneling ? (
+              <>
+                <Spinner />
+                <span className="ml-2">Connecting tunnel...</span>
+              </>
+            ) : addMutation.isPending ? (
               <Spinner />
             ) : savedConfig ? (
               <>
@@ -343,7 +373,8 @@ const OllamaUI = () => {
           <p className="text-xs dark:text-muted-foreground text-cyan-500 leading-relaxed">
             <strong>Tip:</strong> For local Ollama, use{" "}
             <code className="bg-cyan-500/10 px-1 rounded">http://localhost:11434</code> and leave
-            API key empty. For Ollama Cloud, use{" "}
+            API key empty — we'll automatically open a secure tunnel so the AI can reach it while
+            the app is running. For Ollama Cloud, use{" "}
             <code className="bg-cyan-500/10 px-1 rounded">https://ollama.com</code> and provide your
             API key from{" "}
             <a
