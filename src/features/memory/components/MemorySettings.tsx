@@ -10,7 +10,7 @@ export const MemorySettings = () => {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-5xl space-y-3">
+      <div className="mx-auto max-w-5xl px-4 mt-4 mb-6 space-y-3">
         {[1, 2, 3].map((i) => (
           <div
             key={i}
@@ -37,8 +37,8 @@ export const MemorySettings = () => {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4">
-      <div className="flex flex-col gap-1 mb-2">
+    <div className="mx-auto max-w-5xl px-4 mt-4 mb-6 space-y-4">
+      <div className="flex flex-col gap-1 mb-4">
         <h1 className="text-2xl font-bold flex items-center gap-3">
           <Brain className="w-6 h-6 text-cyan-500 dark:text-white" /> Memory
         </h1>
