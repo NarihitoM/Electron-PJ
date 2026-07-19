@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Switch } from "@/shared/components/ui/switch";
 import { Spinner } from "@/shared/components/ui/spinner";
-import { Brain } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useMemoryStatus } from "../hooks/useMemoryStatus";
 import { useToggleMemory } from "../hooks/useToggleMemory";
@@ -26,28 +26,42 @@ export const MemoryToggle = () => {
     }
   };
 
+  const isOn = enabled ?? true;
+
   return (
-    <Card className="border-none bg-card shadow-none p-4">
+    <Card className="border border-cyan-500/15 bg-linear-to-r from-cyan-500/5 to-transparent shadow-none p-5 rounded-2xl">
       <CardContent className="p-0 flex items-center justify-between gap-4">
-        <div className="flex items-start gap-3">
-          <div className="p-2 dark:bg-white rounded-lg h-fit">
-            <Brain className="h-5 w-5 text-cyan-500 dark:text-black" />
+        <div className="flex items-start gap-4">
+          <div className="p-2.5 rounded-xl bg-cyan-500/10 h-fit shrink-0">
+            <Sparkles className="h-5 w-5 text-cyan-500 dark:text-white" />
           </div>
-          <div>
-            <p className="font-semibold">Remember conversations</p>
-            <p className="text-sm text-muted-foreground">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <p className="font-semibold">Remember conversations</p>
+              <span
+                className={`px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide ${
+                  isOn
+                    ? "bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-300"
+                    : "bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                }`}
+              >
+                {isOn ? "On" : "Off"}
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground leading-relaxed">
               Let the AI automatically remember facts and preferences from your conversations, and
               use them across the Chatbot and integrated services.
             </p>
           </div>
         </div>
         {isLoading ? (
-          <Spinner className="h-5 w-5" />
+          <Spinner className="h-5 w-5 shrink-0" />
         ) : (
           <Switch
-            checked={enabled ?? true}
+            checked={isOn}
             onCheckedChange={handleToggle}
             disabled={toggleMutation.isPending}
+            className="shrink-0"
           />
         )}
       </CardContent>
