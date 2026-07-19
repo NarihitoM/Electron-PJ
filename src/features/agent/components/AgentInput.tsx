@@ -43,7 +43,7 @@ export const AgentInput = () => {
     return () => abortControllerRef.current?.abort();
   }, []);
 
-  const onSendMessage = () => {
+  const onSendMessage = async () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       if (!store.input.trim()) return;
@@ -67,8 +67,28 @@ export const AgentInput = () => {
     );
     store.workflowGenRef.current++;
 
-    store.updateHistory((prev) => [...prev, { role: "user", content: messageText, name: "" }]);
-    agentauth.storeagentmessage("user", messageText, "").catch(() => {});
+    const isSpecificNode = store.type === "Specific Node" && !!store.selectnode;
+    const messageNodeName = isSpecificNode ? (store.selectnode as string) : "";
+
+    store.updateHistory((prev) => [
+      ...prev,
+      { role: "user", content: messageText, name: messageNodeName },
+    ]);
+    agentauth.storeagentmessage("user", messageText, messageNodeName).catch(() => {});
+
+    // Give the target node its own prior history instead of starting from scratch each turn.
+    let initialMessages: { role: string; content: string }[] = [];
+    if (isSpecificNode) {
+      try {
+        const historyResp = await agentauth.fetchagentmessages(undefined, store.selectnode!);
+        initialMessages = (historyResp.data?.messages ?? [])
+          .reverse()
+          .map((m) => ({ role: m.role, content: m.content }));
+      } catch {
+        // Fall back to sending just the new message if history can't be fetched.
+      }
+    }
+    initialMessages.push({ role: "user", content: messageText });
 
     const selectedNode = agents.find((n) => n.name === store.selectnode);
     const runningNodes = selectedNode ? [selectedNode] : agents.length > 0 ? [agents[0]] : [];
@@ -76,7 +96,7 @@ export const AgentInput = () => {
 
     window.ipcRenderer.send("cancel-workflow");
     window.ipcRenderer.send("run-workflow", {
-      input: messageText,
+      input: initialMessages,
       nodes: runningNodes,
       encryptkey: Api,
       useremail,
@@ -99,9 +119,11 @@ export const AgentInput = () => {
     );
   };
 
+  const isSpecificNode = store.type === "Specific Node" && !!store.selectnode;
+
   const onResetHistory = async () => {
     try {
-      await resetMsgMutation.mutateAsync(undefined);
+      await resetMsgMutation.mutateAsync(isSpecificNode ? store.selectnode! : undefined);
       store.setHistory([]);
       toast.success("Chat history reset.");
     } catch {
@@ -114,7 +136,10 @@ export const AgentInput = () => {
     if (open) {
       try {
         store.setLoadingfetch(true);
-        const response = await agentauth.fetchagentmessages();
+        const response = await agentauth.fetchagentmessages(
+          undefined,
+          isSpecificNode ? store.selectnode! : undefined,
+        );
         if (response.success && response.data) {
           store.setHistory((response.data.messages ?? []).reverse());
           store.setNextCursor(response.data.nextCursor);

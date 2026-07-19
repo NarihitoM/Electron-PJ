@@ -1,4 +1,5 @@
 import { type MemorySaver, Command } from "@langchain/langgraph";
+import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { nodes } from "../../src/shared/types/globaltype";
 import { Servicefetch } from "../../src/features/services/types/type";
 import { createNodeDeepAgent } from "./node-deepagent";
@@ -132,7 +133,7 @@ export const runAgentOrchestration = async (
   lastnode?: string,
   targetnode?: string,
   simultaneous?: boolean,
-  initialMessages?: any[],
+  initialMessages?: { role: string; content: string }[],
   memoryContext?: string,
 ): Promise<{ messages: any[]; usageData: NodeUsage[] }> => {
   const keyMap: Record<string, string> = {};
@@ -199,7 +200,9 @@ export const runAgentOrchestration = async (
   const thread_id = crypto.randomUUID();
   const config = { configurable: { thread_id }, recursionLimit: 100, signal: controller.signal };
 
-  let messages: any[] = initialMessages ? [...initialMessages] : [];
+  let messages: any[] = (initialMessages ?? []).map((m) =>
+    m.role === "user" ? new HumanMessage(m.content) : new AIMessage(m.content),
+  );
   const usageData: NodeUsage[] = [];
 
   if (simultaneous) {
