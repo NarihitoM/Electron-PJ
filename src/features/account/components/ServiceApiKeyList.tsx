@@ -398,7 +398,7 @@ const ZenUI = () => {
 export const ServiceApiKeyList = () => {
   const [selectedProvider, setSelectedProvider] = useState("openai");
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className="mx-auto max-w-5xl px-4 mt-4 mb-6">
       <div className="flex flex-col gap-1 mb-2">
         <h1 className="text-2xl font-bold flex items-center gap-3">
           <Key className="w-6 h-6 text-cyan-500 dark:text-white " /> Service Providers
