@@ -3,9 +3,11 @@ import { AlertTriangle } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Toaster } from "@/shared/components/ui/sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
 import { ServiceApiKeyList } from "./ServiceApiKeyList";
 import { ServiceIntegrationList } from "./ServiceIntegrationList";
 import { ServiceDetailPanel } from "./ServiceDetailPanel";
+import { MemorySettings } from "@/features/memory/components/MemorySettings";
 
 export const SettingsPage = () => {
   const { isLoading, isError, refetch } = useServiceKeys();
@@ -88,8 +90,28 @@ export const SettingsPage = () => {
   return (
     <>
       <Toaster position="top-right" richColors />
-      <ServiceApiKeyList />
-      <ServiceIntegrationList />
+      <Tabs defaultValue="providers" className="w-full">
+        <TabsList className="w-full max-w-md">
+          <TabsTrigger value="providers" className="flex-1">
+            Providers
+          </TabsTrigger>
+          <TabsTrigger value="integrations" className="flex-1">
+            Integrations
+          </TabsTrigger>
+          <TabsTrigger value="memory" className="flex-1">
+            Memory
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="providers">
+          <ServiceApiKeyList />
+        </TabsContent>
+        <TabsContent value="integrations">
+          <ServiceIntegrationList />
+        </TabsContent>
+        <TabsContent value="memory">
+          <MemorySettings />
+        </TabsContent>
+      </Tabs>
       <ServiceDetailPanel />
     </>
   );
