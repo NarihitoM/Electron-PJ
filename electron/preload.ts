@@ -8,9 +8,6 @@ const ALLOWED_SEND_CHANNELS = [
   "run-workflow",
   "cancel-workflow",
   "tool-approval-response",
-  "minimize-window",
-  "maximize-window",
-  "close-window",
 ];
 const ALLOWED_INVOKE_CHANNELS = [
   "gettoken",
@@ -18,7 +15,6 @@ const ALLOWED_INVOKE_CHANNELS = [
   "fetch-ollama-models",
   "ensure-ollama-tunnel",
   "get-ollama-local-host",
-  "is-maximized",
 ];
 const ALLOWED_ON_CHANNELS = [
   "oauth-window-closed",
@@ -32,7 +28,6 @@ const ALLOWED_ON_CHANNELS = [
   "node-chain-start",
   "node-chain-end",
   "node-error",
-  "maximized-changed",
 ];
 
 contextBridge.exposeInMainWorld("ipcRenderer", {
@@ -82,13 +77,4 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("fetch-ollama-models", baseUrl, apiKey),
   ensureOllamaTunnel: (localUrl: string) => ipcRenderer.invoke("ensure-ollama-tunnel", localUrl),
   getOllamaLocalHost: () => ipcRenderer.invoke("get-ollama-local-host"),
-  minimizeWindow: () => ipcRenderer.send("minimize-window"),
-  maximizeWindow: () => ipcRenderer.send("maximize-window"),
-  closeWindow: () => ipcRenderer.send("close-window"),
-  isMaximized: () => ipcRenderer.invoke("is-maximized"),
-  onMaximizedChanged: (callback: (maximized: boolean) => void) => {
-    const handler = (_event: any, max: boolean) => callback(max);
-    ipcRenderer.on("maximized-changed", handler);
-    return () => ipcRenderer.removeListener("maximized-changed", handler);
-  },
 });

@@ -120,4 +120,10 @@ export const agentauth = {
     const response = await Server.get("/agent/api/fetchedges");
     return response.data;
   },
+  savepositions: async (
+    positions: { nodeid: string; posX: number; posY: number }[],
+  ): Promise<returnedgefeedback> => {
+    const response = await Server.post("/agent/api/savepositions", { positions });
+    return response.data;
+  },
 };

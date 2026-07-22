@@ -21,6 +21,7 @@ import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useAgentNodes } from "@/features/agent/hooks/useAgentNodes";
 import { useAgentEdges } from "@/features/agent/hooks/useAgentEdges";
 import { useSaveAgentEdges } from "@/features/agent/hooks/useSaveAgentEdges";
+import { useSaveNodePositions } from "@/features/agent/hooks/useSaveNodePositions";
 import { useagentstore } from "../store/store";
 import AgentFlowNode, { type AgentFlowNodeData } from "./AgentFlowNode";
 
@@ -69,17 +70,29 @@ export const FlowCanvas = () => {
   const { data: fetchedNodes = [], isLoading } = useAgentNodes();
   const { data: fetchedEdges = [] } = useAgentEdges();
   const { mutate: saveEdgesToBackend } = useSaveAgentEdges();
+  const { mutate: savePositionsToBackend } = useSaveNodePositions();
   const initializedRef = useRef(false);
   const edgesInitRef = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const posDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /* ── Sync DB nodes into store once ── */
+  /* ── Sync DB nodes into store once, and populate positions ── */
   useEffect(() => {
     if (fetchedNodes.length > 0 && !initializedRef.current) {
       initializedRef.current = true;
       store.setNodes(fetchedNodes as any);
+      // Restore saved positions from the backend
+      const savedPositions: Record<string, { x: number; y: number }> = {};
+      for (const node of fetchedNodes as any[]) {
+        if (node.posX !== null && node.posY !== null) {
+          savedPositions[node.name || node.id] = { x: node.posX, y: node.posY };
+        }
+      }
+      if (Object.keys(savedPositions).length > 0) {
+        setNodePositions(savedPositions);
+      }
     }
-  }, [fetchedNodes]);
+  }, [fetchedNodes, store, setNodePositions]);
 
   /* ── Stable callbacks for node actions ── */
   const onUpdate = useCallback(
@@ -221,18 +234,50 @@ export const FlowCanvas = () => {
     };
   }, [latestFlowEdges, saveEdgesToBackend]);
 
-  /* ── Drag handler — persist positions ── */
+  /* ── Drag handler — persist positions to store AND backend ── */
   /* Reads latest positions from store.getState() to avoid stale closure */
   const onNodeDragStop = useCallback(
     (_: any, node: Node) => {
       const current = useagentstore.getState().nodePositions;
-      setNodePositions({
+      const updated = {
         ...current,
         [node.id]: { x: node.position.x, y: node.position.y },
-      });
+      };
+      setNodePositions(updated);
+
+      // Debounce-save to backend
+      if (posDebounceRef.current) {
+        clearTimeout(posDebounceRef.current);
+      }
+      posDebounceRef.current = setTimeout(() => {
+        const entries = Object.entries(updated);
+        // Map node names to their DB ids via store.nodes
+        const nodes = useagentstore.getState().nodes;
+        const positions = entries
+          .map(([name, pos]) => {
+            const match = nodes.find((n: any) => n.name === name);
+            if (!match) return null;
+            return { nodeid: match.id, posX: pos.x, posY: pos.y };
+          })
+          .filter(Boolean) as { nodeid: string; posX: number; posY: number }[];
+        if (positions.length > 0) {
+          savePositionsToBackend(positions);
+        }
+        posDebounceRef.current = null;
+      }, 1500);
     },
-    [setNodePositions],
+    [setNodePositions, savePositionsToBackend],
   );
+
+  /* ── Cleanup position debounce on unmount ── */
+  useEffect(() => {
+    return () => {
+      if (posDebounceRef.current) {
+        clearTimeout(posDebounceRef.current);
+        posDebounceRef.current = null;
+      }
+    };
+  }, []);
 
   /* ── Handlers for CTA buttons ── */
   const onAddNode = useCallback(() => {

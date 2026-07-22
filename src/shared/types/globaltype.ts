@@ -30,6 +30,8 @@ export interface nodes {
   model: string;
   tool: string;
   systemPrompt?: string;
+  posX?: number;
+  posY?: number;
 
   output?: string;
   thinking?: string;

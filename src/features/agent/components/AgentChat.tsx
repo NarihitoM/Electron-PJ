@@ -231,8 +231,8 @@ export const AgentChat = () => {
       <AgentNodeForm />
       <div className="flex h-[92vh] w-full flex-col bg-background">
         <AgentChatHeader />
-        <div className="flex-1 px-3 mt-4 overflow-hidden">
-          <div className="mx-auto max-w-5xl py-5 h-full">
+        <div className="flex-1 mt-4 overflow-hidden pb-4">
+          <div className="mx-auto max-w-5xl mb-4 py-5 h-full">
             <FlowCanvas />
           </div>
         </div>
