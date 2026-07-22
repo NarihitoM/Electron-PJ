@@ -71,26 +71,27 @@ export const FlowCanvas = () => {
   const { data: fetchedEdges = [] } = useAgentEdges();
   const { mutate: saveEdgesToBackend } = useSaveAgentEdges();
   const { mutate: savePositionsToBackend } = useSaveNodePositions();
-  const initializedRef = useRef(false);
-  const edgesInitRef = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const posDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  /* ── Sync DB nodes into store once, and populate positions ── */
+  /* ── Sync DB nodes into store on every fetch, and populate positions ── */
+  const nodesRef = useRef<string>("");
   useEffect(() => {
-    if (fetchedNodes.length > 0 && !initializedRef.current) {
-      initializedRef.current = true;
-      store.setNodes(fetchedNodes as any);
-      // Restore saved positions from the backend
-      const savedPositions: Record<string, { x: number; y: number }> = {};
-      for (const node of fetchedNodes as any[]) {
-        if (node.posX !== null && node.posY !== null) {
-          savedPositions[node.name || node.id] = { x: node.posX, y: node.posY };
-        }
+    if (fetchedNodes.length === 0) return;
+    const serialized = JSON.stringify(fetchedNodes.map((n: any) => n.id));
+    if (serialized === nodesRef.current) return;
+    nodesRef.current = serialized;
+
+    store.setNodes(fetchedNodes as any);
+    // Restore saved positions from the backend
+    const savedPositions: Record<string, { x: number; y: number }> = {};
+    for (const node of fetchedNodes as any[]) {
+      if (node.posX !== null && node.posY !== null) {
+        savedPositions[node.name || node.id] = { x: node.posX, y: node.posY };
       }
-      if (Object.keys(savedPositions).length > 0) {
-        setNodePositions(savedPositions);
-      }
+    }
+    if (Object.keys(savedPositions).length > 0) {
+      setNodePositions(savedPositions);
     }
   }, [fetchedNodes, store, setNodePositions]);
 
@@ -161,7 +162,17 @@ export const FlowCanvas = () => {
         data: { nodeName: agent.name, onUpdate, onDelete },
       })),
     );
-  }, [currentIds, store.nodePositions, setNodes, onUpdate, onDelete]);
+
+    // Clean up edges connected to deleted nodes
+    const nodeNames = new Set(store.nodes.map((n) => n.name));
+    setEdges((prev) => {
+      const filtered = prev.filter((e) => nodeNames.has(e.source) && nodeNames.has(e.target));
+      if (filtered.length !== prev.length) {
+        setFlowEdges(filtered.map((e) => ({ id: e.id, source: e.source, target: e.target })));
+      }
+      return filtered;
+    });
+  }, [currentIds, store.nodePositions, setNodes, setEdges, setFlowEdges, onUpdate, onDelete]);
 
   /* ── Edge handlers ── */
   const onConnect = useCallback(
@@ -191,23 +202,26 @@ export const FlowCanvas = () => {
     setFlowEdges(edges.map((e) => ({ id: e.id, source: e.source, target: e.target })));
   }, [edges, setFlowEdges]);
 
-  /* ── Sync backend edges into React Flow state on initial load ── */
+  /* ── Sync backend edges into React Flow state ── */
+  const edgesFetchedRef = useRef<string>("");
   useEffect(() => {
-    if (fetchedEdges.length > 0 && !edgesInitRef.current) {
-      edgesInitRef.current = true;
-      setEdges(
-        fetchedEdges.map((e) => ({
-          id: e.id || `e-${e.source}-${e.target}`,
-          source: e.source,
-          target: e.target,
-          type: "smoothstep",
-          animated: true,
-          style: { stroke: "#06b6d4", strokeWidth: 2 },
-          markerEnd: { type: MarkerType.ArrowClosed, color: "#06b6d4" },
-          interactionWidth: 20,
-        })),
-      );
-    }
+    if (fetchedEdges.length === 0) return;
+    const serialized = JSON.stringify(fetchedEdges.map((e: any) => `${e.source}-${e.target}`));
+    if (serialized === edgesFetchedRef.current) return;
+    edgesFetchedRef.current = serialized;
+
+    setEdges(
+      fetchedEdges.map((e) => ({
+        id: e.id || `e-${e.source}-${e.target}`,
+        source: e.source,
+        target: e.target,
+        type: "smoothstep",
+        animated: true,
+        style: { stroke: "#06b6d4", strokeWidth: 2 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: "#06b6d4" },
+        interactionWidth: 20,
+      })),
+    );
   }, [fetchedEdges, setEdges]);
 
   /* ── Debounced save edges to backend ── */
@@ -215,7 +229,6 @@ export const FlowCanvas = () => {
   const latestFlowEdges = useagentstore((s) => s.flowEdges);
   useEffect(() => {
     /* Skip the initial empty state and the first load (handled by sync above) */
-    if (!edgesInitRef.current) return;
     if (latestFlowEdges.length === 0 && !debounceRef.current) return;
 
     if (debounceRef.current) {

@@ -102,6 +102,7 @@ export const AgentNodeForm = () => {
         if (response.success) {
           toast.success("Node deleted successfully");
           queryClient.invalidateQueries({ queryKey: ["node"] });
+          queryClient.invalidateQueries({ queryKey: ["edges"] });
           store.resetForm();
         } else {
           toast.error(response.message);
