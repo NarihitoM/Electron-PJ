@@ -115,6 +115,11 @@ export const useagentstore = create<AgentClientState>((set, get) => ({
       modelOpen: false,
     }),
 
+  flowEdges: [],
+  setFlowEdges: (flowEdges) => set({ flowEdges }),
+  nodePositions: {},
+  setNodePositions: (nodePositions) => set({ nodePositions }),
+
   updateHistory: (updater) => set((state) => ({ history: updater(state.history) })),
   updateSessionMessages: (updater) => set((state) => ({ history: updater(state.history) })),
 }));

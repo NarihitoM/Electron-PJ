@@ -7,7 +7,7 @@ import { ImageLightbox } from "@/shared/components/ImageLightbox";
 import { Toaster } from "@/shared/components/ui/sonner";
 import { toast } from "sonner";
 import { AgentChatHeader } from "./AgentChatHeader";
-import { AgentNodeList } from "./AgentNodeList";
+import { FlowCanvas } from "./FlowCanvas";
 import { AgentInput } from "./AgentInput";
 import { AgentNodeForm } from "./AgentNodeForm";
 
@@ -231,9 +231,9 @@ export const AgentChat = () => {
       <AgentNodeForm />
       <div className="flex h-[92vh] w-full flex-col bg-background">
         <AgentChatHeader />
-        <div className="flex-1 px-3 overflow-y-auto mt-4" style={{ scrollbarWidth: "none" }}>
-          <div className="mx-auto max-w-5xl py-5">
-            <AgentNodeList />
+        <div className="flex-1 px-3 mt-4 overflow-hidden">
+          <div className="mx-auto max-w-5xl py-5 h-full">
+            <FlowCanvas />
           </div>
         </div>
         {store.nodes.length > 0 && <AgentInput />}

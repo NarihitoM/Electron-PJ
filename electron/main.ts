@@ -42,6 +42,7 @@ function createWindow() {
     height: 700,
     minWidth: 1000,
     minHeight: 500,
+    frame: false,
     resizable: true,
     maximizable: true,
     fullscreenable: true,
@@ -72,6 +73,9 @@ function createWindow() {
 
   Auth();
   RunAgent();
+
+  win.on("maximize", () => win?.webContents.send("maximized-changed", true));
+  win.on("unmaximize", () => win?.webContents.send("maximized-changed", false));
 }
 
 app.on("window-all-closed", () => {
@@ -102,6 +106,20 @@ ipcMain.handle("ensure-ollama-tunnel", async (_event, localUrl: string) => {
 ipcMain.handle("get-ollama-local-host", () => {
   return getPersistedOllamaHost();
 });
+
+/* ── Window controls (custom title bar) ── */
+ipcMain.on("minimize-window", () => win?.minimize());
+ipcMain.on("maximize-window", () => {
+  const w = win;
+  if (!w) return;
+  if (w.isMaximized()) {
+    w.unmaximize();
+  } else {
+    w.maximize();
+  }
+});
+ipcMain.on("close-window", () => win?.close());
+ipcMain.handle("is-maximized", () => win?.isMaximized() ?? false);
 
 ipcMain.on("open-oauth-window", (event, url) => {
   if (typeof url !== "string") return;

@@ -124,7 +124,7 @@ export const AgentNodeForm = () => {
   const submitLabel = mode === "create" ? "Add" : mode === "update" ? "Update" : "Delete";
 
   return (
-    <Dialog open={open} onOpenChange={store.setNodeDialogOpen} modal={false}>
+    <Dialog open={open} onOpenChange={store.setNodeDialogOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className="text-2xl">{title}</DialogTitle>

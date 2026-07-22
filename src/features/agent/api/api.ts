@@ -4,6 +4,8 @@ import {
   returnagentmessagefeedback,
   returnnodedata,
   returnnodefeedback,
+  returnedgedata,
+  returnedgefeedback,
 } from "../types/type";
 
 export const agentauth = {
@@ -108,6 +110,14 @@ export const agentauth = {
   },
   FirecrawlInteract: async (url: string, prompt: string, sessionId?: string): Promise<any> => {
     const response = await Server.post("/firecrawl/api/interact", { url, prompt, sessionId });
+    return response.data;
+  },
+  saveedges: async (edges: { source: string; target: string }[]): Promise<returnedgefeedback> => {
+    const response = await Server.post("/agent/api/saveedges", { edges });
+    return response.data;
+  },
+  fetchedges: async (): Promise<returnedgedata> => {
+    const response = await Server.get("/agent/api/fetchedges");
     return response.data;
   },
 };

@@ -72,7 +72,10 @@ const runDeepAgentWithEvents = async (
       } else if (eventType === "on_chat_model_stream") {
         const text = chunk.data?.chunk?.content;
         if (text) {
-          if (chainDepth > 0) {
+          // chainDepth 1 → outer graph chain (ignore raw)
+          // chainDepth 2 → main model generation → node-stream (output)
+          // chainDepth >= 3 → nested reasoning/tool-call → node-thinking
+          if (chainDepth > 2) {
             event.reply("node-thinking", { nodeName, chunk: text });
           } else {
             event.reply("node-stream", { nodeName, chunk: text });
@@ -129,9 +132,6 @@ export const runAgentOrchestration = async (
   controller: AbortController,
   checkpointer: MemorySaver,
   requestApproval: (nodeName: string, toolName: string, args: any) => Promise<boolean>,
-  firstnode?: string,
-  lastnode?: string,
-  targetnode?: string,
   simultaneous?: boolean,
   initialMessages?: { role: string; content: string }[],
   memoryContext?: string,
@@ -154,26 +154,8 @@ export const runAgentOrchestration = async (
     }
   });
 
-  let activenode: nodes[];
-  if (firstnode && lastnode) {
-    let a = nodes.findIndex((n) => n.name === firstnode);
-    let b = nodes.findIndex((n) => n.name === lastnode);
-    if (a === -1 || b === -1) {
-      throw new Error(`Node not found: ${a === -1 ? firstnode : lastnode}`);
-    }
-    if (a > b) [a, b] = [b, a];
-    activenode = nodes.slice(a, b + 1);
-  } else if (targetnode) {
-    activenode = nodes.filter((n) => n.name === targetnode);
-    if (activenode.length === 0) {
-      throw new Error(
-        `Node "${targetnode}" not found. Available nodes: ${nodes.map((n) => n.name).join(", ")}`,
-      );
-    }
-  } else {
-    activenode = nodes;
-  }
-
+  // Nodes arrive pre-sorted from the frontend (topological order when edges exist)
+  const activenode = nodes;
   if (activenode.length === 0) {
     throw new Error("No nodes to execute. Please add at least one node.");
   }

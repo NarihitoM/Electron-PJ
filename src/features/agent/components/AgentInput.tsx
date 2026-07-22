@@ -2,8 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Spinner } from "@/shared/components/ui/spinner";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
-import { ArrowUp, Mic, Square, Settings, BotIcon } from "lucide-react";
+import { ArrowUp, Mic, Square, Settings } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -21,6 +20,12 @@ import { agentauth } from "../api/api";
 import { voiceauth } from "@/features/voice/api/api";
 import { AgentChatArea } from "./AgentChatArea";
 import { useUser } from "@/features/auth/hooks/useUser";
+import { useEmailCreds } from "@/features/email/hooks/useEmailCreds";
+import { useSaveEmailCreds } from "@/features/email/hooks/useSaveEmailCreds";
+import { useRemoveEmailCreds } from "@/features/email/hooks/useRemoveEmailCreds";
+import { Label } from "@/shared/components/ui/label";
+import { Input } from "@/shared/components/ui/input";
+import { CheckCircle2, XCircle, Mail, Eye, EyeOff } from "lucide-react";
 
 export const AgentInput = () => {
   const { data: Api = [] } = useServiceKeys();
@@ -38,6 +43,26 @@ export const AgentInput = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastSentInputRef = useRef("");
+
+  // Email service state
+  const { data: emailCreds, isLoading: loadingEmail } = useEmailCreds();
+  const saveEmailCreds = useSaveEmailCreds();
+  const removeEmailCreds = useRemoveEmailCreds();
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [emailHost, setEmailHost] = useState("");
+  const [emailPort, setEmailPort] = useState("587");
+  const [emailUser, setEmailUser] = useState("");
+  const [emailPass, setEmailPass] = useState("");
+  const [showEmailPass, setShowEmailPass] = useState(false);
+
+  useEffect(() => {
+    if (emailCreds?.exists && emailCreds?.data) {
+      setEmailHost(emailCreds.data.smtp_host);
+      setEmailPort(String(emailCreds.data.smtp_port));
+      setEmailUser(emailCreds.data.smtp_user);
+      setEmailPass(emailCreds.data.smtp_pass);
+    }
+  }, [emailCreds]);
 
   useEffect(() => {
     return () => abortControllerRef.current?.abort();
@@ -67,31 +92,32 @@ export const AgentInput = () => {
     );
     store.workflowGenRef.current++;
 
-    const isSpecificNode = store.type === "Specific Node" && !!store.selectnode;
-    const messageNodeName = isSpecificNode ? (store.selectnode as string) : "";
+    // With React Flow — the conversation is shared across all nodes
+    store.updateHistory((prev) => [...prev, { role: "user", content: messageText, name: "" }]);
+    agentauth.storeagentmessage("user", messageText, "").catch(() => {});
 
-    store.updateHistory((prev) => [
-      ...prev,
-      { role: "user", content: messageText, name: messageNodeName },
-    ]);
-    agentauth.storeagentmessage("user", messageText, messageNodeName).catch(() => {});
+    const initialMessages: { role: string; content: string }[] = [
+      { role: "user", content: messageText },
+    ];
 
-    // Give the target node its own prior history instead of starting from scratch each turn.
-    let initialMessages: { role: string; content: string }[] = [];
-    if (isSpecificNode) {
-      try {
-        const historyResp = await agentauth.fetchagentmessages(undefined, store.selectnode!);
-        initialMessages = (historyResp.data?.messages ?? [])
-          .reverse()
-          .map((m) => ({ role: m.role, content: m.content }));
-      } catch {
-        // Fall back to sending just the new message if history can't be fetched.
-      }
+    // ── Compute execution order from React Flow edges ──
+    const hasEdges = store.flowEdges.length > 0;
+    let runningNodes: typeof agents;
+
+    if (hasEdges) {
+      // Topological sort: determine execution order from edge direction
+      const sorted = topologicalSort(
+        agents.map((n) => n.name),
+        store.flowEdges,
+      );
+      runningNodes = sorted
+        .map((name) => agents.find((n) => n.name === name))
+        .filter(Boolean) as typeof agents;
+    } else {
+      // No edges = all nodes run simultaneously
+      runningNodes = agents;
     }
-    initialMessages.push({ role: "user", content: messageText });
 
-    const selectedNode = agents.find((n) => n.name === store.selectnode);
-    const runningNodes = selectedNode ? [selectedNode] : agents.length > 0 ? [agents[0]] : [];
     const useremail = userdata?.useremail ?? "";
 
     window.ipcRenderer.send("cancel-workflow");
@@ -100,10 +126,7 @@ export const AgentInput = () => {
       nodes: runningNodes,
       encryptkey: Api,
       useremail,
-      firstnode: store.firstnode,
-      lastnode: store.lastnode,
-      targetnode: store.selectnode,
-      simultaneous: false,
+      simultaneous: !hasEdges,
     });
     store.setInput("");
   };
@@ -119,11 +142,9 @@ export const AgentInput = () => {
     );
   };
 
-  const isSpecificNode = store.type === "Specific Node" && !!store.selectnode;
-
   const onResetHistory = async () => {
     try {
-      await resetMsgMutation.mutateAsync(isSpecificNode ? store.selectnode! : undefined);
+      await resetMsgMutation.mutateAsync(undefined);
       store.setHistory([]);
       toast.success("Chat history reset.");
     } catch {
@@ -136,10 +157,7 @@ export const AgentInput = () => {
     if (open) {
       try {
         store.setLoadingfetch(true);
-        const response = await agentauth.fetchagentmessages(
-          undefined,
-          isSpecificNode ? store.selectnode! : undefined,
-        );
+        const response = await agentauth.fetchagentmessages(undefined);
         if (response.success && response.data) {
           store.setHistory((response.data.messages ?? []).reverse());
           store.setNextCursor(response.data.nextCursor);
@@ -202,84 +220,6 @@ export const AgentInput = () => {
 
   return (
     <div className="w-full mx-auto max-w-5xl">
-      <div className="flex items-center justify-end gap-2 mb-2 flex-wrap px-1">
-        <Select onValueChange={(val) => store.setType(val ?? "")} value={store.type}>
-          <SelectTrigger className="w-40">
-            <span className="truncate">
-              {store.type ? store.type.substring(0, 15) + "..." : "Select Mode"}
-            </span>
-          </SelectTrigger>
-          <SelectContent side="top" align="end" className="p-1 w-60">
-            <SelectItem value="Linear Sequence">Linear Sequence</SelectItem>
-            <SelectItem value="Specific Node">Specific Node</SelectItem>
-            <SelectItem value="Range Node">Range Node</SelectItem>
-            <SelectItem value="Simultaneous">Simultaneous</SelectItem>
-          </SelectContent>
-        </Select>
-        {store.type === "Specific Node" && (
-          <Select
-            onValueChange={(val) => val && store.setSelectnode(val)}
-            value={store.selectnode ?? ""}
-            disabled={!store.type}
-          >
-            <SelectTrigger className="w-44">
-              <span className="truncate">
-                {store.selectnode ? store.selectnode.substring(0, 15) + "..." : "Select Agent Node"}
-              </span>
-            </SelectTrigger>
-            <SelectContent className="p-1 w-60">
-              {agents.map((n: any) => (
-                <SelectItem key={n.id} value={n.name}>
-                  {n.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        {store.type === "Range Node" &&
-          (agents.length > 1 ? (
-            <div className="flex gap-2">
-              <Select
-                onValueChange={(val) => val && store.setFirstnode(val)}
-                value={store.firstnode ?? ""}
-                disabled={!store.type}
-              >
-                <SelectTrigger className="w-44">
-                  <span className="truncate">
-                    {store.firstnode ? store.firstnode.substring(0, 15) + "..." : "First Node"}
-                  </span>
-                </SelectTrigger>
-                <SelectContent className="p-1 w-60">
-                  {agents.map((n: any) => (
-                    <SelectItem key={n.id} value={n.name}>
-                      {n.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                onValueChange={(val) => val && store.setLastnode(val)}
-                value={store.lastnode ?? ""}
-                disabled={!store.type}
-              >
-                <SelectTrigger className="w-44">
-                  <span className="truncate">
-                    {store.lastnode ? store.lastnode.substring(0, 15) + "..." : "Last Node"}
-                  </span>
-                </SelectTrigger>
-                <SelectContent className="p-1 w-60">
-                  {agents.map((n: any) => (
-                    <SelectItem key={n.id} value={n.name}>
-                      {n.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ) : (
-            <span className="text-sm text-red-400">Add at least two nodes.</span>
-          ))}
-      </div>
       <div className="bg-card rounded-2xl border p-3 shadow-lg">
         <div className="relative flex flex-col">
           <Textarea
@@ -305,28 +245,158 @@ export const AgentInput = () => {
                     <Settings size={14} />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-100 sm:w-135">
-                  <SheetHeader>
+                <SheetContent side="right" className="w-100 sm:w-135 overflow-y-auto">
+                  <SheetHeader className="px-5 pt-5">
                     <SheetTitle>Services</SheetTitle>
                     <SheetDescription>
                       Configure external services for your MultiAgents.
                     </SheetDescription>
                   </SheetHeader>
-                  <div className="mt-4 text-sm text-muted-foreground">
-                    {Api.length === 0 ? (
-                      <p>No services configured. Add API keys in Settings to enable services.</p>
-                    ) : (
-                      <ul className="space-y-2">
-                        {Api.map((s: any) => (
-                          <li
-                            key={s.provider}
-                            className="flex items-center gap-2 p-2 rounded-lg border"
-                          >
-                            <span className="font-medium">{s.provider}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+
+                  <div className="px-5 mt-6 space-y-6">
+                    {/* ── Integrations ── */}
+                    <div>
+                      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                        Integrations
+                      </h3>
+                      <div className="rounded-lg border p-3">
+                        {/* Email */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                              <Mail className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium">Email (SMTP)</p>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {loadingEmail
+                                  ? "Checking..."
+                                  : emailCreds?.exists
+                                    ? `Connected: ${emailCreds.data?.smtp_user}`
+                                    : "Not configured"}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {emailCreds?.exists ? (
+                              <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                            ) : (
+                              <XCircle className="w-4 h-4 text-muted-foreground shrink-0" />
+                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowEmailForm(!showEmailForm)}
+                              className="whitespace-nowrap"
+                            >
+                              {emailCreds?.exists ? "Edit" : "Configure"}
+                            </Button>
+                            {emailCreds?.exists && (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={async () => {
+                                  try {
+                                    await removeEmailCreds.mutateAsync();
+                                    toast.success("Email credentials removed.");
+                                    setShowEmailForm(false);
+                                  } catch {
+                                    toast.error("Failed to remove email credentials.");
+                                  }
+                                }}
+                                disabled={removeEmailCreds.isPending}
+                                className="whitespace-nowrap"
+                              >
+                                {removeEmailCreds.isPending ? <Spinner /> : "Disconnect"}
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Email form */}
+                        {showEmailForm && (
+                          <div className="mt-4 space-y-3 border-t pt-4">
+                            <div className="grid grid-cols-3 gap-3">
+                              <div className="col-span-2 flex flex-col gap-1">
+                                <Label className="text-xs">SMTP Host</Label>
+                                <Input
+                                  placeholder="smtp.gmail.com"
+                                  value={emailHost}
+                                  onChange={(e) => setEmailHost(e.target.value)}
+                                  className="h-9 text-sm"
+                                />
+                              </div>
+                              <div className="flex flex-col gap-1">
+                                <Label className="text-xs">Port</Label>
+                                <Input
+                                  placeholder="587"
+                                  value={emailPort}
+                                  onChange={(e) => setEmailPort(e.target.value)}
+                                  className="h-9 text-sm"
+                                />
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <Label className="text-xs">Email / Username</Label>
+                              <Input
+                                placeholder="user@gmail.com"
+                                value={emailUser}
+                                onChange={(e) => setEmailUser(e.target.value)}
+                                className="h-9 text-sm"
+                              />
+                            </div>
+                            <div className="flex flex-col gap-1">
+                              <Label className="text-xs">Password</Label>
+                              <div className="relative">
+                                <Input
+                                  type={showEmailPass ? "text" : "password"}
+                                  placeholder="App password"
+                                  value={emailPass}
+                                  onChange={(e) => setEmailPass(e.target.value)}
+                                  className="h-9 text-sm pr-9"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowEmailPass(!showEmailPass)}
+                                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                >
+                                  {showEmailPass ? (
+                                    <EyeOff className="w-4 h-4" />
+                                  ) : (
+                                    <Eye className="w-4 h-4" />
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="bg-cyan-500 dark:bg-white w-full"
+                              onClick={async () => {
+                                if (!emailHost || !emailPort || !emailUser || !emailPass) {
+                                  toast.error("All fields are required.");
+                                  return;
+                                }
+                                try {
+                                  await saveEmailCreds.mutateAsync({
+                                    smtp_host: emailHost,
+                                    smtp_port: parseInt(emailPort, 10) || 587,
+                                    smtp_user: emailUser,
+                                    smtp_pass: emailPass,
+                                  });
+                                  toast.success("Email credentials saved.");
+                                  setShowEmailForm(false);
+                                } catch {
+                                  toast.error("Failed to save email credentials.");
+                                }
+                              }}
+                              disabled={saveEmailCreds.isPending}
+                            >
+                              {saveEmailCreds.isPending ? <Spinner /> : "Save"}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </SheetContent>
               </Sheet>
@@ -359,14 +429,6 @@ export const AgentInput = () => {
                   </div>
                 </SheetContent>
               </Sheet>
-              {store.type === "Specific Node" && store.selectnode && (
-                <div className="inline-flex gap-2 items-center p-1.5 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20">
-                  <span className="text-sm flex items-center gap-2">
-                    {store.selectnode}
-                    <BotIcon size={18} />
-                  </span>
-                </div>
-              )}
             </div>
             <div className="flex gap-2 justify-end items-center">
               <Button
@@ -388,8 +450,7 @@ export const AgentInput = () => {
                 size="icon"
                 disabled={
                   !store.workflowloading &&
-                  (!store.type ||
-                    !store.input ||
+                  (!store.input ||
                     agents.length === 0 ||
                     store.messageloading ||
                     loadingrecord ||
@@ -414,3 +475,42 @@ export const AgentInput = () => {
     </div>
   );
 };
+
+/* ── Topological sort — determines execution order from edges ── */
+function topologicalSort(
+  nodeNames: string[],
+  edges: { source: string; target: string }[],
+): string[] {
+  const adj = new Map<string, string[]>();
+  const inDeg = new Map<string, number>();
+
+  for (const name of nodeNames) {
+    adj.set(name, []);
+    inDeg.set(name, 0);
+  }
+
+  for (const edge of edges) {
+    if (adj.has(edge.source)) {
+      adj.get(edge.source)!.push(edge.target);
+    }
+    inDeg.set(edge.target, (inDeg.get(edge.target) || 0) + 1);
+  }
+
+  const queue: string[] = [];
+  for (const [name, deg] of inDeg) {
+    if (deg === 0) queue.push(name);
+  }
+
+  const result: string[] = [];
+  while (queue.length > 0) {
+    const node = queue.shift()!;
+    result.push(node);
+    for (const neighbor of adj.get(node) || []) {
+      const newDeg = (inDeg.get(neighbor) || 1) - 1;
+      inDeg.set(neighbor, newDeg);
+      if (newDeg === 0) queue.push(neighbor);
+    }
+  }
+
+  return result;
+}

@@ -36,6 +36,8 @@ export type returnnodefeedback = ApiResponse;
 export type returnnodedata = ApiResponse<nodedata[]>;
 export type returnagentmessagedata = ApiResponse<agentpaginatedMessages>;
 export type returnagentmessagefeedback = ApiResponse;
+export type returnedgedata = ApiResponse<FlowEdgeData[]>;
+export type returnedgefeedback = ApiResponse;
 
 export interface createAgent {
   //Data
@@ -79,6 +81,12 @@ export interface createAgent {
     model?: string,
   ) => Promise<returnagentmessagefeedback>;
   resetagentmessages: () => Promise<returnagentmessagefeedback>;
+}
+
+export interface FlowEdgeData {
+  id: string;
+  source: string;
+  target: string;
 }
 
 export interface AgentClientState {
@@ -181,6 +189,13 @@ export interface AgentClientState {
   setRecordstatus: (v: boolean) => void;
   loadingrecord: boolean;
   setLoadingrecord: (v: boolean) => void;
+
+  /** React Flow edges — defines execution order between agent nodes */
+  flowEdges: FlowEdgeData[];
+  setFlowEdges: (edges: FlowEdgeData[]) => void;
+  /** Persisted node positions for React Flow (keyed by node name) */
+  nodePositions: Record<string, { x: number; y: number }>;
+  setNodePositions: (positions: Record<string, { x: number; y: number }>) => void;
 
   resetForm: () => void;
   updateHistory: (updater: (prev: agentsession[]) => agentsession[]) => void;
