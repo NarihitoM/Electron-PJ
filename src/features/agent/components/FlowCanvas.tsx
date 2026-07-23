@@ -9,6 +9,7 @@ import {
   type Edge,
   type Connection,
   type NodeTypes,
+  type EdgeTypes,
   useNodesState,
   useEdgesState,
   addEdge,
@@ -24,13 +25,15 @@ import { useSaveAgentEdges } from "@/features/agent/hooks/useSaveAgentEdges";
 import { useSaveNodePositions } from "@/features/agent/hooks/useSaveNodePositions";
 import { useagentstore } from "../store/store";
 import AgentFlowNode, { type AgentFlowNodeData } from "./AgentFlowNode";
+import CustomEdge from "./CustomEdge";
 
-/* ─── Custom node type registration (stable reference) ─── */
+/* ─── Custom type registrations (stable references) ─── */
 const nodeTypes = { agentFlowNode: AgentFlowNode } as unknown as NodeTypes;
+const edgeTypes = { custom: CustomEdge } as unknown as EdgeTypes;
 
 /* ─── Default edge config ─── */
 const defaultEdgeOptions = {
-  type: "smoothstep",
+  type: "custom",
   animated: true,
   style: { stroke: "#06b6d4", strokeWidth: 2 },
   markerEnd: { type: MarkerType.ArrowClosed, color: "#06b6d4" },
@@ -73,6 +76,7 @@ export const FlowCanvas = () => {
   const { mutate: savePositionsToBackend } = useSaveNodePositions();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const posDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevEdgeCountRef = useRef<number>(0);
 
   /* ── Sync DB nodes into store on every fetch, and populate positions ── */
   const nodesRef = useRef<string>("");
@@ -182,11 +186,10 @@ export const FlowCanvas = () => {
           id: `e-${connection.source}-${connection.target}`,
           source: connection.source!,
           target: connection.target!,
-          type: "smoothstep",
+          type: "custom",
           animated: true,
           style: { stroke: "#06b6d4", strokeWidth: 2 },
           markerEnd: { type: MarkerType.ArrowClosed, color: "#06b6d4" },
-          interactionWidth: 20,
         };
         const updated: Edge[] = addEdge(newEdge, eds);
         setFlowEdges(updated.map((e) => ({ id: e.id, source: e.source, target: e.target })));
@@ -215,11 +218,10 @@ export const FlowCanvas = () => {
         id: e.id || `e-${e.source}-${e.target}`,
         source: e.source,
         target: e.target,
-        type: "smoothstep",
+        type: "custom",
         animated: true,
         style: { stroke: "#06b6d4", strokeWidth: 2 },
         markerEnd: { type: MarkerType.ArrowClosed, color: "#06b6d4" },
-        interactionWidth: 20,
       })),
     );
   }, [fetchedEdges, setEdges]);
@@ -228,16 +230,29 @@ export const FlowCanvas = () => {
   /* Listens to store.flowEdges (which mirrors edges via the effect above) */
   const latestFlowEdges = useagentstore((s) => s.flowEdges);
   useEffect(() => {
-    /* Skip the initial empty state and the first load (handled by sync above) */
-    if (latestFlowEdges.length === 0 && !debounceRef.current) return;
+    const edgeData = latestFlowEdges.map((e) => ({ source: e.source, target: e.target }));
+    const prevCount = prevEdgeCountRef.current;
+    const currCount = latestFlowEdges.length;
+    prevEdgeCountRef.current = currCount;
 
+    /* Edge was deleted — save immediately so DB stays in sync */
+    if (currCount < prevCount) {
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        debounceRef.current = null;
+      }
+      saveEdgesToBackend(edgeData);
+      return;
+    }
+
+    /* Edge added or reordered — debounce at 500 ms */
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
     debounceRef.current = setTimeout(() => {
-      saveEdgesToBackend(latestFlowEdges.map((e) => ({ source: e.source, target: e.target })));
+      saveEdgesToBackend(edgeData);
       debounceRef.current = null;
-    }, 1500);
+    }, 500);
 
     return () => {
       if (debounceRef.current) {
@@ -277,7 +292,7 @@ export const FlowCanvas = () => {
           savePositionsToBackend(positions);
         }
         posDebounceRef.current = null;
-      }, 1500);
+      }, 500);
     },
     [setNodePositions, savePositionsToBackend],
   );
@@ -339,7 +354,7 @@ export const FlowCanvas = () => {
   /* ── Canvas ── */
   return (
     <div className="w-full h-[60vh] min-h-100 rounded-xl border bg-card/50">
-      {/* Edge selection styles */}
+      {/* Edge selection styles + dark-mode controls + hide branding */}
       <style>{`
         .react-flow__edge.selected .react-flow__edge-path {
           stroke: #22d3ee !important;
@@ -352,6 +367,33 @@ export const FlowCanvas = () => {
         .react-flow__edge-path {
           cursor: pointer;
         }
+
+        /* Controls (+ / - buttons) — dark-mode friendly */
+        .react-flow__controls {
+          background: transparent !important;
+          border: none !important;
+          box-shadow: none !important;
+        }
+        .react-flow__controls button {
+          background: var(--card) !important;
+          border: 1px solid var(--border) !important;
+          color: var(--foreground) !important;
+          fill: var(--foreground) !important;
+          width: 32px !important;
+          height: 32px !important;
+        }
+        .react-flow__controls button:hover {
+          background: var(--muted) !important;
+        }
+        .react-flow__controls button svg {
+          fill: var(--foreground) !important;
+          color: var(--foreground) !important;
+        }
+
+        /* Hide ReactFlow branding / attribution link */
+        .react-flow__attribution {
+          display: none !important;
+        }
       `}</style>
       <ReactFlow
         nodes={nodes}
@@ -361,6 +403,7 @@ export const FlowCanvas = () => {
         onConnect={onConnect}
         onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
         fitView
         fitViewOptions={{ padding: 0.3 }}
@@ -371,7 +414,7 @@ export const FlowCanvas = () => {
         multiSelectionKeyCode="Shift"
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#4b5563" />
-        <Controls showInteractive={false} className="bg-background! border-border!" />
+        <Controls showInteractive={false} />
         <MiniMap
           nodeStrokeColor="#06b6d4"
           nodeColor={(n) => {

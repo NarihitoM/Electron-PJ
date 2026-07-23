@@ -81,6 +81,7 @@ export const AgentInput = () => {
     store.setWorkflowloading(true);
     store.setMessageloading(true);
     store.setHistory([]);
+    store.setLoopIteration({ current: 0, max: 0 });
     store.setNodes((prev) =>
       prev.map((n: any) => ({
         ...n,
@@ -102,9 +103,15 @@ export const AgentInput = () => {
 
     // ── Compute execution order from React Flow edges ──
     const hasEdges = store.flowEdges.length > 0;
+    const isLoop =
+      hasEdges &&
+      hasCycle(
+        agents.map((n) => n.name),
+        store.flowEdges,
+      );
     let runningNodes: typeof agents;
 
-    if (hasEdges) {
+    if (hasEdges && !isLoop) {
       // Topological sort: determine execution order from edge direction
       const sorted = topologicalSort(
         agents.map((n) => n.name),
@@ -114,7 +121,7 @@ export const AgentInput = () => {
         .map((name) => agents.find((n) => n.name === name))
         .filter(Boolean) as typeof agents;
     } else {
-      // No edges = all nodes run simultaneously
+      // No edges or loop = all nodes run simultaneously / continuous
       runningNodes = agents;
     }
 
@@ -126,7 +133,8 @@ export const AgentInput = () => {
       nodes: runningNodes,
       encryptkey: Api,
       useremail,
-      simultaneous: !hasEdges,
+      simultaneous: !hasEdges || isLoop,
+      continuous: isLoop,
     });
     store.setInput("");
   };
@@ -136,6 +144,7 @@ export const AgentInput = () => {
     window.ipcRenderer.send("cancel-workflow");
     store.setWorkflowloading(false);
     store.setMessageloading(false);
+    store.setLoopIteration({ current: 0, max: 0 });
     store.workflowGenRef.current++;
     store.setNodes((prev) =>
       prev.map((n: any) => ({ ...n, status: "idle" as const, activeTool: null })),
@@ -237,6 +246,24 @@ export const AgentInput = () => {
             }
             className="border-none max-h-50 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
           />
+          {/* ── Recording / Working indicator ── */}
+          {store.workflowloading && (
+            <div className="flex items-center gap-2 px-1 py-1">
+              <button
+                onClick={onAbortWorkflow}
+                className="group flex items-center gap-2 rounded-full bg-red-500/10 dark:bg-red-500/15 border border-red-500/30 px-3 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+                title="Click to stop"
+              >
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+                </span>
+                {store.loopIteration.max > 0
+                  ? `Looping ${store.loopIteration.current}/${store.loopIteration.max} — Click to stop`
+                  : "Working — Click to stop"}
+              </button>
+            </div>
+          )}
           <div className="flex items-center justify-between gap-2 mt-2">
             <div className="flex items-center gap-2">
               <Sheet open={store.servicesOpen} onOpenChange={store.setServicesOpen}>
@@ -475,6 +502,40 @@ export const AgentInput = () => {
     </div>
   );
 };
+
+/* ── Cycle detection — checks if edges contain a cycle (loop) ── */
+function hasCycle(nodeNames: string[], edges: { source: string; target: string }[]): boolean {
+  const adj = new Map<string, string[]>();
+  const WHITE = 0,
+    GRAY = 1,
+    BLACK = 2;
+  const color = new Map<string, number>();
+
+  for (const name of nodeNames) {
+    adj.set(name, []);
+    color.set(name, WHITE);
+  }
+  for (const edge of edges) {
+    if (adj.has(edge.source)) {
+      adj.get(edge.source)!.push(edge.target);
+    }
+  }
+
+  const dfs = (node: string): boolean => {
+    color.set(node, GRAY);
+    for (const neighbor of adj.get(node) || []) {
+      if (color.get(neighbor) === GRAY) return true; // back edge = cycle
+      if (color.get(neighbor) === WHITE && dfs(neighbor)) return true;
+    }
+    color.set(node, BLACK);
+    return false;
+  };
+
+  for (const name of nodeNames) {
+    if (color.get(name) === WHITE && dfs(name)) return true;
+  }
+  return false;
+}
 
 /* ── Topological sort — determines execution order from edges ── */
 function topologicalSort(

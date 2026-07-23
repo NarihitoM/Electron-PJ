@@ -1,11 +1,12 @@
 ---
-description: 'Must-follow rules for creating and modifying shadcn/ui components in the MultimateAi codebase (base-nova style, @base-ui/react primitives, Tailwind v4).'
+description: "Must-follow rules for creating and modifying shadcn/ui components in the MultimateAi codebase (base-nova style, @base-ui/react primitives, Tailwind v4)."
 applyTo: "src/shared/components/ui/**"
 ---
 
 # UI Components — Rules
 
 ## Technology Stack
+
 - **Primitives**: `@base-ui/react` (not native HTML)
 - **Variants**: `class-variance-authority` (`cva`)
 - **Class merging**: `cn()` from `src/shared/lib/utils.ts` (clsx + tailwind-merge)
@@ -73,18 +74,19 @@ export { Component, componentVariants }
 
 ```typescript
 // Focus ring — always use this exact pattern
-"focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+"focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 // Disabled state
-"disabled:pointer-events-none disabled:opacity-50"
+"disabled:pointer-events-none disabled:opacity-50";
 
 // SVG sizing — include in any component that renders icons
-"[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+"[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 ```
 
 ## Dark Mode
 
 CSS variable-based colors switch automatically — **do not** add `dark:` prefixes for theme tokens:
+
 ```tsx
 // ✅ CORRECT — switches automatically
 <div className="bg-background text-foreground" />

@@ -27,5 +27,3 @@ jobs:
 
       - name: Prettier check
         run: npx prettier --check "src/**/*.{ts,tsx,json,css,md}"
-
-      

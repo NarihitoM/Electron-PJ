@@ -34,31 +34,31 @@ MultimateAi is a desktop application that orchestrates AI agents across multiple
 
 ### Supported AI Providers
 
-| Provider | Models |
-|----------|--------|
-| OpenAI | GPT-4o, GPT-4o-mini, GPT-4.1, o1, o3, o4-mini |
-| Anthropic | Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku |
-| Groq | Llama 3.3 70B, Mixtral 8x7B, Gemma 2 9B |
-| DeepSeek | DeepSeek Chat, DeepSeek Reasoner |
-| Mistral | Mistral Large, Mistral Small, Codestral |
-| Ollama | Any local model |
-| OpenRouter | All supported models |
+| Provider           | Models                                                          |
+| ------------------ | --------------------------------------------------------------- |
+| OpenAI             | GPT-4o, GPT-4o-mini, GPT-4.1, o1, o3, o4-mini                   |
+| Anthropic          | Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku                |
+| Groq               | Llama 3.3 70B, Mixtral 8x7B, Gemma 2 9B                         |
+| DeepSeek           | DeepSeek Chat, DeepSeek Reasoner                                |
+| Mistral            | Mistral Large, Mistral Small, Codestral                         |
+| Ollama             | Any local model                                                 |
+| OpenRouter         | All supported models                                            |
 | MultimateAi (Free) | DeepSeek V4 Flash, Mimo v2.5, Nemotron 3 Ultra, North Mini Code |
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| **Frontend** | React 18, TypeScript, Tailwind CSS 4 |
-| **Desktop** | Electron 30 |
-| **State** | Zustand (client), TanStack Query (server) |
+| Layer             | Technology                                      |
+| ----------------- | ----------------------------------------------- |
+| **Frontend**      | React 18, TypeScript, Tailwind CSS 4            |
+| **Desktop**       | Electron 30                                     |
+| **State**         | Zustand (client), TanStack Query (server)       |
 | **UI Components** | Radix UI, Lucide Icons, Framer Motion, Recharts |
-| **AI Framework** | LangChain.js, LangGraph |
-| **Build** | Vite 5, electron-builder |
-| **Routing** | React Router DOM 7 |
-| **Styling** | Tailwind CSS 4, tw-animate-css |
+| **AI Framework**  | LangChain.js, LangGraph                         |
+| **Build**         | Vite 5, electron-builder                        |
+| **Routing**       | React Router DOM 7                              |
+| **Styling**       | Tailwind CSS 4, tw-animate-css                  |
 
 ---
 
@@ -82,13 +82,13 @@ npm run dev
 
 ### Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start Vite dev server + Electron |
-| `npm run build` | Build for production (TSC + Vite + Electron Builder) |
-| `npm run deploy` | Build and publish release |
-| `npm run lint` | Run ESLint |
-| `npm run preview` | Preview production build |
+| Command           | Description                                          |
+| ----------------- | ---------------------------------------------------- |
+| `npm run dev`     | Start Vite dev server + Electron                     |
+| `npm run build`   | Build for production (TSC + Vite + Electron Builder) |
+| `npm run deploy`  | Build and publish release                            |
+| `npm run lint`    | Run ESLint                                           |
+| `npm run preview` | Preview production build                             |
 
 ---
 

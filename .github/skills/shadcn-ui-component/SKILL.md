@@ -1,36 +1,37 @@
 ---
 name: shadcn-ui-component
-description: 'Create or modify shadcn/ui components in the MultimateAi codebase (base-nova style, @base-ui/react primitives, Tailwind v4). Use when: building a new UI primitive, adding variants to existing components, or fixing styling inconsistencies.'
+description: "Create or modify shadcn/ui components in the MultimateAi codebase (base-nova style, @base-ui/react primitives, Tailwind v4). Use when: building a new UI primitive, adding variants to existing components, or fixing styling inconsistencies."
 user-invocable: true
 ---
 
 # shadcn/ui Component Creation
 
 ## When to Use
+
 - Adding a new reusable UI component to `src/shared/components/ui/`
 - Extending an existing component with new variants
 - Understanding the cva + cn + Tailwind v4 pattern
 
 ## Technology Stack
 
-| Tool | Usage |
-|------|-------|
-| `@base-ui/react` | Primitives (Button, Dialog, Select, etc.) |
-| `class-variance-authority` | Component variant definitions |
-| `clsx` + `tailwind-merge` | Class merging via `cn()` helper |
-| Tailwind CSS v4 | Utility-first styling |
-| `lucide-react` | Icons |
+| Tool                       | Usage                                     |
+| -------------------------- | ----------------------------------------- |
+| `@base-ui/react`           | Primitives (Button, Dialog, Select, etc.) |
+| `class-variance-authority` | Component variant definitions             |
+| `clsx` + `tailwind-merge`  | Class merging via `cn()` helper           |
+| Tailwind CSS v4            | Utility-first styling                     |
+| `lucide-react`             | Icons                                     |
 
 ## cn() Utility
 
 Defined in `src/shared/lib/utils.ts`:
 
 ```typescript
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 ```
 
@@ -89,7 +90,9 @@ export { Component, componentVariants }
 This codebase uses **Tailwind CSS v4** (not v3). Key differences:
 
 ### Theme Variables
+
 Defined in `src/index.css` using `@theme inline`:
+
 ```css
 @theme inline {
   --color-primary: var(--primary);
@@ -101,24 +104,29 @@ Defined in `src/index.css` using `@theme inline`:
 Refer to theme variables as `bg-primary`, `text-primary-foreground`, `rounded-sm`.
 
 ### Dark Mode
+
 ```css
 @custom-variant dark (&:is(.dark *));
 ```
+
 Use `.dark` class-based dark mode. Components don't need `dark:` prefixes for CSS variables — they switch automatically. Use `dark:` only for hardcoded values like `dark:border-white/10`.
 
 ### Focus Ring Pattern
+
 ```typescript
-"focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+"focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 ```
 
 ### Disabled State
+
 ```typescript
-"disabled:pointer-events-none disabled:opacity-50"
+"disabled:pointer-events-none disabled:opacity-50";
 ```
 
 ### SVG Sizing
+
 ```typescript
-"[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
+"[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4";
 ```
 
 ## Component Checklist
@@ -135,6 +143,7 @@ When creating a new component:
 ## Component Location
 
 All UI primitives go in `src/shared/components/ui/`:
+
 ```
 src/shared/components/ui/
 ├── button.tsx

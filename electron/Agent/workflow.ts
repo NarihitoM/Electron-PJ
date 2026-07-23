@@ -124,6 +124,8 @@ const runDeepAgentWithEvents = async (
   return { finalState };
 };
 
+const MAX_CONTINUOUS_ITERATIONS = 10;
+
 export const runAgentOrchestration = async (
   event: any,
   nodes: nodes[],
@@ -135,6 +137,7 @@ export const runAgentOrchestration = async (
   simultaneous?: boolean,
   initialMessages?: { role: string; content: string }[],
   memoryContext?: string,
+  continuous?: boolean,
 ): Promise<{ messages: any[]; usageData: NodeUsage[] }> => {
   const keyMap: Record<string, string> = {};
   const hostMap: Record<string, string> = {};
@@ -187,77 +190,105 @@ export const runAgentOrchestration = async (
   );
   const usageData: NodeUsage[] = [];
 
-  if (simultaneous) {
-    const results = await Promise.allSettled(
-      agents.map((agent, i) =>
-        runDeepAgentWithEvents(
-          agent,
-          messages,
-          config,
-          event,
-          activenode[i].name,
-          controller,
-          requestApproval,
+  const runAllNodesOnce = async (
+    iterationMsgs: any[],
+  ): Promise<{ msgs: any[]; usage: NodeUsage[] }> => {
+    const iterUsage: NodeUsage[] = [];
+    let iterMsgs = [...iterationMsgs];
+
+    if (simultaneous) {
+      const results = await Promise.allSettled(
+        agents.map((agent, i) =>
+          runDeepAgentWithEvents(
+            agent,
+            iterMsgs,
+            config,
+            event,
+            activenode[i].name,
+            controller,
+            requestApproval,
+          ),
         ),
-      ),
-    );
-    for (let i = 0; i < results.length; i++) {
-      const result = results[i];
-      if (result.status === "rejected") {
-        const msg = result.reason instanceof Error ? result.reason.message : String(result.reason);
-        console.error(`Node "${activenode[i].name}" failed:`, msg);
-        event.reply("node-finished", { nodeName: activenode[i].name });
-        continue;
-      }
-      const { finalState } = result.value;
-      if (finalState?.values?.messages) {
-        messages = messages.concat(finalState.values.messages);
-      }
-      const { inputTokens, outputTokens } = extractTokenUsage(finalState);
-      usageData.push({
-        nodeName: activenode[i].name,
-        agent: activenode[i].name,
-        provider: activenode[i].provider,
-        model: activenode[i].model,
-        inputTokens,
-        outputTokens,
-        latencyMs: 0,
-      });
-    }
-  } else {
-    for (let i = 0; i < agents.length; i++) {
-      if (controller.signal.aborted) break;
-      const nodeStart = Date.now();
-      try {
-        const { finalState } = await runDeepAgentWithEvents(
-          agents[i],
-          messages,
-          config,
-          event,
-          activenode[i].name,
-          controller,
-          requestApproval,
-        );
+      );
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        if (result.status === "rejected") {
+          const msg =
+            result.reason instanceof Error ? result.reason.message : String(result.reason);
+          console.error(`Node "${activenode[i].name}" failed:`, msg);
+          event.reply("node-finished", { nodeName: activenode[i].name });
+          continue;
+        }
+        const { finalState } = result.value;
         if (finalState?.values?.messages) {
-          messages = finalState.values.messages;
+          iterMsgs = iterMsgs.concat(finalState.values.messages);
         }
         const { inputTokens, outputTokens } = extractTokenUsage(finalState);
-        usageData.push({
+        iterUsage.push({
           nodeName: activenode[i].name,
           agent: activenode[i].name,
           provider: activenode[i].provider,
           model: activenode[i].model,
           inputTokens,
           outputTokens,
-          latencyMs: Date.now() - nodeStart,
+          latencyMs: 0,
         });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        console.error(`Node "${activenode[i].name}" failed:`, msg);
-        event.reply("node-finished", { nodeName: activenode[i].name });
-        throw err;
+      }
+    } else {
+      for (let i = 0; i < agents.length; i++) {
+        if (controller.signal.aborted) break;
+        const nodeStart = Date.now();
+        try {
+          const { finalState } = await runDeepAgentWithEvents(
+            agents[i],
+            iterMsgs,
+            config,
+            event,
+            activenode[i].name,
+            controller,
+            requestApproval,
+          );
+          if (finalState?.values?.messages) {
+            iterMsgs = finalState.values.messages;
+          }
+          const { inputTokens, outputTokens } = extractTokenUsage(finalState);
+          iterUsage.push({
+            nodeName: activenode[i].name,
+            agent: activenode[i].name,
+            provider: activenode[i].provider,
+            model: activenode[i].model,
+            inputTokens,
+            outputTokens,
+            latencyMs: Date.now() - nodeStart,
+          });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          console.error(`Node "${activenode[i].name}" failed:`, msg);
+          event.reply("node-finished", { nodeName: activenode[i].name });
+          throw err;
+        }
       }
     }
+
+    return { msgs: iterMsgs, usage: iterUsage };
+  };
+
+  if (continuous) {
+    // Continuous loop mode: re-run all agents repeatedly until user aborts or max iterations
+    for (let iteration = 0; iteration < MAX_CONTINUOUS_ITERATIONS; iteration++) {
+      if (controller.signal.aborted) break;
+      console.log(`Continuous loop iteration ${iteration + 1}/${MAX_CONTINUOUS_ITERATIONS}`);
+      event.reply("loop-iteration", { iteration: iteration + 1, max: MAX_CONTINUOUS_ITERATIONS });
+
+      const { msgs, usage } = await runAllNodesOnce(messages);
+      messages = msgs;
+      usageData.push(...usage);
+    }
+    console.log("Continuous loop finished");
+  } else {
+    const { msgs, usage } = await runAllNodesOnce(messages);
+    messages = msgs;
+    usageData.push(...usage);
   }
 
   return { messages, usageData };

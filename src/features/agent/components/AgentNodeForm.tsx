@@ -9,7 +9,6 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { ChevronsUpDown, Plus, Search } from "lucide-react";
@@ -171,38 +170,56 @@ export const AgentNodeForm = () => {
               <div className="flex-1 flex flex-col gap-1">
                 <Label htmlFor="provider">Provider</Label>
                 <div className="flex items-center gap-2">
-                  <Select
-                    onValueChange={(value) => {
-                      store.setProvider(value ?? "");
-                      store.setModel("");
-                    }}
-                    value={store.provider}
-                  >
-                    <SelectTrigger>
+                  <div className="relative flex-1 overflow-visible">
+                    <Button
+                      variant="outline"
+                      onClick={() => store.setProviderOpen(!store.providerOpen)}
+                      className="w-full justify-between"
+                    >
                       {store.provider ? (
-                        <>
+                        <div className="flex items-center gap-2">
                           <img
                             src={BRAND_ASSETS[store.provider.toLowerCase()]}
                             className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
                           />
-                          <span>{getProviderDisplayName(store.provider)}</span>
-                        </>
+                          <span className="truncate">{getProviderDisplayName(store.provider)}</span>
+                        </div>
                       ) : (
-                        "Select Provider"
+                        <span className="text-muted-foreground">Select Provider</span>
                       )}
-                    </SelectTrigger>
-                    <SelectContent>
-                      {apiWithLogos.map((item: any) => (
-                        <SelectItem key={item.provider} value={item.provider}>
-                          <img
-                            src={item.imageUrl}
-                            className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
-                          />
-                          <span>{getProviderDisplayName(item.provider)}</span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                    {store.providerOpen && (
+                      <div className="absolute left-0 right-0 bottom-full mb-1 z-100 min-w-full rounded-lg border bg-popover text-popover-foreground shadow-md">
+                        <div className="max-h-60 overflow-y-auto p-1">
+                          {apiWithLogos.length === 0 ? (
+                            <div className="px-3 py-2 text-sm text-muted-foreground">
+                              No providers available.
+                            </div>
+                          ) : (
+                            apiWithLogos.map((item: any) => (
+                              <button
+                                key={item.provider}
+                                type="button"
+                                onClick={() => {
+                                  store.setProvider(item.provider);
+                                  store.setProviderOpen(false);
+                                  store.setModel("");
+                                }}
+                                className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
+                              >
+                                <img
+                                  src={item.imageUrl}
+                                  className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
+                                />
+                                <span>{getProviderDisplayName(item.provider)}</span>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <Button
                     variant="outline"
                     size="icon"
@@ -237,7 +254,7 @@ export const AgentNodeForm = () => {
                         />
                       </div>
                       <div className="max-h-60 overflow-y-auto p-1">
-                        {Object.entries(ToolLabels).filter(([_, label]) =>
+                        {Object.entries(ToolLabels).filter(([, label]) =>
                           label.toLowerCase().includes(toolSearch.toLowerCase()),
                         ).length === 0 ? (
                           <p className="py-6 text-center text-sm text-muted-foreground">
@@ -245,7 +262,7 @@ export const AgentNodeForm = () => {
                           </p>
                         ) : (
                           Object.entries(ToolLabels)
-                            .filter(([_, label]) =>
+                            .filter(([, label]) =>
                               label.toLowerCase().includes(toolSearch.toLowerCase()),
                             )
                             .map(([key, label]) => (

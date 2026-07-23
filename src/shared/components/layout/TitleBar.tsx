@@ -25,9 +25,7 @@ export function TitleBar() {
       .then((m: boolean) => setMaximized(m))
       .catch(() => {});
 
-    const cleanup = (window as any).api?.onMaximizedChanged?.((m: boolean) =>
-      setMaximized(m),
-    );
+    const cleanup = (window as any).api?.onMaximizedChanged?.((m: boolean) => setMaximized(m));
     return () => cleanup?.();
   }, []);
 
@@ -56,11 +54,7 @@ export function TitleBar() {
           className="flex h-7 w-7 items-center justify-center rounded text-white/60 hover:bg-white/10 hover:text-white transition-colors"
           aria-label={maximized ? "Restore" : "Maximize"}
         >
-          {maximized ? (
-            <RestoreIcon className="h-3.5 w-3.5" />
-          ) : (
-            <Square className="h-3.5 w-3.5" />
-          )}
+          {maximized ? <RestoreIcon className="h-3.5 w-3.5" /> : <Square className="h-3.5 w-3.5" />}
         </button>
         <button
           type="button"

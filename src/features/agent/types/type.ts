@@ -113,6 +113,8 @@ export interface AgentClientState {
   setMessageloading: (v: boolean) => void;
   workflowloading: boolean;
   setWorkflowloading: (v: boolean) => void;
+  loopIteration: { current: number; max: number };
+  setLoopIteration: (v: { current: number; max: number }) => void;
 
   history: agentsession[];
   setHistory: (v: agentsession[]) => void;
@@ -151,6 +153,8 @@ export interface AgentClientState {
   setTool: (v: string | null) => void;
   toolOpen: boolean;
   setToolOpen: (v: boolean) => void;
+  providerOpen: boolean;
+  setProviderOpen: (v: boolean) => void;
   modelOpen: boolean;
   setModelOpen: (v: boolean) => void;
 

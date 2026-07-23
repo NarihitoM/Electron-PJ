@@ -1,25 +1,22 @@
 {
-  "appId": "multimateai.com",
-  "productName": "MultimateAI",
-  "directories": {
-    "output": "release/${version}"
+  appId: "multimateai.com",
+  productName: "MultimateAI",
+  directories: {
+    output: "release/${version}",
   },
-  "publish": [
+  publish: [
     {
-      "provider": "github",
-      "owner": "NarihitoM",
-      "repo": "MultimateAi"
+      provider: "github",
+      owner: "NarihitoM",
+      repo: "MultimateAi",
     },
     {
-      "provider": "generic",
-      "url": "https://example.com" 
-    }
+      provider: "generic",
+      url: "https://example.com",
+    },
   ],
-  "extraResources": [
-  ],
-  "win": {
-    "target": [
-      "nsis"
-    ]
-  }
+  extraResources: [],
+  win: {
+    target: ["nsis"],
+  },
 }

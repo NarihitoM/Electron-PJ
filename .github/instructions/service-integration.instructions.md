@@ -1,5 +1,5 @@
 ---
-description: 'Use when adding or modifying a service integration feature (Slack, Telegram, Notion, Google, n8n, etc.). Covers the complete file structure, API pattern, chat UI, store, hooks, and routing setup.'
+description: "Use when adding or modifying a service integration feature (Slack, Telegram, Notion, Google, n8n, etc.). Covers the complete file structure, API pattern, chat UI, store, hooks, and routing setup."
 applyTo: "src/features/**"
 ---
 
@@ -27,22 +27,22 @@ Use Axios with JWT interceptor (auto-attaches Bearer token). Use native `fetch` 
 
 ```typescript
 // Standard REST calls — uses preconfigured axios instance
-import { axiosInstance } from '@/shared/config/axioconfig'
+import { axiosInstance } from "@/shared/config/axioconfig";
 
 export const myserviceauth = {
   connect: async (apiKey: string) => {
-    const response = await axiosInstance.post('/api/myservice/connect', { apiKey })
-    return response.data
+    const response = await axiosInstance.post("/api/myservice/connect", { apiKey });
+    return response.data;
   },
   fetchConfig: async () => {
-    const response = await axiosInstance.get('/api/myservice/config')
-    return response.data
+    const response = await axiosInstance.get("/api/myservice/config");
+    return response.data;
   },
   disconnect: async () => {
-    const response = await axiosInstance.delete('/api/myservice/disconnect')
-    return response.data
+    const response = await axiosInstance.delete("/api/myservice/disconnect");
+    return response.data;
   },
-}
+};
 ```
 
 For **streaming chat**, use the `fetchconfig` from `@/shared/config/fetchconfig` — read NDJSON lines with typed events:
@@ -89,36 +89,36 @@ export const myserviceauth = {
 ### 2. Create the Zustand store (`store/store.ts`)
 
 ```typescript
-import { create } from 'zustand'
+import { create } from "zustand";
 
 interface ServiceState {
-  provider: string
-  model: string
-  input: string
-  sending: boolean
-  sessionmessage: any[]
+  provider: string;
+  model: string;
+  input: string;
+  sending: boolean;
+  sessionmessage: any[];
   // ... other state
-  setProvider: (provider: string) => void
-  setModel: (model: string) => void
-  setInput: (input: string) => void
-  setSending: (sending: boolean) => void
-  updateSessionMessages: (updater: (prev: any[]) => any[]) => void
+  setProvider: (provider: string) => void;
+  setModel: (model: string) => void;
+  setInput: (input: string) => void;
+  setSending: (sending: boolean) => void;
+  updateSessionMessages: (updater: (prev: any[]) => any[]) => void;
   // ... other setters
 }
 
 export const servicestore = create<ServiceState>((set) => ({
-  provider: '',
-  model: '',
-  input: '',
+  provider: "",
+  model: "",
+  input: "",
   sending: false,
   sessionmessage: [],
-  setProvider: (provider) => set({ provider, model: '' }),
+  setProvider: (provider) => set({ provider, model: "" }),
   setModel: (model) => set({ model }),
   setInput: (input) => set({ input }),
   setSending: (sending) => set({ sending }),
   updateSessionMessages: (updater) =>
     set((state) => ({ sessionmessage: updater(state.sessionmessage) })),
-}))
+}));
 ```
 
 ### 3. Create TanStack Query hooks (`hooks/`)
@@ -127,35 +127,35 @@ Two hooks minimum — one for fetching connection status, one for disconnect mut
 
 ```typescript
 // useMyServiceAccount.ts — connection status
-import { useQuery } from '@tanstack/react-query'
-import { myserviceauth } from '../api/api'
+import { useQuery } from "@tanstack/react-query";
+import { myserviceauth } from "../api/api";
 
 export const useMyServiceAccount = () => {
   return useQuery({
-    queryKey: ['myserviceconfig'],
+    queryKey: ["myserviceconfig"],
     queryFn: async () => {
-      const response = await myserviceauth.fetchConfig()
-      return response.success ? response.data : null
+      const response = await myserviceauth.fetchConfig();
+      return response.success ? response.data : null;
     },
     staleTime: 1000 * 60 * 10, // 10 min
     gcTime: 1000 * 60 * 10,
     retry: false,
-  })
-}
+  });
+};
 
 // useDisconnectMyService.ts — disconnect mutation
-import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { myserviceauth } from '../api/api'
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { myserviceauth } from "../api/api";
 
 export const useDisconnectMyService = () => {
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => myserviceauth.disconnect(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['myserviceconfig'] })
+      queryClient.invalidateQueries({ queryKey: ["myserviceconfig"] });
     },
-  })
-}
+  });
+};
 ```
 
 ### 4. Create the Chat component (`components/`)
@@ -175,10 +175,10 @@ Every service chat UI follows the same structure — reference `src/features/n8n
 ### 5. Create barrel exports (`index.ts`)
 
 ```typescript
-export { MyServiceChat } from './components/MyServiceChat'
-export * from './api/api'
-export * from './store/store'
-export * from './types/type'
+export { MyServiceChat } from "./components/MyServiceChat";
+export * from "./api/api";
+export * from "./store/store";
+export * from "./types/type";
 ```
 
 ### 6. Page + Route wiring

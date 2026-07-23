@@ -1,12 +1,13 @@
 ---
 name: tailwind-theming
-description: 'Work with Tailwind CSS v4 theming in the MultimateAi codebase. Use when: adding or modifying design tokens, working with CSS variables and oklch colors, configuring dark mode, adjusting the radius scale, or debugging styling issues.'
+description: "Work with Tailwind CSS v4 theming in the MultimateAi codebase. Use when: adding or modifying design tokens, working with CSS variables and oklch colors, configuring dark mode, adjusting the radius scale, or debugging styling issues."
 user-invocable: true
 ---
 
 # Tailwind CSS v4 Theming
 
 ## When to Use
+
 - Adding new design tokens (colors, spacing, radius)
 - Modifying the light or dark theme
 - Understanding the `oklch()` color system
@@ -26,7 +27,7 @@ All design tokens are defined in `src/index.css` using Tailwind v4's `@theme inl
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: 'Geist Variable', sans-serif;
+  --font-sans: "Geist Variable", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   /* ... all color tokens mapped to CSS variables ... */
@@ -105,6 +106,7 @@ oklch(0.577 0.245 27.325) → red (destructive)
 ### When to Use `dark:` Prefix
 
 CSS variable-based colors **do not need** `dark:` — they switch automatically:
+
 ```tsx
 // ✅ These work in both themes:
 <div className="bg-background text-foreground" />
@@ -114,6 +116,7 @@ CSS variable-based colors **do not need** `dark:` — they switch automatically:
 ```
 
 Use `dark:` only for **hardcoded values**:
+
 ```tsx
 // ✅ Needed — hardcoded values don't auto-switch:
 <div className="bg-white dark:bg-black" />
@@ -123,6 +126,7 @@ Use `dark:` only for **hardcoded values**:
 ## Custom Scrollbar
 
 The scrollbar thumb color is a plain CSS variable (not in `@theme`):
+
 ```css
 :root {
   --scroll-thumb: rgb(137, 214, 201); /* teal */
@@ -135,14 +139,17 @@ The scrollbar thumb color is a plain CSS variable (not in `@theme`):
 ## Debugging Tips
 
 ### Tailwind class not working?
+
 1. Check if the token is defined in `@theme inline` — only those are available as Tailwind utilities
 2. Check `index.css` for the `@theme inline` block
 3. Run `npm run dev` — Tailwind v4 uses the Vite plugin, no PostCSS config needed
 
 ### Color not changing in dark mode?
+
 Ensure the CSS variable is defined in both `:root` and `.dark` blocks. The `@theme inline` mapping is only done once — both themes must set the same variable names.
 
 ### Adding a new theme token
+
 1. Add the CSS variable in both `:root` and `.dark` in `src/index.css`
 2. Add the mapping in `@theme inline { --color-<name>: var(--<name>); }`
 3. Use as `<div className="bg-<name> text-<name>-foreground">`

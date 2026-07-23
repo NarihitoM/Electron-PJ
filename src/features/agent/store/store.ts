@@ -25,6 +25,8 @@ export const useagentstore = create<AgentClientState>((set, get) => ({
   setMessageloading: (messageloading) => set({ messageloading }),
   workflowloading: false,
   setWorkflowloading: (workflowloading) => set({ workflowloading }),
+  loopIteration: { current: 0, max: 0 },
+  setLoopIteration: (loopIteration) => set({ loopIteration }),
 
   history: [],
   setHistory: (history) => set({ history }),
@@ -63,6 +65,8 @@ export const useagentstore = create<AgentClientState>((set, get) => ({
   setTool: (tool) => set({ tool }),
   toolOpen: false,
   setToolOpen: (toolOpen) => set({ toolOpen }),
+  providerOpen: false,
+  setProviderOpen: (providerOpen) => set({ providerOpen }),
   modelOpen: false,
   setModelOpen: (modelOpen) => set({ modelOpen }),
 
@@ -112,6 +116,7 @@ export const useagentstore = create<AgentClientState>((set, get) => ({
       nodeDialogOpen: false,
       nodeDialogMode: "create",
       toolOpen: false,
+      providerOpen: false,
       modelOpen: false,
     }),
 

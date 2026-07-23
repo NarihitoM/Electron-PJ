@@ -89,6 +89,7 @@ export const AgentChat = () => {
         if (!isWorkflowStillRunning) {
           store.setWorkflowloading(false);
           store.setMessageloading(false);
+          store.setLoopIteration({ current: 0, max: 0 });
           queryClient.invalidateQueries({ queryKey: ["usage-stats"] });
           queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
           queryClient.invalidateQueries({ queryKey: ["key"] });
@@ -172,6 +173,7 @@ export const AgentChat = () => {
       const gen = store.workflowGenRef.current;
       store.setWorkflowloading(false);
       store.setMessageloading(false);
+      store.setLoopIteration({ current: 0, max: 0 });
       if (data?.message) {
         toast.error("Workflow Error", { description: data.message });
       }
@@ -198,6 +200,11 @@ export const AgentChat = () => {
     window.ipcRenderer.on("node-tool-finished", handleToolFinished);
     window.ipcRenderer.on("node-start", handleStart);
     window.ipcRenderer.on("node-finished", handleFinished);
+
+    const handleLoopIteration = (_: any, data: { iteration: number; max: number }) => {
+      store.setLoopIteration({ current: data.iteration, max: data.max });
+    };
+    window.ipcRenderer.on("loop-iteration", handleLoopIteration);
     window.ipcRenderer.on("node-error", handleError);
     window.ipcRenderer.on("tool-approval-request", handleToolApprovalRequest);
 
@@ -210,6 +217,7 @@ export const AgentChat = () => {
       window.ipcRenderer.removeAllListeners("node-finished");
       window.ipcRenderer.removeAllListeners("node-error");
       window.ipcRenderer.removeAllListeners("tool-approval-request");
+      window.ipcRenderer.removeAllListeners("loop-iteration");
     };
   }, []);
 

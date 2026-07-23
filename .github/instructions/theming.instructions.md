@@ -1,5 +1,5 @@
 ---
-description: 'Must-follow rules for working with Tailwind CSS v4 theming in the MultimateAi codebase. Covers @theme inline, CSS variables, oklch colors, dark mode, and adding new tokens.'
+description: "Must-follow rules for working with Tailwind CSS v4 theming in the MultimateAi codebase. Covers @theme inline, CSS variables, oklch colors, dark mode, and adding new tokens."
 applyTo: "src/**/*.css"
 ---
 
@@ -54,13 +54,13 @@ Always use `oklch()` — never HSL, RGB, or hex in theme variables.
 
 ## When to Use `dark:` Prefix
 
-| Scenario | Example | Prefix Needed? |
-|----------|---------|:---:|
-| Theme variable | `bg-background` | ❌ auto-switches |
-| Theme variable | `text-muted-foreground` | ❌ auto-switches |
-| Hardcoded value | `bg-white` | ✅ `dark:bg-black` |
-| Hardcoded border | `border-gray-200` | ✅ `dark:border-gray-700` |
-| Opacity modifier | `border-white/10` | ✅ only dark |
+| Scenario         | Example                 |      Prefix Needed?       |
+| ---------------- | ----------------------- | :-----------------------: |
+| Theme variable   | `bg-background`         |     ❌ auto-switches      |
+| Theme variable   | `text-muted-foreground` |     ❌ auto-switches      |
+| Hardcoded value  | `bg-white`              |    ✅ `dark:bg-black`     |
+| Hardcoded border | `border-gray-200`       | ✅ `dark:border-gray-700` |
+| Opacity modifier | `border-white/10`       |       ✅ only dark        |
 
 ## Adding a New Theme Token
 
