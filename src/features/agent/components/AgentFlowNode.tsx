@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { Bot, EllipsisVertical, PenBox, Trash } from "lucide-react";
 import {
   DropdownMenu,
@@ -13,14 +13,15 @@ import ThinkingBlock from "@/shared/components/ui/ThinkingBlock";
 import AiContent from "@/shared/components/layout/LayoutAiresponse";
 import { useagentstore } from "../store/store";
 
-export type AgentFlowNodeData = Record<string, unknown> & {
+export type AgentFlowNodeData = {
   /** The agent node name — used to look up full data from the store */
   nodeName: string;
   onUpdate: (name: string) => void;
   onDelete: (name: string) => void;
+  [key: string]: unknown;
 };
 
-const AgentFlowNode = memo(({ data }: NodeProps<AgentFlowNodeData>) => {
+const AgentFlowNode = memo(({ data }: NodeProps<Node<AgentFlowNodeData>>) => {
   // Read live agent data from the store so IPC updates flow through reactively
   const agentData = useagentstore((s) => s.nodes.find((n) => n.name === data.nodeName));
   // Fallback so the node still renders if the store hasn't synced yet

@@ -79,7 +79,6 @@ export default function CustomEdge(props: EdgeProps) {
             requiredExtensions="http://www.w3.org/1999/xhtml"
           >
             <div
-              xmlns="http://www.w3.org/1999/xhtml"
               onClick={onDelete}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium cursor-pointer shadow-lg transition-colors select-none w-fit"
             >
