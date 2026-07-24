@@ -1,10 +1,13 @@
 import { useState, useCallback } from "react";
 import { BaseEdge, getSmoothStepPath, type EdgeProps, useReactFlow } from "@xyflow/react";
-import { Trash } from "lucide-react";
+import { Plus, Trash } from "lucide-react";
+import { useagentstore } from "../store/store";
 
 export default function CustomEdge(props: EdgeProps) {
   const {
     id,
+    source,
+    target,
     sourceX,
     sourceY,
     targetX,
@@ -13,11 +16,16 @@ export default function CustomEdge(props: EdgeProps) {
     targetPosition,
     style,
     markerEnd,
+    selected,
   } = props;
   const { setEdges } = useReactFlow();
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
+  const setPendingEdgeInsert = useagentstore((s) => s.setPendingEdgeInsert);
+  const setNodeDialogMode = useagentstore((s) => s.setNodeDialogMode);
+  const resetForm = useagentstore((s) => s.resetForm);
+  const setNodeDialogOpen = useagentstore((s) => s.setNodeDialogOpen);
+  const [hovered, setHovered] = useState(false);
 
-  const [edgePath] = getSmoothStepPath({
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     targetX,
@@ -31,62 +39,75 @@ export default function CustomEdge(props: EdgeProps) {
     (e: React.MouseEvent) => {
       e.stopPropagation();
       setEdges((eds) => eds.filter((edge) => edge.id !== id));
-      setContextMenu(null);
     },
     [id, setEdges],
   );
 
+  const onInsert = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setPendingEdgeInsert({ edgeId: id, source, target });
+      resetForm();
+      setNodeDialogMode("create");
+      setNodeDialogOpen(true);
+    },
+    [id, source, target, setPendingEdgeInsert, resetForm, setNodeDialogMode, setNodeDialogOpen],
+  );
+
+  const active = hovered || selected;
+
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
+      <BaseEdge
+        path={edgePath}
+        markerEnd={markerEnd}
+        style={{
+          ...style,
+          stroke: active ? "#06b6d4" : "var(--edge-muted, #9ca3af)",
+          strokeWidth: active ? 2.5 : 1.5,
+        }}
+      />
 
-      {/* Invisible wide hit area for easy clicking */}
+      {/* Invisible wide hit area for hover + click */}
       <path
         d={edgePath}
         fill="none"
         stroke="transparent"
         strokeWidth={24}
         style={{ cursor: "pointer" }}
-        onClick={(e) => {
-          e.stopPropagation();
-          const svgRect = (e.target as SVGElement).closest("svg")?.getBoundingClientRect();
-          if (svgRect) {
-            setContextMenu({
-              x: e.clientX - svgRect.left,
-              y: e.clientY - svgRect.top,
-            });
-          }
-        }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
       />
 
-      {/* Delete popover */}
-      {contextMenu && (
-        <>
-          {/* Backdrop to close on outside click */}
-          <rect
-            x={0}
-            y={0}
-            width="100%"
-            height="100%"
-            fill="transparent"
-            onClick={() => setContextMenu(null)}
-          />
-          <foreignObject
-            x={contextMenu.x - 4}
-            y={contextMenu.y - 40}
-            width={90}
-            height={36}
-            requiredExtensions="http://www.w3.org/1999/xhtml"
-          >
-            <div
-              onClick={onDelete}
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium cursor-pointer shadow-lg transition-colors select-none w-fit"
+      {active && (
+        <foreignObject
+          x={labelX - 28}
+          y={labelY - 12}
+          width={56}
+          height={24}
+          requiredExtensions="http://www.w3.org/1999/xhtml"
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+        >
+          <div className="flex items-center gap-1 w-fit mx-auto">
+            <button
+              type="button"
+              onClick={onInsert}
+              title="Insert node"
+              className="flex items-center justify-center w-6 h-6 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-md transition-colors"
             >
-              <Trash size={12} />
-              Delete
-            </div>
-          </foreignObject>
-        </>
+              <Plus size={13} />
+            </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              title="Delete edge"
+              className="flex items-center justify-center w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-md transition-colors"
+            >
+              <Trash size={11} />
+            </button>
+          </div>
+        </foreignObject>
       )}
     </>
   );

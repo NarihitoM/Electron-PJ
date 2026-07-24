@@ -201,6 +201,10 @@ export interface AgentClientState {
   nodePositions: Record<string, { x: number; y: number }>;
   setNodePositions: (positions: Record<string, { x: number; y: number }>) => void;
 
+  /** Edge the user clicked "+" on — the next created node gets spliced into this edge */
+  pendingEdgeInsert: { edgeId: string; source: string; target: string } | null;
+  setPendingEdgeInsert: (v: { edgeId: string; source: string; target: string } | null) => void;
+
   resetForm: () => void;
   updateHistory: (updater: (prev: agentsession[]) => agentsession[]) => void;
   updateSessionMessages: (updater: (prev: agentsession[]) => agentsession[]) => void;

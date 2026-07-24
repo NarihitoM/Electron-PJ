@@ -31,19 +31,20 @@ import CustomEdge from "./CustomEdge";
 const nodeTypes = { agentFlowNode: AgentFlowNode } as unknown as NodeTypes;
 const edgeTypes = { custom: CustomEdge } as unknown as EdgeTypes;
 
-/* ─── Default edge config ─── */
+/* ─── Default edge config (muted gray — n8n style) ─── */
 const defaultEdgeOptions = {
   type: "custom",
-  animated: true,
-  style: { stroke: "#06b6d4", strokeWidth: 2 },
-  markerEnd: { type: MarkerType.ArrowClosed, color: "#06b6d4" },
-  interactionWidth: 20,
+  style: { stroke: "#9ca3af", strokeWidth: 1.5 },
+  markerEnd: { type: MarkerType.ArrowClosed, color: "#9ca3af" },
+  interactionWidth: 24,
 };
 
 /* ─── Helpers ─── */
-const NODE_WIDTH = 288;
-const NODE_GAP_X = 80;
-const NODE_GAP_Y = 100;
+/* n8n-style horizontal layout: nodes flow left-to-right, wrapping into rows */
+const NODE_WIDTH = 256;
+const NODE_GAP_X = 100;
+const NODE_HEIGHT = 140;
+const NODE_GAP_Y = 60;
 
 function computePosition(
   index: number,
@@ -53,14 +54,14 @@ function computePosition(
 ): { x: number; y: number } {
   if (existing[nodeName]) return existing[nodeName];
   if (total <= 6) {
-    return { x: 250, y: index * 220 + 40 };
+    return { x: index * (NODE_WIDTH + NODE_GAP_X) + 60, y: 120 };
   }
-  const cols = 3;
+  const cols = 6;
   const row = Math.floor(index / cols);
   const col = index % cols;
   return {
-    x: 80 + col * (NODE_WIDTH + NODE_GAP_X),
-    y: 40 + row * (220 + NODE_GAP_Y),
+    x: 60 + col * (NODE_WIDTH + NODE_GAP_X),
+    y: 60 + row * (NODE_HEIGHT + NODE_GAP_Y),
   };
 }
 
@@ -141,11 +142,10 @@ export const FlowCanvas = () => {
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(
     store.flowEdges.map((e) => ({
       ...e,
-      type: "smoothstep",
-      animated: true,
-      style: { stroke: "#06b6d4", strokeWidth: 2 },
-      markerEnd: { type: MarkerType.ArrowClosed, color: "#06b6d4" },
-      interactionWidth: 20,
+      type: "custom",
+      style: { stroke: "#9ca3af", strokeWidth: 1.5 },
+      markerEnd: { type: MarkerType.ArrowClosed, color: "#9ca3af" },
+      interactionWidth: 24,
     })),
   );
 
@@ -153,10 +153,15 @@ export const FlowCanvas = () => {
   // We keep a set of known node ids and only update when the list changes structurally
   const knownIdsRef = useRef<string>("");
   const currentIds = store.nodes.map((n) => n.name).join(",");
+  const pendingEdgeInsert = useagentstore((s) => s.pendingEdgeInsert);
+  const setPendingEdgeInsert = useagentstore((s) => s.setPendingEdgeInsert);
 
   useEffect(() => {
     if (currentIds === knownIdsRef.current) return; // no structural change
+    const previousNames = new Set(knownIdsRef.current ? knownIdsRef.current.split(",") : []);
     knownIdsRef.current = currentIds;
+
+    const newlyAdded = store.nodes.map((n) => n.name).filter((name) => !previousNames.has(name));
 
     setNodes(
       store.nodes.map((agent, idx) => ({
@@ -170,13 +175,67 @@ export const FlowCanvas = () => {
     // Clean up edges connected to deleted nodes
     const nodeNames = new Set(store.nodes.map((n) => n.name));
     setEdges((prev) => {
-      const filtered = prev.filter((e) => nodeNames.has(e.source) && nodeNames.has(e.target));
-      if (filtered.length !== prev.length) {
-        setFlowEdges(filtered.map((e) => ({ id: e.id, source: e.source, target: e.target })));
+      let next = prev.filter((e) => nodeNames.has(e.source) && nodeNames.has(e.target));
+
+      // If a node was just created via the edge "+" button, splice it into that edge
+      if (pendingEdgeInsert && newlyAdded.length === 1) {
+        const [newNodeName] = newlyAdded;
+        const { edgeId, source, target } = pendingEdgeInsert;
+        const hadOriginal = next.some((e) => e.id === edgeId);
+        next = next.filter((e) => e.id !== edgeId);
+        next = [
+          ...next,
+          {
+            id: `e-${source}-${newNodeName}`,
+            source,
+            target: newNodeName,
+            type: "custom",
+            style: { stroke: "#9ca3af", strokeWidth: 1.5 },
+            markerEnd: { type: MarkerType.ArrowClosed, color: "#9ca3af" },
+          },
+          {
+            id: `e-${newNodeName}-${target}`,
+            source: newNodeName,
+            target,
+            type: "custom",
+            style: { stroke: "#9ca3af", strokeWidth: 1.5 },
+            markerEnd: { type: MarkerType.ArrowClosed, color: "#9ca3af" },
+          },
+        ];
+        if (hadOriginal) {
+          const sourcePos = store.nodePositions[source];
+          const targetPos = store.nodePositions[target];
+          if (sourcePos && targetPos) {
+            setNodePositions({
+              ...store.nodePositions,
+              [newNodeName]: {
+                x: (sourcePos.x + targetPos.x) / 2,
+                y: (sourcePos.y + targetPos.y) / 2,
+              },
+            });
+          }
+        }
+        setPendingEdgeInsert(null);
       }
-      return filtered;
+
+      if (next.length !== prev.length || next !== prev) {
+        setFlowEdges(next.map((e) => ({ id: e.id, source: e.source, target: e.target })));
+      }
+      return next;
     });
-  }, [currentIds, store.nodePositions, setNodes, setEdges, setFlowEdges, onUpdate, onDelete]);
+  }, [
+    currentIds,
+    store.nodes,
+    store.nodePositions,
+    setNodes,
+    setEdges,
+    setNodePositions,
+    setFlowEdges,
+    onUpdate,
+    onDelete,
+    pendingEdgeInsert,
+    setPendingEdgeInsert,
+  ]);
 
   /* ── Edge handlers ── */
   const onConnect = useCallback(
@@ -187,9 +246,8 @@ export const FlowCanvas = () => {
           source: connection.source!,
           target: connection.target!,
           type: "custom",
-          animated: true,
-          style: { stroke: "#06b6d4", strokeWidth: 2 },
-          markerEnd: { type: MarkerType.ArrowClosed, color: "#06b6d4" },
+          style: { stroke: "#9ca3af", strokeWidth: 1.5 },
+          markerEnd: { type: MarkerType.ArrowClosed, color: "#9ca3af" },
         };
         const updated: Edge[] = addEdge(newEdge, eds);
         setFlowEdges(updated.map((e) => ({ id: e.id, source: e.source, target: e.target })));
@@ -219,9 +277,8 @@ export const FlowCanvas = () => {
         source: e.source,
         target: e.target,
         type: "custom",
-        animated: true,
-        style: { stroke: "#06b6d4", strokeWidth: 2 },
-        markerEnd: { type: MarkerType.ArrowClosed, color: "#06b6d4" },
+        style: { stroke: "#9ca3af", strokeWidth: 1.5 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: "#9ca3af" },
       })),
     );
   }, [fetchedEdges, setEdges]);
@@ -356,14 +413,6 @@ export const FlowCanvas = () => {
     <div className="w-full h-[60vh] min-h-100 rounded-xl border bg-card/50">
       {/* Edge selection styles + dark-mode controls + hide branding */}
       <style>{`
-        .react-flow__edge.selected .react-flow__edge-path {
-          stroke: #22d3ee !important;
-          stroke-width: 3.5 !important;
-        }
-        .react-flow__edge:hover .react-flow__edge-path {
-          stroke: #22d3ee !important;
-          stroke-width: 3 !important;
-        }
         .react-flow__edge-path {
           cursor: pointer;
         }

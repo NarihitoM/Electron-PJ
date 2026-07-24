@@ -38,156 +38,142 @@ const AgentFlowNode = memo(({ data }: NodeProps<Node<AgentFlowNodeData>>) => {
   };
 
   const isActive = agent.status === "running";
+  const hasBody = Boolean(agent.thinking || agent.output || agent.activeTool);
 
   return (
     <div
-      className={`relative w-72 rounded-xl border bg-card text-card-foreground shadow-sm transition-all duration-300 ${
+      className={`relative w-64 rounded-2xl border bg-card text-card-foreground shadow-sm transition-all duration-300 ${
         isActive
           ? "border-cyan-500 shadow-[0_0_20px_-5px_rgba(6,182,212,0.4)] bg-cyan-50/5 dark:bg-cyan-950/10"
           : "border-border hover:border-cyan-500/50"
       }`}
     >
-      {/* Top pulsing glow line when active */}
-      {isActive && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-cyan-500 shadow-[0_0_10px_#06b6d4] animate-pulse rounded-t-xl" />
-      )}
-
-      {/* Target handle — incoming connection (top center) */}
+      {/* Target handle — incoming connection (left) */}
       <Handle
         type="target"
-        position={Position.Top}
-        className="w-3! h-3! border-2! border-cyan-500! bg-background! shadow-sm!"
+        position={Position.Left}
+        className="w-2.5! h-2.5! border-2! border-cyan-500! bg-background! shadow-sm!"
       />
 
-      {/* --- Header --- */}
-      <div className="p-3 pb-2">
-        <div className="flex justify-between items-start">
-          <div className="flex items-center gap-2 text-sm font-semibold min-w-0">
-            <Bot
-              className={`shrink-0 text-cyan-500 dark:text-white ${
-                isActive ? "animate-bounce" : ""
-              }`}
-              size={18}
-            />
+      {/* --- Header (n8n-style compact row: icon chip + title + actions) --- */}
+      <div className="flex items-center gap-2 p-2.5">
+        <div
+          className={`flex items-center justify-center shrink-0 w-8 h-8 rounded-full border transition-all duration-300 ${
+            isActive
+              ? "bg-cyan-500 border-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.5)]"
+              : "bg-cyan-500/10 border-cyan-500/20"
+          }`}
+        >
+          <Bot
+            className={`${isActive ? "text-white animate-bounce" : "text-cyan-500 dark:text-white"}`}
+            size={16}
+          />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 text-sm font-semibold truncate">
             <span className="truncate">{agent.name}</span>
-            <span
-              className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full border transition-all duration-300 ${
-                isActive
-                  ? "bg-cyan-500 text-white border-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.5)]"
-                  : "bg-cyan-500/10 text-cyan-500 border-cyan-500/20"
-              }`}
-            >
-              {isActive ? "ACTIVE" : agent.actor}
-            </span>
-          </div>
-
-          {/* Actions dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="dark:hover:bg-zinc-700 hover:bg-black/10 p-1 rounded-full shrink-0"
-                onPointerDown={(e) => e.stopPropagation()}
-              >
-                <EllipsisVertical size={15} className="text-muted-foreground dark:text-white" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent side="right" align="start">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  data.onUpdate(agent.name);
-                }}
-                className="flex gap-2"
-              >
-                <PenBox size={14} /> Update
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-600 flex gap-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  data.onDelete(agent.name);
-                }}
-              >
-                <Trash size={14} /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {/* Provider + Model */}
-        <div className="flex items-center gap-1.5 mt-2 text-xs">
-          {agent.provider && (
-            <img
-              src={BRAND_ASSETS[agent.provider.toLowerCase()] ?? BRAND_ASSETS[agent.provider]}
-              alt={agent.provider}
-              className="bg-white rounded-lg p-0.5 w-4 h-4"
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = "none";
-              }}
-            />
-          )}
-          <span className="font-bold truncate">{agent.model}</span>
-        </div>
-
-        {/* Tools */}
-        {agent.tool && (
-          <div className="text-xs mt-1">
-            Tools: <span className="text-green-500">{ToolLabels[agent.tool] || agent.tool}</span>
-          </div>
-        )}
-      </div>
-
-      {/* --- Body — runtime output --- */}
-      <div
-        className="px-3 pb-3 max-h-40 overflow-y-auto text-xs"
-        style={{ scrollbarWidth: "none" }}
-      >
-        {/* Active tool indicator */}
-        {agent.activeTool && (
-          <div className="flex items-center gap-1.5 text-amber-500 font-medium animate-pulse mb-1">
-            <div className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
-            <span className="truncate">Tool: {agent.activeTool}</span>
-          </div>
-        )}
-
-        {/* Thinking block */}
-        {agent.thinking && (
-          <div className="mb-1">
-            {agent.status === "running" ? (
-              <ThinkingBlock thinking={agent.thinking} isStreaming />
-            ) : (
-              <ThinkingBlock thinking={agent.thinking} />
+            {isActive && (
+              <span className="shrink-0 text-[9px] font-bold tracking-wide px-1.5 py-0.5 rounded-full bg-cyan-500 text-white">
+                LIVE
+              </span>
             )}
           </div>
-        )}
-
-        {/* Streaming / final output */}
-        {agent.output ? (
-          <div className="whitespace-pre-wrap">
-            <AiContent content={agent.output} />
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground truncate">
+            {agent.provider && (
+              <img
+                src={BRAND_ASSETS[agent.provider.toLowerCase()] ?? BRAND_ASSETS[agent.provider]}
+                alt={agent.provider}
+                className="bg-white rounded p-0.5 w-3.5 h-3.5 shrink-0"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = "none";
+                }}
+              />
+            )}
+            <span className="truncate">{agent.model || agent.actor}</span>
           </div>
-        ) : agent.thinking ? null : agent.activeTool ? null : (
-          <span
-            className="italic opacity-50"
-            style={{
-              backgroundImage: "linear-gradient(90deg, #6b7280 0%, #f3f4f6 50%, #6b7280 100%)",
-              backgroundSize: "200% 100%",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            Awaiting sequence...
-          </span>
-        )}
+        </div>
+
+        {/* Actions dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="dark:hover:bg-zinc-700 hover:bg-black/10 p-1 rounded-full shrink-0"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <EllipsisVertical size={15} className="text-muted-foreground dark:text-white" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="right" align="start">
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onUpdate(agent.name);
+              }}
+              className="flex gap-2"
+            >
+              <PenBox size={14} /> Update
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className="text-red-600 flex gap-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onDelete(agent.name);
+              }}
+            >
+              <Trash size={14} /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
-      {/* Source handle — outgoing connection (bottom center) */}
+      {/* Tools chip */}
+      {agent.tool && (
+        <div className="px-2.5 pb-1.5 -mt-1 text-[11px]">
+          <span className="text-green-500">{ToolLabels[agent.tool] || agent.tool}</span>
+        </div>
+      )}
+
+      {/* --- Body — runtime output (only rendered once there's something to show) --- */}
+      {hasBody && (
+        <div
+          className="px-2.5 pb-2.5 max-h-40 overflow-y-auto text-xs border-t border-border/60 pt-2"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {/* Active tool indicator */}
+          {agent.activeTool && (
+            <div className="flex items-center gap-1.5 text-amber-500 font-medium animate-pulse mb-1">
+              <div className="h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+              <span className="truncate">Tool: {agent.activeTool}</span>
+            </div>
+          )}
+
+          {/* Thinking block */}
+          {agent.thinking && (
+            <div className="mb-1">
+              {agent.status === "running" ? (
+                <ThinkingBlock thinking={agent.thinking} isStreaming />
+              ) : (
+                <ThinkingBlock thinking={agent.thinking} />
+              )}
+            </div>
+          )}
+
+          {/* Streaming / final output */}
+          {agent.output && (
+            <div className="whitespace-pre-wrap">
+              <AiContent content={agent.output} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Source handle — outgoing connection (right) */}
       <Handle
         type="source"
-        position={Position.Bottom}
-        className="w-3! h-3! border-2! border-cyan-500! bg-background! shadow-sm!"
+        position={Position.Right}
+        className="w-2.5! h-2.5! border-2! border-cyan-500! bg-background! shadow-sm!"
       />
     </div>
   );

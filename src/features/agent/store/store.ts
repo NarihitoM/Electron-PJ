@@ -125,6 +125,9 @@ export const useagentstore = create<AgentClientState>((set, get) => ({
   nodePositions: {},
   setNodePositions: (nodePositions) => set({ nodePositions }),
 
+  pendingEdgeInsert: null,
+  setPendingEdgeInsert: (pendingEdgeInsert) => set({ pendingEdgeInsert }),
+
   updateHistory: (updater) => set((state) => ({ history: updater(state.history) })),
   updateSessionMessages: (updater) => set((state) => ({ history: updater(state.history) })),
 }));
