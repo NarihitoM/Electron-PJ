@@ -18,6 +18,8 @@ import { Notion } from "./pages/Notion";
 import { Verify } from "./pages/VerifyCode";
 import { Account } from "./pages/Account";
 import { Slack } from "./pages/Slack";
+import { Github } from "./pages/Github";
+import { Discord } from "./pages/Discord";
 import { N8n } from "./pages/N8n";
 import { Emailcheck } from "./pages/SendEmail";
 import { Verifychangepassword } from "./pages/VerifyChangePassword";
@@ -50,6 +52,8 @@ function App() {
                 {/* Agentic Features route */}
                 <Route path="telegram" element={<Telegram />} /> //done
                 <Route path="slack" element={<Slack />} /> //done
+                <Route path="github" element={<Github />} />
+                <Route path="discord" element={<Discord />} />
                 <Route path="notion" element={<Notion />} /> //done
                 <Route path="googlesheet" element={<Googlesheet />} /> //done
                 <Route path="googledocs" element={<Googledocs />} /> //done

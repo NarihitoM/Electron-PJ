@@ -52,8 +52,12 @@ import { useagentstore } from "../../../features/agent/store/store";
 import Multimate from "../../assets/Multimate.png";
 import { Separator } from "../ui/separator";
 import { notionauthstore } from "../../../features/notion/store/store";
+import { githubauthstore } from "../../../features/github/store/store";
+import { discordauthstore } from "../../../features/discord/store/store";
 import { googleauthstore } from "../../../features/google/store/store";
 import { useSlackAccount } from "../../../features/slack/hooks/useSlackAccount";
+import { useGithubAccount } from "../../../features/github/hooks/useGithubAccount";
+import { useDiscordAccount } from "../../../features/discord/hooks/useDiscordAccount";
 import { useGoogleService } from "../../../features/google/hooks/useGoogleService";
 import { useTelegramAccount } from "../../../features/telegram/hooks/useTelegramAccount";
 import { useNotionAccount } from "../../../features/notion/hooks/useNotionAccount";
@@ -97,11 +101,19 @@ export const Sidebarprovider = () => {
   const { data: notionAccount } = useNotionAccount();
   const workspacename = (notionAccount as any)?.workspacename ?? "";
   const { resetnotion } = notionauthstore();
+  const { resetgithub } = githubauthstore();
+  const { resetdiscord } = discordauthstore();
 
   const { resetagent } = useagentstore();
 
   const { data: slackAccount } = useSlackAccount();
   const workspace = (slackAccount as any)?.workspace ?? "";
+
+  const { data: githubAccount } = useGithubAccount();
+  const githubusername = (githubAccount as any)?.username ?? "";
+
+  const { data: discordAccount } = useDiscordAccount();
+  const guildName = (discordAccount as any)?.guildName ?? "";
 
   const { resetUsage } = usagestore();
 
@@ -142,6 +154,8 @@ export const Sidebarprovider = () => {
       resetagent();
       resettelegram();
       resetnotion();
+      resetgithub();
+      resetdiscord();
       resetgoogle();
       resetUsage();
       resetDashboard();
@@ -304,11 +318,23 @@ export const Sidebarprovider = () => {
           return !!telegramUserdata;
         case "n8n":
           return n8nConnected;
+        case "Github":
+          return !!githubusername;
+        case "Discord":
+          return !!guildName;
         default:
           return false;
       }
     });
-  }, [telegramUserdata, workspace, workspacename, serviceemail, n8nConnected]);
+  }, [
+    telegramUserdata,
+    workspace,
+    workspacename,
+    serviceemail,
+    n8nConnected,
+    githubusername,
+    guildName,
+  ]);
 
   const filteredAgentItems = useMemo(() => {
     if (!agentSearch) return connectedAgentItems;

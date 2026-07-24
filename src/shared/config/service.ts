@@ -6,6 +6,8 @@ export const BRAND_SERVICE: Record<string, any> = {
   google: GoogleIcon,
   telegram: "https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg",
   n8n: "https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg",
+  github: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
+  discord: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
 };
 
 export const SERVICES = [
@@ -34,5 +36,15 @@ export const SERVICES = [
     name: "n8n",
     image: BRAND_SERVICE["n8n"],
     description: "Connect n8n to manage and trigger workflows automatically.",
+  },
+  {
+    name: "GitHub",
+    image: BRAND_SERVICE["github"],
+    description: "Connect GitHub to browse repositories, file issues, and review pull requests.",
+  },
+  {
+    name: "Discord",
+    image: BRAND_SERVICE["discord"],
+    description: "Connect Discord to send messages and read channels through a bot.",
   },
 ];

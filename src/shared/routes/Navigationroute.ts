@@ -43,6 +43,16 @@ export const Agent = [
     url: "/app/n8n",
     icon: "https://n8n.io/favicon.ico",
   },
+  {
+    title: "Github",
+    url: "/app/github",
+    icon: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
+  },
+  {
+    title: "Discord",
+    url: "/app/discord",
+    icon: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
+  },
 ];
 
 //LocalAiAgent
