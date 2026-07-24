@@ -12,6 +12,8 @@ import { httptool } from "./httptool";
 import { jsontool } from "./jsontool";
 import { cryptotool } from "./cryptotool";
 import { texttool } from "./texttool";
+import { githubtool } from "./githubtool";
+import { discordtool } from "./discordtool";
 
 export const toolRegistry: Record<string, any> = {
   "Web Search Agent": [websearch],
@@ -20,6 +22,8 @@ export const toolRegistry: Record<string, any> = {
   "Browser Agent": [browser_agent],
   "Utility Agent": [calculatortool, datetimetool, readfiletool, writefiletool, systeminfotool],
   "Real World Agent": [emailtool, httptool, jsontool, cryptotool, texttool],
+  "GitHub Agent": [githubtool],
+  "Discord Agent": [discordtool],
 };
 
 export function getRegistryKey(toolId: string): string | undefined {
@@ -38,6 +42,8 @@ export function getRegistryKey(toolId: string): string | undefined {
     json_tool: "Real World Agent",
     crypto_tool: "Real World Agent",
     text_tool: "Real World Agent",
+    github_action: "GitHub Agent",
+    discord_action: "Discord Agent",
   };
   return map[toolId];
 }

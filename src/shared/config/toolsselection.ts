@@ -111,6 +111,8 @@ export const ToolLabels: Record<string, string> = {
   json_tool: "JSON Tool",
   crypto_tool: "Crypto Tool",
   text_tool: "Text Tool",
+  github_action: "GitHub",
+  discord_action: "Discord",
 };
 
 export const toolToRole = (toolId: string): string =>
@@ -147,6 +149,9 @@ export const WRITE_TOOLS = new Set([
   "write_file",
   "send_email",
   "http_request",
+  // GitHub / Discord
+  "github_action",
+  "discord_action",
 ]);
 
 export const WRITE_TOOLS_LABELS: Record<string, string> = {
@@ -173,4 +178,6 @@ export const WRITE_TOOLS_LABELS: Record<string, string> = {
   write_file: "Writes content to a file on your system",
   send_email: "Sends an email",
   http_request: "Makes an HTTP request to an external URL",
+  github_action: "Creates issues/comments on GitHub (also used for read-only lookups)",
+  discord_action: "Sends messages to Discord (also used for read-only lookups)",
 };
