@@ -442,8 +442,9 @@ export const GithubForm = ({ onComplete }: { onComplete: () => void }) => {
       }
       const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://multimate-server.vercel.app";
       const redirecturi = encodeURIComponent(`${backendUrl}/github/api/callback`);
+      const scopes = encodeURIComponent("repo read:user user:email notifications");
 
-      const url = `https://github.com/login/oauth/authorize?client_id=${clientid}&scope=repo&redirect_uri=${redirecturi}&state=${stateId}`;
+      const url = `https://github.com/login/oauth/authorize?client_id=${clientid}&scope=${scopes}&redirect_uri=${redirecturi}&state=${stateId}`;
       (window.ipcRenderer as any).openInBrowser(url);
       setChecking(true);
       setPolling(true);
