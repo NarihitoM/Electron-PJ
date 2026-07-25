@@ -260,8 +260,14 @@ export const FlowCanvas = () => {
   ]);
 
   /* ── Edge handlers ── */
+  const isValidConnection = useCallback(
+    (connection: Connection | Edge) => connection.source !== connection.target,
+    [],
+  );
+
   const onConnect = useCallback(
     (connection: Connection) => {
+      if (connection.source === connection.target) return;
       setEdges((eds: Edge[]) => {
         const newEdge: Edge = {
           id: `e-${connection.source}-${connection.target}`,
@@ -495,6 +501,7 @@ export const FlowCanvas = () => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        isValidConnection={isValidConnection}
         onNodeDragStop={onNodeDragStop}
         onInit={onInit}
         nodeTypes={nodeTypes}
