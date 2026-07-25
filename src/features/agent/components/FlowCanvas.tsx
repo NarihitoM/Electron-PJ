@@ -17,6 +17,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
+import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useAgentNodes } from "@/features/agent/hooks/useAgentNodes";
@@ -71,13 +72,34 @@ export const FlowCanvas = () => {
   const setFlowEdges = useagentstore((s) => s.setFlowEdges);
   const setNodePositions = useagentstore((s) => s.setNodePositions);
   const { data: Api = [] } = useServiceKeys();
-  const { data: fetchedNodes = [], isLoading } = useAgentNodes();
-  const { data: fetchedEdges = [] } = useAgentEdges();
+  const {
+    data: fetchedNodes = [],
+    isLoading,
+    isError: nodesError,
+    refetch: refetchNodes,
+  } = useAgentNodes();
+  const { data: fetchedEdges = [], isError: edgesError, refetch: refetchEdges } = useAgentEdges();
   const { mutate: saveEdgesToBackend } = useSaveAgentEdges();
   const { mutate: savePositionsToBackend } = useSaveNodePositions();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const posDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevEdgeCountRef = useRef<number>(0);
+
+  /* ── Surface silent fetch failures instead of leaving the canvas stuck stale ── */
+  useEffect(() => {
+    if (nodesError) {
+      toast.error("Failed to load agent nodes", {
+        action: { label: "Retry", onClick: () => refetchNodes() },
+      });
+    }
+  }, [nodesError, refetchNodes]);
+  useEffect(() => {
+    if (edgesError) {
+      toast.error("Failed to load agent edges", {
+        action: { label: "Retry", onClick: () => refetchEdges() },
+      });
+    }
+  }, [edgesError, refetchEdges]);
 
   /* ── Sync DB nodes into store on every fetch, and populate positions ── */
   const nodesRef = useRef<string>("");
