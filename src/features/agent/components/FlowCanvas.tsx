@@ -172,7 +172,6 @@ export const FlowCanvas = () => {
   );
 
   /* ── Sync when agents are added/removed from store (avoids re-creating every IPC tick) ── */
-  // We keep a set of known node ids and only update when the list changes structurally
   const knownIdsRef = useRef<string>("");
   const currentIds = store.nodes.map((n) => n.name).join(",");
   const pendingEdgeInsert = useagentstore((s) => s.pendingEdgeInsert);
