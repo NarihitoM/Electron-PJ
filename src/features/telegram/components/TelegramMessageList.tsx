@@ -69,6 +69,7 @@ export const TelegramMessageList = () => {
 
   useEffect(() => {
     fetchMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadMore = async () => {
@@ -113,6 +114,7 @@ export const TelegramMessageList = () => {
     const el = topSentinelRef.current;
     if (el) observer.observe(el);
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.hasMore, store.loadingMore]);
 
   const isNearBottomRef = useRef(true);
@@ -305,15 +307,9 @@ export const TelegramMessageList = () => {
                     {msg.model}
                   </span>
                 )}
-                {!isUser &&
-                  store.sending &&
-                  isLastMessage &&
-                  !msg.content &&
-                  (!msg.toolsCall ||
-                    msg.toolsCall.length === 0 ||
-                    msg.toolsCall.some((t: any) => t.status === "loading")) && (
-                    <ShimmerLoadingText className="mt-0.5" />
-                  )}
+                {!isUser && store.sending && isLastMessage && !msg.content && (
+                  <ShimmerLoadingText className="mt-0.5" />
+                )}
 
                 {isUser && msg.images && msg.images.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-1">

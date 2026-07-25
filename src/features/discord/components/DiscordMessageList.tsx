@@ -308,15 +308,9 @@ export const DiscordMessageList = () => {
                     {msg.model}
                   </span>
                 )}
-                {!isUser &&
-                  sending &&
-                  isLastMessage &&
-                  !msg.content &&
-                  (!msg.toolsCall ||
-                    msg.toolsCall.length === 0 ||
-                    msg.toolsCall.some((t: any) => t.status === "loading")) && (
-                    <ShimmerLoadingText className="mt-0.5" />
-                  )}
+                {!isUser && sending && isLastMessage && !msg.content && (
+                  <ShimmerLoadingText className="mt-0.5" />
+                )}
                 {isUser && msg.images && msg.images.length > 0 && (
                   <div className="flex flex-wrap gap-1 mb-1">
                     {msg.images.map((url, i) => (

@@ -300,15 +300,9 @@ export const ChatMessageList = () => {
                       {msg.model}
                     </span>
                   )}
-                  {!isUser &&
-                    store.sending &&
-                    isLastMessage &&
-                    !msg.content &&
-                    (!msg.toolsCall ||
-                      msg.toolsCall.length === 0 ||
-                      msg.toolsCall.some((t: { status: string }) => t.status === "loading")) && (
-                      <ShimmerLoadingText phrases={["Thinking"]} className="mt-0.5" />
-                    )}
+                  {!isUser && store.sending && isLastMessage && !msg.content && (
+                    <ShimmerLoadingText phrases={["Thinking"]} className="mt-0.5" />
+                  )}
                   {isUser && msg.images && msg.images.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-1">
                       {msg.images.map((url: string, i: number) => (

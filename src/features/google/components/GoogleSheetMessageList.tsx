@@ -122,6 +122,7 @@ export const GoogleSheetMessageList = () => {
     if (el) observer.observe(el);
 
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.hasMore_sheet, store.loadingMore_sheet]);
 
   const fetchMessages = async () => {
@@ -154,6 +155,7 @@ export const GoogleSheetMessageList = () => {
 
   useEffect(() => {
     fetchMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -259,15 +261,9 @@ export const GoogleSheetMessageList = () => {
                         {msg.model}
                       </span>
                     )}
-                    {!isUser &&
-                      store.sending_sheet &&
-                      isLastMessage &&
-                      !msg.content &&
-                      (!msg.toolsCall ||
-                        msg.toolsCall.length === 0 ||
-                        msg.toolsCall.some((t: any) => t.status === "loading")) && (
-                        <ShimmerLoadingText className="mt-0.5" />
-                      )}
+                    {!isUser && store.sending_sheet && isLastMessage && !msg.content && (
+                      <ShimmerLoadingText className="mt-0.5" />
+                    )}
 
                     {isUser && msg.images && msg.images.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-1">

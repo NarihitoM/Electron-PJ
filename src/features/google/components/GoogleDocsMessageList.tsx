@@ -84,6 +84,7 @@ export const GoogleDocsMessageList = () => {
     const el = topSentinelRef.current;
     if (el) observer.observe(el);
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.hasMore_docs, store.loadingMore_docs]);
 
   const loadMore = async () => {
@@ -145,6 +146,7 @@ export const GoogleDocsMessageList = () => {
 
   useEffect(() => {
     fetchMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCopy = (index: number) => {
@@ -273,15 +275,9 @@ export const GoogleDocsMessageList = () => {
                         {msg.model}
                       </span>
                     )}
-                    {!isUser &&
-                      store.sending_docs &&
-                      isLastMessage &&
-                      !msg.content &&
-                      (!msg.toolsCall ||
-                        msg.toolsCall.length === 0 ||
-                        msg.toolsCall.some((t: any) => t.status === "loading")) && (
-                        <ShimmerLoadingText className="mt-0.5" />
-                      )}
+                    {!isUser && store.sending_docs && isLastMessage && !msg.content && (
+                      <ShimmerLoadingText className="mt-0.5" />
+                    )}
 
                     {isUser && msg.images && msg.images.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-1">
