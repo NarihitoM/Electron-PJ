@@ -455,7 +455,7 @@ export const FlowCanvas = () => {
 
   /* ── Canvas ── */
   return (
-    <div className="w-full h-[60vh] min-h-100 rounded-xl border bg-card/50">
+    <div className="w-full h-full min-h-100 rounded-xl border bg-card/50">
       {/* Edge selection styles + dark-mode controls + hide branding */}
       <style>{`
         .react-flow__edge-path {
