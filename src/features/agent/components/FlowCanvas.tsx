@@ -10,6 +10,7 @@ import {
   type Connection,
   type NodeTypes,
   type EdgeTypes,
+  type ReactFlowInstance,
   useNodesState,
   useEdgesState,
   addEdge,
@@ -385,6 +386,29 @@ export const FlowCanvas = () => {
     };
   }, []);
 
+  /* ── Keep nodes in view when the window is resized/minimized — React Flow only
+     fits the view once on mount, so shrinking the window can push nodes out of
+     the visible pane until the user manually pans/zooms ── */
+  const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null);
+  const onInit = useCallback((instance: ReactFlowInstance) => {
+    reactFlowInstanceRef.current = instance;
+  }, []);
+
+  useEffect(() => {
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    const handleResize = () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        reactFlowInstanceRef.current?.fitView({ padding: 0.3 });
+      }, 200);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (resizeTimer) clearTimeout(resizeTimer);
+    };
+  }, []);
+
   /* ── Handlers for CTA buttons ── */
   const onAddNode = useCallback(() => {
     store.setNodeDialogMode("create");
@@ -472,6 +496,7 @@ export const FlowCanvas = () => {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeDragStop={onNodeDragStop}
+        onInit={onInit}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
