@@ -18,7 +18,7 @@ export default function CustomEdge(props: EdgeProps) {
     markerEnd,
     selected,
   } = props;
-  const { setEdges } = useReactFlow();
+  const { deleteElements } = useReactFlow();
   const setPendingEdgeInsert = useagentstore((s) => s.setPendingEdgeInsert);
   const setNodeDialogMode = useagentstore((s) => s.setNodeDialogMode);
   const resetForm = useagentstore((s) => s.resetForm);
@@ -38,9 +38,13 @@ export default function CustomEdge(props: EdgeProps) {
   const onDelete = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      setEdges((eds) => eds.filter((edge) => edge.id !== id));
+      // deleteElements routes through onEdgesChange, which is what actually
+      // syncs the removal back into FlowCanvas's controlled edges state —
+      // setEdges() from useReactFlow mutates the internal store directly and
+      // gets silently overwritten on the next render since edges is controlled.
+      deleteElements({ edges: [{ id }] });
     },
-    [id, setEdges],
+    [id, deleteElements],
   );
 
   const onInsert = useCallback(
