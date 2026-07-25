@@ -6,6 +6,8 @@ import { useGoogleService } from "@/features/google/hooks/useGoogleService";
 import { useNotionAccount } from "@/features/notion/hooks/useNotionAccount";
 import { useSlackAccount } from "@/features/slack/hooks/useSlackAccount";
 import { useN8nConfig } from "@/features/n8n/hooks/useN8nConfig";
+import { useGithubAccount } from "@/features/github/hooks/useGithubAccount";
+import { useDiscordAccount } from "@/features/discord/hooks/useDiscordAccount";
 import { accountstore } from "../store/store";
 
 export const ServiceIntegrationList = () => {
@@ -18,12 +20,16 @@ export const ServiceIntegrationList = () => {
   const { data: notionAccount } = useNotionAccount();
   const { data: slackAccount } = useSlackAccount();
   const { data: n8nConfig } = useN8nConfig();
+  const { data: githubAccount } = useGithubAccount();
+  const { data: discordAccount } = useDiscordAccount();
 
   const userdata = telegramData;
   const serviceemail = (googleServiceData as any)?.serviceemail ?? "";
   const workspacename = (notionAccount as any)?.workspacename ?? "";
   const workspace = (slackAccount as any)?.workspace ?? "";
   const n8nConnected = !!((n8nConfig as any)?.connected ?? false);
+  const githubusername = (githubAccount as any)?.username ?? "";
+  const guildName = (discordAccount as any)?.guildName ?? "";
 
   const connectedServices: ServiceCardData[] = [
     {
@@ -60,6 +66,20 @@ export const ServiceIntegrationList = () => {
       icon: "https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg",
       description: "Configure your n8n workflow automation.",
       isActive: n8nConnected,
+    },
+    {
+      id: "github",
+      name: "GitHub",
+      icon: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
+      description: "Configure your GitHub account.",
+      isActive: !!githubusername,
+    },
+    {
+      id: "discord",
+      name: "Discord",
+      icon: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
+      description: "Configure your Discord bot server.",
+      isActive: !!guildName,
     },
   ];
 
