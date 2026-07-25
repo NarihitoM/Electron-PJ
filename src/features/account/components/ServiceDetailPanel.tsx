@@ -16,6 +16,8 @@ import {
   NotionForm,
   SlackForm,
   N8nForm,
+  GithubForm,
+  DiscordForm,
 } from "@/features/services/components/ServiceConfigDialog";
 import { toast } from "sonner";
 import { ServiceCardData } from "./ServiceCard";
@@ -24,11 +26,15 @@ import { useGoogleService } from "@/features/google/hooks/useGoogleService";
 import { useNotionAccount } from "@/features/notion/hooks/useNotionAccount";
 import { useSlackAccount } from "@/features/slack/hooks/useSlackAccount";
 import { useN8nConfig } from "@/features/n8n/hooks/useN8nConfig";
+import { useGithubAccount } from "@/features/github/hooks/useGithubAccount";
+import { useDiscordAccount } from "@/features/discord/hooks/useDiscordAccount";
 import { telegramauth } from "@/features/telegram/api/api";
 import { googleauth } from "@/features/google/api/api";
 import { notionauth } from "@/features/notion/api/api";
 import { slackauth } from "@/features/slack/api/api";
 import { n8nauth } from "@/features/n8n/api/api";
+import { githubauth } from "@/features/github/api/api";
+import { discordauth } from "@/features/discord/api/api";
 import { accountstore } from "../store/store";
 
 export const ServiceDetailPanel = () => {
@@ -65,6 +71,18 @@ export const ServiceDetailPanel = () => {
     isError: n8nError,
     refetch: n8nRefetch,
   } = useN8nConfig();
+  const {
+    data: githubAccount,
+    isLoading: loadinggithub,
+    isError: githubError,
+    refetch: githubRefetch,
+  } = useGithubAccount();
+  const {
+    data: discordAccount,
+    isLoading: loadingdiscord,
+    isError: discordError,
+    refetch: discordRefetch,
+  } = useDiscordAccount();
 
   const userdata = telegramData;
   const serviceemail = (googleServiceData as any)?.serviceemail ?? "";
@@ -72,10 +90,14 @@ export const ServiceDetailPanel = () => {
   const workspace = (slackAccount as any)?.workspace ?? "";
   const n8nConnected = !!((n8nConfig as any)?.connected ?? false);
   const n8nUrl = (n8nConfig as any)?.n8nUrl ?? "";
+  const githubusername = (githubAccount as any)?.username ?? "";
+  const guildName = (discordAccount as any)?.guildName ?? "";
 
   const [deletingTelegram, setDeletingTelegram] = useState(false);
   const [deletingGoogle, setDeletingGoogle] = useState(false);
   const [deletingNotion, setDeletingNotion] = useState(false);
+  const [deletingGithub, setDeletingGithub] = useState(false);
+  const [deletingDiscord, setDeletingDiscord] = useState(false);
 
   const connectedServices: ServiceCardData[] = [
     {
@@ -112,6 +134,20 @@ export const ServiceDetailPanel = () => {
       icon: "https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg",
       description: "Configure your n8n workflow automation.",
       isActive: n8nConnected,
+    },
+    {
+      id: "github",
+      name: "GitHub",
+      icon: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
+      description: "Configure your GitHub account.",
+      isActive: !!githubusername,
+    },
+    {
+      id: "discord",
+      name: "Discord",
+      icon: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
+      description: "Configure your Discord bot server.",
+      isActive: !!guildName,
     },
   ];
 
@@ -206,6 +242,46 @@ export const ServiceDetailPanel = () => {
       } else {
         toast.error("An unexpected error occurred.");
       }
+    }
+  };
+
+  const deletegithub = async () => {
+    setDeletingGithub(true);
+    try {
+      const response = await githubauth.githubdeleteservice();
+      if (response.success) {
+        toast.success(response.message);
+        setDialogService(null);
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        const Error = err as any;
+        toast.error(Error.response?.data?.message || err.message);
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
+    } finally {
+      setDeletingGithub(false);
+    }
+  };
+
+  const deletediscord = async () => {
+    setDeletingDiscord(true);
+    try {
+      const response = await discordauth.deletediscordservice();
+      if (response.success) {
+        toast.success(response.message);
+        setDialogService(null);
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        const Error = err as any;
+        toast.error(Error.response?.data?.message || err.message);
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
+    } finally {
+      setDeletingDiscord(false);
     }
   };
 
@@ -539,6 +615,128 @@ export const ServiceDetailPanel = () => {
                         await n8nRefetch();
                         setDialogService(null);
                         toast.success("n8n connected!");
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {dialogService === "github" && (
+            <div className="flex flex-col items-center justify-center text-center py-4">
+              {loadinggithub ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Spinner className="w-8 h-8 animate-spin text-cyan-500 dark:text-white" />
+                  <p className="text-sm text-muted-foreground animate-pulse">
+                    Loading GitHub Service...
+                  </p>
+                </div>
+              ) : githubError ? (
+                <div className="flex flex-col gap-2 items-center justify-center py-4">
+                  <AlertTriangle className="w-8 h-8 text-red-500" />
+                  <p className="text-sm text-red-500 font-medium">Failed to load GitHub service</p>
+                  <Button
+                    size="sm"
+                    onClick={() => githubRefetch()}
+                    className="bg-cyan-500 dark:bg-white"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : githubusername ? (
+                <div className="flex items-center gap-4 w-full">
+                  <div className="h-12 w-12 rounded-full flex items-center justify-center">
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg"
+                      alt="icon"
+                    />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <p className="text-sm font-medium">Connected GitHub Account</p>
+                    <h3 className="text-lg font-semibold">{githubusername}</h3>
+                  </div>
+                  <Button
+                    onClick={deletegithub}
+                    disabled={deletingGithub}
+                    variant="destructive"
+                    className="ml-auto"
+                  >
+                    {deletingGithub ? <Spinner /> : "Disconnect"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center py-4">
+                  <div className="space-y-4 w-full">
+                    <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg"
+                        alt="icon"
+                      />
+                    </div>
+                    <GithubForm
+                      onComplete={async () => {
+                        await githubRefetch();
+                        setDialogService(null);
+                        toast.success("GitHub connected!");
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {dialogService === "discord" && (
+            <div className="flex flex-col items-center justify-center text-center py-4">
+              {loadingdiscord ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Spinner className="w-8 h-8 animate-spin text-cyan-500 dark:text-white" />
+                  <p className="text-sm text-muted-foreground animate-pulse">
+                    Loading Discord Service...
+                  </p>
+                </div>
+              ) : discordError ? (
+                <div className="flex flex-col gap-2 items-center justify-center py-4">
+                  <AlertTriangle className="w-8 h-8 text-red-500" />
+                  <p className="text-sm text-red-500 font-medium">Failed to load Discord service</p>
+                  <Button
+                    size="sm"
+                    onClick={() => discordRefetch()}
+                    className="bg-cyan-500 dark:bg-white"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : guildName ? (
+                <div className="flex items-center gap-4 w-full">
+                  <div className="h-12 w-12 rounded-full flex items-center justify-center">
+                    <img src="https://cdn.worldvectorlogo.com/logos/discord-6.svg" alt="icon" />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <p className="text-sm font-medium">Connected Discord Server</p>
+                    <h3 className="text-lg font-semibold">{guildName}</h3>
+                  </div>
+                  <Button
+                    onClick={deletediscord}
+                    disabled={deletingDiscord}
+                    variant="destructive"
+                    className="ml-auto"
+                  >
+                    {deletingDiscord ? <Spinner /> : "Disconnect"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center py-4">
+                  <div className="space-y-4 w-full">
+                    <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
+                      <img src="https://cdn.worldvectorlogo.com/logos/discord-6.svg" alt="icon" />
+                    </div>
+                    <DiscordForm
+                      onComplete={async () => {
+                        await discordRefetch();
+                        setDialogService(null);
+                        toast.success("Discord connected!");
                       }}
                     />
                   </div>

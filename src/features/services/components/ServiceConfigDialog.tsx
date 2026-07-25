@@ -18,8 +18,11 @@ import { notionauth } from "../../notion/api/api";
 import { telegramauth } from "../../telegram/api/api";
 import { googleauth } from "../../google/api/api";
 import { n8nauth } from "../../n8n/api/api";
+import { githubauth } from "../../github/api/api";
+import { discordauth } from "../../discord/api/api";
 
-type ServiceType = "slack" | "notion" | "telegram" | "googlesheet" | "googledocs" | "n8n";
+type ServiceType =
+  "slack" | "notion" | "telegram" | "googlesheet" | "googledocs" | "n8n" | "github" | "discord";
 
 interface ServiceConfigDialogProps {
   open: boolean;
@@ -58,6 +61,16 @@ const SERVICE_INFO: Record<ServiceType, { name: string; icon: string; descriptio
     name: "n8n",
     icon: "https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg",
     description: "Connect your n8n instance to manage workflows.",
+  },
+  github: {
+    name: "GitHub",
+    icon: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
+    description: "Connect your GitHub account to browse repos, issues, and pull requests.",
+  },
+  discord: {
+    name: "Discord",
+    icon: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
+    description: "Install the Multimate bot into your Discord server to send and read messages.",
   },
 };
 
@@ -313,6 +326,10 @@ const ServiceForm = ({ service, onComplete }: { service: ServiceType; onComplete
       return <GoogleForm onComplete={onComplete} />;
     case "n8n":
       return <N8nForm onComplete={onComplete} />;
+    case "github":
+      return <GithubForm onComplete={onComplete} />;
+    case "discord":
+      return <DiscordForm onComplete={onComplete} />;
     default:
       return null;
   }
@@ -358,9 +375,6 @@ export const SlackForm = ({ onComplete }: { onComplete: () => void }) => {
 
   useEffect(() => {
     if (!polling) return;
-    let timeout: NodeJS.Timeout;
-    let interval: NodeJS.Timeout;
-
     const poll = async () => {
       try {
         const status = await slackauth.slackcheckstatus();
@@ -369,11 +383,13 @@ export const SlackForm = ({ onComplete }: { onComplete: () => void }) => {
           toast.success("Connected to Slack!");
           onComplete();
         }
-      } catch {}
+      } catch (err) {
+        console.error("Slack status poll failed:", err);
+      }
     };
 
-    interval = setInterval(poll, 2000);
-    timeout = setTimeout(() => {
+    const interval = setInterval(poll, 2000);
+    const timeout = setTimeout(() => {
       setPolling(false);
       clearInterval(interval);
       toast.error("Connection timed out. Please try again.");
@@ -411,6 +427,164 @@ export const SlackForm = ({ onComplete }: { onComplete: () => void }) => {
   );
 };
 
+export const GithubForm = ({ onComplete }: { onComplete: () => void }) => {
+  const [checking, setChecking] = useState(false);
+  const [polling, setPolling] = useState(false);
+
+  const connect = async () => {
+    try {
+      const response = await githubauth.githubstate();
+      const stateId = response.stateId;
+      const clientid = import.meta.env.VITE_GITHUB_CLIENT_ID;
+      if (!clientid) {
+        toast.error("GitHub Client ID not configured.");
+        return;
+      }
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://multimate-server.vercel.app";
+      const redirecturi = encodeURIComponent(`${backendUrl}/github/api/callback`);
+
+      const url = `https://github.com/login/oauth/authorize?client_id=${clientid}&scope=repo&redirect_uri=${redirecturi}&state=${stateId}`;
+      (window.ipcRenderer as any).openInBrowser(url);
+      setChecking(true);
+      setPolling(true);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to initiate GitHub connection.");
+    }
+  };
+
+  useEffect(() => {
+    if (!polling) return;
+    const poll = async () => {
+      try {
+        const status = await githubauth.githubcheckstatus();
+        if (status.success) {
+          setPolling(false);
+          toast.success("Connected to GitHub!");
+          onComplete();
+        }
+      } catch (err) {
+        console.error("GitHub status poll failed:", err);
+      }
+    };
+
+    const interval = setInterval(poll, 2000);
+    const timeout = setTimeout(() => {
+      setPolling(false);
+      clearInterval(interval);
+      toast.error("Connection timed out. Please try again.");
+    }, 180000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [polling, onComplete]);
+
+  return (
+    <div className="flex flex-col gap-4 py-4">
+      {checking ? (
+        <div className="flex flex-col items-center gap-3 py-4">
+          <Spinner className="w-6 h-6 text-cyan-500" />
+          <p className="text-sm text-muted-foreground">Waiting for GitHub authorization...</p>
+          <p className="text-xs text-muted-foreground">
+            A browser window has opened. Complete the authorization there.
+          </p>
+        </div>
+      ) : (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Click the button below to open GitHub's authorization page. You'll be asked to grant
+            access to your account.
+          </p>
+          <Button onClick={connect} className="bg-cyan-500 dark:bg-white gap-2">
+            <ExternalLink className="w-4 h-4" />
+            Authorize with GitHub
+          </Button>
+        </>
+      )}
+    </div>
+  );
+};
+
+export const DiscordForm = ({ onComplete }: { onComplete: () => void }) => {
+  const [checking, setChecking] = useState(false);
+  const [polling, setPolling] = useState(false);
+
+  const connect = async () => {
+    try {
+      const response = await discordauth.discordstate();
+      const stateId = response.stateId;
+      const clientid = import.meta.env.VITE_DISCORD_CLIENT_ID;
+      if (!clientid) {
+        toast.error("Discord Client ID not configured.");
+        return;
+      }
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://multimate-server.vercel.app";
+      const redirecturi = encodeURIComponent(`${backendUrl}/discord/api/callback`);
+
+      const url = `https://discord.com/api/oauth2/authorize?client_id=${clientid}&scope=bot&permissions=68608&redirect_uri=${redirecturi}&response_type=code&state=${stateId}`;
+      (window.ipcRenderer as any).openInBrowser(url);
+      setChecking(true);
+      setPolling(true);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to initiate Discord connection.");
+    }
+  };
+
+  useEffect(() => {
+    if (!polling) return;
+    const poll = async () => {
+      try {
+        const status = await discordauth.discordcheckstatus();
+        if (status.success) {
+          setPolling(false);
+          toast.success("Connected to Discord!");
+          onComplete();
+        }
+      } catch (err) {
+        console.error("Discord status poll failed:", err);
+      }
+    };
+
+    const interval = setInterval(poll, 2000);
+    const timeout = setTimeout(() => {
+      setPolling(false);
+      clearInterval(interval);
+      toast.error("Connection timed out. Please try again.");
+    }, 180000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [polling, onComplete]);
+
+  return (
+    <div className="flex flex-col gap-4 py-4">
+      {checking ? (
+        <div className="flex flex-col items-center gap-3 py-4">
+          <Spinner className="w-6 h-6 text-cyan-500" />
+          <p className="text-sm text-muted-foreground">Waiting for Discord authorization...</p>
+          <p className="text-xs text-muted-foreground">
+            A browser window has opened. Choose the server to install the bot into.
+          </p>
+        </div>
+      ) : (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Click the button below to open Discord's authorization page. You'll be asked to install
+            the Multimate bot into one of your servers.
+          </p>
+          <Button onClick={connect} className="bg-cyan-500 dark:bg-white gap-2">
+            <ExternalLink className="w-4 h-4" />
+            Authorize with Discord
+          </Button>
+        </>
+      )}
+    </div>
+  );
+};
+
 export const NotionForm = ({ onComplete }: { onComplete: () => void }) => {
   const [checking, setChecking] = useState(false);
   const [polling, setPolling] = useState(false);
@@ -438,9 +612,6 @@ export const NotionForm = ({ onComplete }: { onComplete: () => void }) => {
 
   useEffect(() => {
     if (!polling) return;
-    let timeout: NodeJS.Timeout;
-    let interval: NodeJS.Timeout;
-
     const poll = async () => {
       try {
         const status = await notionauth.notioncheckstatus();
@@ -449,11 +620,13 @@ export const NotionForm = ({ onComplete }: { onComplete: () => void }) => {
           toast.success("Connected to Notion!");
           onComplete();
         }
-      } catch {}
+      } catch (err) {
+        console.error("Notion status poll failed:", err);
+      }
     };
 
-    interval = setInterval(poll, 2000);
-    timeout = setTimeout(() => {
+    const interval = setInterval(poll, 2000);
+    const timeout = setTimeout(() => {
       setPolling(false);
       clearInterval(interval);
       toast.error("Connection timed out. Please try again.");
