@@ -83,36 +83,40 @@ export default function CustomEdge(props: EdgeProps) {
         onMouseLeave={() => setHovered(false)}
       />
 
-      {active && (
-        <foreignObject
-          x={labelX - 28}
-          y={labelY - 12}
-          width={56}
-          height={24}
-          requiredExtensions="http://www.w3.org/1999/xhtml"
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
+      {/* Always rendered — a thin edge line is a hard target to hit precisely,
+          especially when nodes sit close together, so don't gate this behind
+          hover/select. It just dims when not active, like n8n's edge buttons. */}
+      <foreignObject
+        x={labelX - 28}
+        y={labelY - 12}
+        width={56}
+        height={24}
+        requiredExtensions="http://www.w3.org/1999/xhtml"
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{ overflow: "visible" }}
+      >
+        <div
+          className={`flex items-center gap-1 w-fit mx-auto transition-opacity ${active ? "opacity-100" : "opacity-60 hover:opacity-100"}`}
         >
-          <div className="flex items-center gap-1 w-fit mx-auto">
-            <button
-              type="button"
-              onClick={onInsert}
-              title="Insert node"
-              className="flex items-center justify-center w-6 h-6 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-md transition-colors"
-            >
-              <Plus size={13} />
-            </button>
-            <button
-              type="button"
-              onClick={onDelete}
-              title="Delete edge"
-              className="flex items-center justify-center w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-md transition-colors"
-            >
-              <Trash size={11} />
-            </button>
-          </div>
-        </foreignObject>
-      )}
+          <button
+            type="button"
+            onClick={onInsert}
+            title="Insert node"
+            className="flex items-center justify-center w-6 h-6 rounded-full bg-cyan-500 hover:bg-cyan-600 text-white shadow-md transition-colors"
+          >
+            <Plus size={13} />
+          </button>
+          <button
+            type="button"
+            onClick={onDelete}
+            title="Delete edge"
+            className="flex items-center justify-center w-6 h-6 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-md transition-colors"
+          >
+            <Trash size={11} />
+          </button>
+        </div>
+      </foreignObject>
     </>
   );
 }
