@@ -102,11 +102,13 @@ export const AgentInput = () => {
     ];
 
     // ── Compute execution order from React Flow edges ──
+    // Edges are keyed by each node's real DB id (names can repeat), so the
+    // graph algorithms below must match on id too, not name.
     const hasEdges = store.flowEdges.length > 0;
     const isLoop =
       hasEdges &&
       hasCycle(
-        agents.map((n) => n.name),
+        agents.map((n) => n.id),
         store.flowEdges,
       );
     let runningNodes: typeof agents;
@@ -114,11 +116,11 @@ export const AgentInput = () => {
     if (hasEdges && !isLoop) {
       // Topological sort: determine execution order from edge direction
       const sorted = topologicalSort(
-        agents.map((n) => n.name),
+        agents.map((n) => n.id),
         store.flowEdges,
       );
       runningNodes = sorted
-        .map((name) => agents.find((n) => n.name === name))
+        .map((id) => agents.find((n) => n.id === id))
         .filter(Boolean) as typeof agents;
     } else {
       // No edges or loop = all nodes run simultaneously / continuous
