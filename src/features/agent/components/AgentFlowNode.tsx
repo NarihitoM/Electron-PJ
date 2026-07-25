@@ -14,19 +14,20 @@ import AiContent from "@/shared/components/layout/LayoutAiresponse";
 import { useagentstore } from "../store/store";
 
 export type AgentFlowNodeData = {
-  /** The agent node name — used to look up full data from the store */
-  nodeName: string;
-  onUpdate: (name: string) => void;
-  onDelete: (name: string) => void;
+  /** The agent node's real DB id — used to look up full data from the store (names can repeat) */
+  nodeId: string;
+  onUpdate: (id: string) => void;
+  onDelete: (id: string) => void;
   [key: string]: unknown;
 };
 
 const AgentFlowNode = memo(({ data }: NodeProps<Node<AgentFlowNodeData>>) => {
   // Read live agent data from the store so IPC updates flow through reactively
-  const agentData = useagentstore((s) => s.nodes.find((n) => n.name === data.nodeName));
+  const agentData = useagentstore((s) => s.nodes.find((n) => n.id === data.nodeId));
   // Fallback so the node still renders if the store hasn't synced yet
   const agent = agentData ?? {
-    name: data.nodeName,
+    id: data.nodeId,
+    name: "",
     provider: "",
     actor: "",
     model: "",
@@ -109,7 +110,7 @@ const AgentFlowNode = memo(({ data }: NodeProps<Node<AgentFlowNodeData>>) => {
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
-                data.onUpdate(agent.name);
+                data.onUpdate(agent.id);
               }}
               className="flex gap-2"
             >
@@ -119,7 +120,7 @@ const AgentFlowNode = memo(({ data }: NodeProps<Node<AgentFlowNodeData>>) => {
               className="text-red-600 flex gap-2"
               onClick={(e) => {
                 e.stopPropagation();
-                data.onDelete(agent.name);
+                data.onDelete(agent.id);
               }}
             >
               <Trash size={14} /> Delete

@@ -51,9 +51,9 @@ function computePosition(
   index: number,
   total: number,
   existing: Record<string, { x: number; y: number }>,
-  nodeName: string,
+  nodeId: string,
 ): { x: number; y: number } {
-  if (existing[nodeName]) return existing[nodeName];
+  if (existing[nodeId]) return existing[nodeId];
   if (total <= 6) {
     return { x: index * (NODE_WIDTH + NODE_GAP_X) + 60, y: 120 };
   }
@@ -110,11 +110,11 @@ export const FlowCanvas = () => {
     nodesRef.current = serialized;
 
     store.setNodes(fetchedNodes as any);
-    // Restore saved positions from the backend
+    // Restore saved positions from the backend (keyed by real node id — names aren't unique)
     const savedPositions: Record<string, { x: number; y: number }> = {};
     for (const node of fetchedNodes as any[]) {
       if (node.posX !== null && node.posY !== null) {
-        savedPositions[node.name || node.id] = { x: node.posX, y: node.posY };
+        savedPositions[node.id] = { x: node.posX, y: node.posY };
       }
     }
     if (Object.keys(savedPositions).length > 0) {
@@ -124,8 +124,8 @@ export const FlowCanvas = () => {
 
   /* ── Stable callbacks for node actions ── */
   const onUpdate = useCallback(
-    (name: string) => {
-      const node = store.nodes.find((n) => n.name === name);
+    (id: string) => {
+      const node = store.nodes.find((n) => n.id === id);
       if (!node) return;
       store.setNodeid(node.id);
       store.setName(node.name);
@@ -141,8 +141,8 @@ export const FlowCanvas = () => {
   );
 
   const onDelete = useCallback(
-    (name: string) => {
-      const node = store.nodes.find((n) => n.name === name);
+    (id: string) => {
+      const node = store.nodes.find((n) => n.id === id);
       if (!node) return;
       store.setNodeid(node.id);
       store.setName(node.name);
@@ -152,12 +152,12 @@ export const FlowCanvas = () => {
     [store],
   );
 
-  /* ── Build React Flow nodes from store.nodes (stable: only nodeName + callbacks) ── */
+  /* ── Build React Flow nodes from store.nodes (identity is the real DB id — names can repeat) ── */
   const flowNodes: Node<AgentFlowNodeData>[] = store.nodes.map((agent, idx) => ({
-    id: agent.name,
+    id: agent.id,
     type: "agentFlowNode",
-    position: computePosition(idx, store.nodes.length, store.nodePositions, agent.name),
-    data: { nodeName: agent.name, onUpdate, onDelete },
+    position: computePosition(idx, store.nodes.length, store.nodePositions, agent.id),
+    data: { nodeId: agent.id, onUpdate, onDelete },
   }));
 
   const [nodes, setNodes, onNodesChange] = useNodesState(flowNodes as unknown as Node[]);
@@ -173,50 +173,50 @@ export const FlowCanvas = () => {
 
   /* ── Sync when agents are added/removed from store (avoids re-creating every IPC tick) ── */
   const knownIdsRef = useRef<string>("");
-  const currentIds = store.nodes.map((n) => n.name).join(",");
+  const currentIds = store.nodes.map((n) => n.id).join(",");
   const pendingEdgeInsert = useagentstore((s) => s.pendingEdgeInsert);
   const setPendingEdgeInsert = useagentstore((s) => s.setPendingEdgeInsert);
 
   useEffect(() => {
     if (currentIds === knownIdsRef.current) return; // no structural change
-    const previousNames = new Set(knownIdsRef.current ? knownIdsRef.current.split(",") : []);
+    const previousIds = new Set(knownIdsRef.current ? knownIdsRef.current.split(",") : []);
     knownIdsRef.current = currentIds;
 
-    const newlyAdded = store.nodes.map((n) => n.name).filter((name) => !previousNames.has(name));
+    const newlyAdded = store.nodes.map((n) => n.id).filter((id) => !previousIds.has(id));
 
     setNodes(
       store.nodes.map((agent, idx) => ({
-        id: agent.name,
+        id: agent.id,
         type: "agentFlowNode",
-        position: computePosition(idx, store.nodes.length, store.nodePositions, agent.name),
-        data: { nodeName: agent.name, onUpdate, onDelete },
+        position: computePosition(idx, store.nodes.length, store.nodePositions, agent.id),
+        data: { nodeId: agent.id, onUpdate, onDelete },
       })),
     );
 
     // Clean up edges connected to deleted nodes
-    const nodeNames = new Set(store.nodes.map((n) => n.name));
+    const nodeIds = new Set(store.nodes.map((n) => n.id));
     setEdges((prev) => {
-      let next = prev.filter((e) => nodeNames.has(e.source) && nodeNames.has(e.target));
+      let next = prev.filter((e) => nodeIds.has(e.source) && nodeIds.has(e.target));
 
       // If a node was just created via the edge "+" button, splice it into that edge
       if (pendingEdgeInsert && newlyAdded.length === 1) {
-        const [newNodeName] = newlyAdded;
+        const [newNodeId] = newlyAdded;
         const { edgeId, source, target } = pendingEdgeInsert;
         const hadOriginal = next.some((e) => e.id === edgeId);
         next = next.filter((e) => e.id !== edgeId);
         next = [
           ...next,
           {
-            id: `e-${source}-${newNodeName}`,
+            id: `e-${source}-${newNodeId}`,
             source,
-            target: newNodeName,
+            target: newNodeId,
             type: "custom",
             style: { stroke: "#9ca3af", strokeWidth: 1.5 },
             markerEnd: { type: MarkerType.ArrowClosed, color: "#9ca3af" },
           },
           {
-            id: `e-${newNodeName}-${target}`,
-            source: newNodeName,
+            id: `e-${newNodeId}-${target}`,
+            source: newNodeId,
             target,
             type: "custom",
             style: { stroke: "#9ca3af", strokeWidth: 1.5 },
@@ -229,7 +229,7 @@ export const FlowCanvas = () => {
           if (sourcePos && targetPos) {
             setNodePositions({
               ...store.nodePositions,
-              [newNodeName]: {
+              [newNodeId]: {
                 x: (sourcePos.x + targetPos.x) / 2,
                 y: (sourcePos.y + targetPos.y) / 2,
               },
@@ -357,11 +357,11 @@ export const FlowCanvas = () => {
       }
       posDebounceRef.current = setTimeout(() => {
         const entries = Object.entries(updated);
-        // Map node names to their DB ids via store.nodes
+        // nodePositions is keyed by the real DB node id already
         const nodes = useagentstore.getState().nodes;
         const positions = entries
-          .map(([name, pos]) => {
-            const match = nodes.find((n: any) => n.name === name);
+          .map(([id, pos]) => {
+            const match = nodes.find((n: any) => n.id === id);
             if (!match) return null;
             return { nodeid: match.id, posX: pos.x, posY: pos.y };
           })
@@ -488,7 +488,7 @@ export const FlowCanvas = () => {
         <MiniMap
           nodeStrokeColor="#06b6d4"
           nodeColor={(n) => {
-            const agent = store.nodes.find((a) => a.name === n.id);
+            const agent = store.nodes.find((a) => a.id === n.id);
             if (agent?.status === "running") return "#06b6d4";
             if (agent?.status === "error") return "#ef4444";
             if (agent?.status === "completed") return "#22c55e";
