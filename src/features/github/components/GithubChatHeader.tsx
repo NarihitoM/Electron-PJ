@@ -26,7 +26,10 @@ export const GithubChatHeader = () => {
     <div className="mx-auto w-full max-w-5xl flex justify-between gap-1">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold flex items-center gap-3">
-          <img src="https://github.githubassets.com/favicons/favicon.svg" className="w-7 h-7" />
+          <img
+            src="https://github.githubassets.com/favicons/favicon.svg"
+            className="w-7 h-7 dark:invert"
+          />
           GithubAgent
         </h1>
         <p className="text-muted-foreground">
@@ -41,7 +44,10 @@ export const GithubChatHeader = () => {
           </span>
         ) : username ? (
           <span className="text-[13px] flex items-center gap-2 px-2 py-1 rounded-full border bg-card">
-            <img src="https://github.githubassets.com/favicons/favicon.svg" className="w-4 h-4" />
+            <img
+              src="https://github.githubassets.com/favicons/favicon.svg"
+              className="w-4 h-4 dark:invert"
+            />
             {username.substring(0, 10)}
           </span>
         ) : null}
