@@ -404,6 +404,9 @@ export const GithubInput = () => {
                 <DropdownMenuItem onClick={() => store.settype("listpullrequests")}>
                   <Box /> List Pull Requests
                 </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => store.settype("commitfile")}>
+                  <Box /> Commit File
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             {store.type === "listrepos" && (
@@ -499,6 +502,25 @@ export const GithubInput = () => {
                   <Box size={17} className="text-blue-400" />
                 )}
                 <span className="text-[13px] text-blue-400">List Pull Requests</span>
+              </button>
+            )}
+            {store.type === "commitfile" && (
+              <button
+                onClick={() => {
+                  store.settype("text");
+                  setHover(false);
+                }}
+                disabled={store.sending}
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+                className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
+              >
+                {hover ? (
+                  <X size={17} className="text-blue-400" />
+                ) : (
+                  <Box size={17} className="text-blue-400" />
+                )}
+                <span className="text-[13px] text-blue-400">Commit File</span>
               </button>
             )}
           </div>
