@@ -47,6 +47,7 @@ export const Agent = [
     title: "Github",
     url: "/app/github",
     icon: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
+    invertDark: true,
   },
   {
     title: "Discord",

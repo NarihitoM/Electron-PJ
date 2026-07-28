@@ -72,9 +72,15 @@ import { CreditBadge } from "../../../features/credits/components/CreditBadge";
 import { useAddServiceKey } from "../../../features/services/hooks/useAddServiceKey";
 import { clearModelCache } from "../../config/providermodels";
 
-const IconRenderer = ({ icon: Icon }: { icon: any }) => {
+const IconRenderer = ({ icon: Icon, invertDark }: { icon: any; invertDark?: boolean }) => {
   if (typeof Icon === "string") {
-    return <img src={Icon} alt="icon" className="w-4 h-4 object-contain transition-all" />;
+    return (
+      <img
+        src={Icon}
+        alt="icon"
+        className={`w-4 h-4 object-contain transition-all ${invertDark ? "dark:invert" : ""}`}
+      />
+    );
   }
 
   return <Icon className="w-4 h-4 text-cyan-500 dark:text-white" />;
@@ -368,7 +374,10 @@ export const Sidebarprovider = () => {
                         }
                         onClick={() => navigate(`${element.url}`)}
                       >
-                        <IconRenderer icon={element.icon} />
+                        <IconRenderer
+                          icon={element.icon}
+                          invertDark={(element as any).invertDark}
+                        />
                         {element.title}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -403,7 +412,10 @@ export const Sidebarprovider = () => {
                           </>
                         ) : (
                           <>
-                            <IconRenderer icon={element.icon} />
+                            <IconRenderer
+                              icon={element.icon}
+                              invertDark={(element as any).invertDark}
+                            />
                             {element.title}
                           </>
                         )}
@@ -468,7 +480,10 @@ export const Sidebarprovider = () => {
                               }
                               onClick={() => navigate(`${element.url}`)}
                             >
-                              <IconRenderer icon={element.icon} />
+                              <IconRenderer
+                                icon={element.icon}
+                                invertDark={(element as any).invertDark}
+                              />
                               {element.title}
                             </SidebarMenuButton>
                           </SidebarMenuItem>
