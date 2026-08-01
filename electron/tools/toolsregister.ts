@@ -6,8 +6,6 @@ import { readfiletool } from "./readfiletool";
 import { writefiletool } from "./writefiletool";
 import { emailtool } from "./emailtool";
 import { httptool } from "./httptool";
-import { githubtool } from "./githubtool";
-import { discordtool } from "./discordtool";
 
 export const toolRegistry: Record<string, any> = {
   "Web Search Agent": [websearch],
@@ -16,8 +14,6 @@ export const toolRegistry: Record<string, any> = {
   "Browser Agent": [browser_agent],
   "Utility Agent": [readfiletool, writefiletool],
   "Real World Agent": [emailtool, httptool],
-  "GitHub Agent": [githubtool],
-  "Discord Agent": [discordtool],
 };
 
 export function getRegistryKey(toolId: string): string | undefined {
@@ -30,8 +26,6 @@ export function getRegistryKey(toolId: string): string | undefined {
     write_file: "Utility Agent",
     send_email: "Real World Agent",
     http_request: "Real World Agent",
-    github_action: "GitHub Agent",
-    discord_action: "Discord Agent",
   };
   return map[toolId];
 }
