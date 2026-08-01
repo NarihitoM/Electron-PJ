@@ -6,7 +6,7 @@ import {
   CollapsibleTrigger,
 } from "@/shared/components/ui/collapsible";
 import { Button } from "@/shared/components/ui/button";
-import { motion } from "framer-motion";
+import { GradientShimmer } from "gradient-shimmer";
 
 interface ThinkingBlockProps {
   thinking: string;
@@ -27,13 +27,9 @@ export default function ThinkingBlock({ thinking, isStreaming }: ThinkingBlockPr
         >
           <Brain size={14} className="shrink-0 text-cyan-500" />
           {isStreaming ? (
-            <motion.span
-              animate={{ opacity: [1, 0.5, 1] }}
-              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-              className="text-foreground"
-            >
+            <GradientShimmer gradient="tonic" className="text-foreground">
               Thinking...
-            </motion.span>
+            </GradientShimmer>
           ) : (
             <span>Thinking</span>
           )}
