@@ -18,6 +18,7 @@ import {
   N8nForm,
   GithubForm,
   DiscordForm,
+  ViberForm,
 } from "@/features/services/components/ServiceConfigDialog";
 import { toast } from "sonner";
 import { ServiceCardData } from "./ServiceCard";
@@ -28,6 +29,7 @@ import { useSlackAccount } from "@/features/slack/hooks/useSlackAccount";
 import { useN8nConfig } from "@/features/n8n/hooks/useN8nConfig";
 import { useGithubAccount } from "@/features/github/hooks/useGithubAccount";
 import { useDiscordAccount } from "@/features/discord/hooks/useDiscordAccount";
+import { useViberAccount } from "@/features/viber/hooks/useViberAccount";
 import { telegramauth } from "@/features/telegram/api/api";
 import { googleauth } from "@/features/google/api/api";
 import { notionauth } from "@/features/notion/api/api";
@@ -35,6 +37,7 @@ import { slackauth } from "@/features/slack/api/api";
 import { n8nauth } from "@/features/n8n/api/api";
 import { githubauth } from "@/features/github/api/api";
 import { discordauth } from "@/features/discord/api/api";
+import { viberauth } from "@/features/viber/api/api";
 import { accountstore } from "../store/store";
 
 export const ServiceDetailPanel = () => {
@@ -83,6 +86,12 @@ export const ServiceDetailPanel = () => {
     isError: discordError,
     refetch: discordRefetch,
   } = useDiscordAccount();
+  const {
+    data: viberAccount,
+    isLoading: loadingviber,
+    isError: viberError,
+    refetch: viberRefetch,
+  } = useViberAccount();
 
   const userdata = telegramData;
   const serviceemail = (googleServiceData as any)?.serviceemail ?? "";
@@ -92,12 +101,14 @@ export const ServiceDetailPanel = () => {
   const n8nUrl = (n8nConfig as any)?.n8nUrl ?? "";
   const githubusername = (githubAccount as any)?.username ?? "";
   const guildName = (discordAccount as any)?.guildName ?? "";
+  const vibername = (viberAccount as any)?.name ?? "";
 
   const [deletingTelegram, setDeletingTelegram] = useState(false);
   const [deletingGoogle, setDeletingGoogle] = useState(false);
   const [deletingNotion, setDeletingNotion] = useState(false);
   const [deletingGithub, setDeletingGithub] = useState(false);
   const [deletingDiscord, setDeletingDiscord] = useState(false);
+  const [deletingViber, setDeletingViber] = useState(false);
 
   const connectedServices: ServiceCardData[] = [
     {
@@ -148,6 +159,13 @@ export const ServiceDetailPanel = () => {
       icon: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
       description: "Configure your Discord bot server.",
       isActive: !!guildName,
+    },
+    {
+      id: "viber",
+      name: "Viber",
+      icon: "https://upload.wikimedia.org/wikipedia/commons/1/1f/Viber_logo.svg",
+      description: "Configure your Viber bot account.",
+      isActive: !!vibername,
     },
   ];
 
@@ -282,6 +300,26 @@ export const ServiceDetailPanel = () => {
       }
     } finally {
       setDeletingDiscord(false);
+    }
+  };
+
+  const deleteviber = async () => {
+    setDeletingViber(true);
+    try {
+      const response = await viberauth.deleteviberservice();
+      if (response.success) {
+        toast.success(response.message);
+        setDialogService(null);
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        const Error = err as any;
+        toast.error(Error.response?.data?.message || err.message);
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
+    } finally {
+      setDeletingViber(false);
     }
   };
 
@@ -737,6 +775,70 @@ export const ServiceDetailPanel = () => {
                         await discordRefetch();
                         setDialogService(null);
                         toast.success("Discord connected!");
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {dialogService === "viber" && (
+            <div className="flex flex-col items-center justify-center text-center py-4">
+              {loadingviber ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Spinner className="w-8 h-8 animate-spin text-cyan-500 dark:text-white" />
+                  <p className="text-sm text-muted-foreground animate-pulse">
+                    Loading Viber Service...
+                  </p>
+                </div>
+              ) : viberError ? (
+                <div className="flex flex-col gap-2 items-center justify-center py-4">
+                  <AlertTriangle className="w-8 h-8 text-red-500" />
+                  <p className="text-sm text-red-500 font-medium">Failed to load Viber service</p>
+                  <Button
+                    size="sm"
+                    onClick={() => viberRefetch()}
+                    className="bg-cyan-500 dark:bg-white"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : vibername ? (
+                <div className="flex items-center gap-4 w-full">
+                  <div className="h-12 w-12 rounded-full flex items-center justify-center">
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/1/1f/Viber_logo.svg"
+                      alt="icon"
+                    />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <p className="text-sm font-medium">Connected Viber Account</p>
+                    <h3 className="text-lg font-semibold">{vibername}</h3>
+                  </div>
+                  <Button
+                    onClick={deleteviber}
+                    disabled={deletingViber}
+                    variant="destructive"
+                    className="ml-auto"
+                  >
+                    {deletingViber ? <Spinner /> : "Disconnect"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center py-4">
+                  <div className="space-y-4 w-full">
+                    <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/1/1f/Viber_logo.svg"
+                        alt="icon"
+                      />
+                    </div>
+                    <ViberForm
+                      onComplete={async () => {
+                        await viberRefetch();
+                        setDialogService(null);
+                        toast.success("Viber connected!");
                       }}
                     />
                   </div>

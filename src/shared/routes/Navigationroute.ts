@@ -54,6 +54,11 @@ export const Agent = [
     url: "/app/discord",
     icon: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
   },
+  {
+    title: "Viber",
+    url: "/app/viber",
+    icon: "https://upload.wikimedia.org/wikipedia/commons/1/1f/Viber_logo.svg",
+  },
 ];
 
 //LocalAiAgent
