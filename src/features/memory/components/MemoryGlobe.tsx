@@ -54,6 +54,32 @@ const Controls = () => {
   );
 };
 
+const Stars = () => {
+  const positions = useMemo(() => {
+    const count = 800;
+    const arr = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      // spread stars in a large shell around the globe so they don't clip through it
+      const r = 15 + Math.random() * 35;
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      arr[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      arr[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      arr[i * 3 + 2] = r * Math.cos(phi);
+    }
+    return arr;
+  }, []);
+
+  return (
+    <points>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial color="#ffffff" size={0.05} sizeAttenuation transparent opacity={0.7} />
+    </points>
+  );
+};
+
 const GlobeCore = () => (
   <mesh>
     <sphereGeometry args={[RADIUS * 0.55, 32, 32]} />
@@ -149,6 +175,7 @@ const Scene = ({
     <>
       <ambientLight intensity={0.6} />
       <pointLight position={[5, 5, 5]} intensity={1.2} />
+      <Stars />
       <GlobeCore />
       <Edges positionById={positionById} similarity={similarity} />
       {memories.map((memory, i) => (
