@@ -58,6 +58,10 @@ const runDeepAgentWithEvents = async (
   event.reply("node-start", { nodeName });
   let chainDepth = 0;
 
+  // Maps a `task` tool call's run_id to the sub-agent node it delegated to,
+  // so that node can also show as running on the canvas during delegation.
+  const activeSubagentRuns = new Map<string, string>();
+
   const consumeStream = async (stream: any) => {
     for await (const chunk of stream) {
       if (controller.signal.aborted) break;
@@ -83,8 +87,22 @@ const runDeepAgentWithEvents = async (
         }
       } else if (eventType === "on_tool_start") {
         event.reply("node-tool-call", { nodeName, toolName: chunk.name });
+        if (chunk.name === "task") {
+          const subagentName = chunk.data?.input?.subagent_type;
+          if (subagentName) {
+            activeSubagentRuns.set(chunk.run_id, subagentName);
+            event.reply("node-start", { nodeName: subagentName });
+          }
+        }
       } else if (eventType === "on_tool_end") {
         event.reply("node-tool-finished", { nodeName, toolName: chunk.name, status: "success" });
+        if (chunk.name === "task") {
+          const subagentName = activeSubagentRuns.get(chunk.run_id);
+          if (subagentName) {
+            activeSubagentRuns.delete(chunk.run_id);
+            event.reply("node-finished", { nodeName: subagentName });
+          }
+        }
       }
     }
   };
