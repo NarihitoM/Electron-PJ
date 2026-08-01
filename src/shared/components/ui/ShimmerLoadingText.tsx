@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { GradientShimmer } from "gradient-shimmer";
 
 const PHRASES = ["Thinking", "Searching", "Processing", "Generating", "Analyzing", "Working on it"];
 
@@ -34,13 +35,9 @@ export default function ShimmerLoadingText({
           transition={{ duration: 0.2 }}
           className="inline-block font-medium"
         >
-          <motion.span
-            animate={{ opacity: [1, 0.5, 1] }}
-            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-            className="text-muted-foreground"
-          >
+          <GradientShimmer gradient="tonic" className="text-muted-foreground">
             {phrases[index]}
-          </motion.span>
+          </GradientShimmer>
         </motion.span>
       </AnimatePresence>
       <span className="inline-flex overflow-hidden">
