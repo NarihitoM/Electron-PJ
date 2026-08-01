@@ -15,5 +15,6 @@ export const useMemories = () => {
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 5,
     retry: false,
+    refetchOnMount: "always",
   });
 };

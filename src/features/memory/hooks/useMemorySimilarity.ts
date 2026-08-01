@@ -13,5 +13,6 @@ export const useMemorySimilarity = (enabled: boolean) => {
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 5,
     retry: false,
+    refetchOnMount: "always",
   });
 };
