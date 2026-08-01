@@ -14,8 +14,10 @@ export interface Apiresponse<T = void> {
 
 export interface MemoryPage {
   memories: Memoryitem[];
-  nextCursor: string | null;
-  hasMore: boolean;
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
 }
 
 export type authmemoryfeedback = Apiresponse;

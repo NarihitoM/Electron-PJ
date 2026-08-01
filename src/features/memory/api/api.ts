@@ -7,11 +7,11 @@ import {
 } from "../types/type";
 
 export const memoryauth = {
-  memoryfetch: async (cursor?: string, limit?: number): Promise<authmemorydata> => {
+  memoryfetch: async (page?: number, pageSize?: number): Promise<authmemorydata> => {
     const response = await Server.get("/memory/api/fetchmemory", {
       params: {
-        ...(cursor !== undefined ? { cursor } : {}),
-        ...(limit !== undefined ? { limit } : {}),
+        ...(page !== undefined ? { page } : {}),
+        ...(pageSize !== undefined ? { pageSize } : {}),
       },
     });
     return response.data;

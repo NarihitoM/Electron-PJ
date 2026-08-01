@@ -1,11 +1,20 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/shared/components/ui/card";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Button } from "@/shared/components/ui/button";
 import { Spinner } from "@/shared/components/ui/spinner";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/shared/components/ui/pagination";
 import { Bot, Brain, Check, Pencil, Trash, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { memorystore } from "../store/store";
-import { useMemoriesPaginated } from "../hooks/useMemoriesPaginated";
+import { useMemoriesPage } from "../hooks/useMemoriesPage";
 import { useUpdateMemory } from "../hooks/useUpdateMemory";
 import { useDeleteMemory } from "../hooks/useDeleteMemory";
 
@@ -16,8 +25,11 @@ const formatDate = (iso: string) => {
 };
 
 export const MemoryList = () => {
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useMemoriesPaginated();
-  const memories = data?.pages.flatMap((page) => page.memories) ?? [];
+  const [page, setPage] = useState(1);
+  const { data, isFetching } = useMemoriesPage(page);
+  const memories = data?.memories ?? [];
+  const totalCount = data?.totalCount ?? 0;
+  const totalPages = data?.totalPages ?? 1;
   const editingId = memorystore((s) => s.editingId);
   const editingContent = memorystore((s) => s.editingContent);
   const setEditingId = memorystore((s) => s.setEditingId);
@@ -66,7 +78,7 @@ export const MemoryList = () => {
     }
   };
 
-  if (memories.length === 0) {
+  if (totalCount === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-14 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
         <div className="p-3 rounded-full bg-cyan-500/10">
@@ -87,7 +99,7 @@ export const MemoryList = () => {
           Saved memories
         </span>
         <span className="text-xs text-muted-foreground tabular-nums">
-          {memories.length} {memories.length === 1 ? "memory" : "memories"}
+          {totalCount} {totalCount === 1 ? "memory" : "memories"}
         </span>
       </div>
       {memories.map((memory) => (
@@ -180,18 +192,42 @@ export const MemoryList = () => {
           </CardContent>
         </Card>
       ))}
-      {hasNextPage && (
-        <div className="flex justify-center pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-lg"
-            disabled={isFetchingNextPage}
-            onClick={() => fetchNextPage()}
-          >
-            {isFetchingNextPage ? <Spinner /> : "Load more"}
-          </Button>
-        </div>
+      {totalPages > 1 && (
+        <Pagination className={isFetching ? "opacity-50 pointer-events-none" : ""}>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (page > 1) setPage(page - 1);
+                }}
+                className={page === 1 ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <PaginationItem key={p}>
+                <PaginationLink
+                  isActive={p === page}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setPage(p);
+                  }}
+                >
+                  {p}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
+            <PaginationItem>
+              <PaginationNext
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (page < totalPages) setPage(page + 1);
+                }}
+                className={page === totalPages ? "pointer-events-none opacity-50" : ""}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       )}
     </div>
   );
