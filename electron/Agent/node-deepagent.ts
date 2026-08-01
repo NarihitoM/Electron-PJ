@@ -55,6 +55,29 @@ const buildNodeSystemPrompt = (nodeConfig: nodes, tools: any[], memoryContext?: 
   );
 };
 
+// Orchestrator nodes have no tools of their own — the shared prompt's "you
+// have shell execution capability, take direct action" instructions would
+// otherwise mislead the model into fabricating the work instead of calling
+// the task tool to delegate to a sub-agent.
+const buildOrchestratorSystemPrompt = (
+  nodeConfig: nodes,
+  subagents: ReturnType<typeof buildSubAgentSpec>[],
+  memoryContext?: string,
+) => {
+  const roster = subagents.map((s) => `- "${s.name}": ${s.description}`).join("\n");
+  const memoryBlock = memoryContext
+    ? `\n\n# What you remember about this user\n${memoryContext}`
+    : "";
+
+  return (
+    `You are ${nodeConfig.actor}.\n\n` +
+    (nodeConfig.systemPrompt ? `${nodeConfig.systemPrompt}\n\n` : "") +
+    `You have NO tools of your own. You cannot browse, run commands, read files, or take any direct action yourself. Your only job is to delegate to the sub-agents below using the "task" tool, with subagent_type set to the exact name of the sub-agent to use. Never claim you performed an action yourself — always call "task" first, then report back what the sub-agent returned.\n\n` +
+    `Available sub-agents:\n${roster}` +
+    memoryBlock
+  );
+};
+
 const buildInterruptOn = (tools: any[]) => {
   const interruptOn: Record<string, { allowedDecisions: ("edit" | "approve" | "reject")[] }> = {};
   for (const tool of tools) {
@@ -100,7 +123,9 @@ export const createNodeDeepAgent = async (
   // work itself instead of delegating to the matching sub-agent.
   const isOrchestrating = !!subagents && subagents.length > 0;
   const tools = isOrchestrating ? [] : resolveNodeTools(nodeConfig);
-  const systemPrompt = buildNodeSystemPrompt(nodeConfig, tools, memoryContext);
+  const systemPrompt = isOrchestrating
+    ? buildOrchestratorSystemPrompt(nodeConfig, subagents, memoryContext)
+    : buildNodeSystemPrompt(nodeConfig, tools, memoryContext);
 
   return createDeepAgent({
     model: llm,
