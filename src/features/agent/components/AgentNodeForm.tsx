@@ -261,32 +261,47 @@ export const AgentNodeForm = () => {
                         />
                       </div>
                       <div className="max-h-60 overflow-y-auto p-1">
+                        {"orchestrator".includes(toolSearch.toLowerCase()) && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              store.setTool("");
+                              store.setActor("Orchestrator");
+                              store.setToolOpen(false);
+                              setToolSearch("");
+                            }}
+                            className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-cyan-500 hover:bg-accent cursor-pointer"
+                          >
+                            Orchestrator
+                          </button>
+                        )}
                         {Object.entries(ToolLabels).filter(([, label]) =>
                           label.toLowerCase().includes(toolSearch.toLowerCase()),
-                        ).length === 0 ? (
-                          <p className="py-6 text-center text-sm text-muted-foreground">
-                            No tool found.
-                          </p>
-                        ) : (
-                          Object.entries(ToolLabels)
-                            .filter(([, label]) =>
-                              label.toLowerCase().includes(toolSearch.toLowerCase()),
+                        ).length === 0
+                          ? !"orchestrator".includes(toolSearch.toLowerCase()) && (
+                              <p className="py-6 text-center text-sm text-muted-foreground">
+                                No tool found.
+                              </p>
                             )
-                            .map(([key, label]) => (
-                              <button
-                                key={key}
-                                type="button"
-                                onClick={() => {
-                                  store.setTool(key);
-                                  store.setToolOpen(false);
-                                  setToolSearch("");
-                                }}
-                                className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
-                              >
-                                {label}
-                              </button>
-                            ))
-                        )}
+                          : Object.entries(ToolLabels)
+                              .filter(([, label]) =>
+                                label.toLowerCase().includes(toolSearch.toLowerCase()),
+                              )
+                              .map(([key, label]) => (
+                                <button
+                                  key={key}
+                                  type="button"
+                                  onClick={() => {
+                                    store.setTool(key);
+                                    store.setActor(label);
+                                    store.setToolOpen(false);
+                                    setToolSearch("");
+                                  }}
+                                  className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
+                                >
+                                  {label}
+                                </button>
+                              ))}
                       </div>
                     </div>
                   )}
