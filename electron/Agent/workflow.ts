@@ -76,51 +76,79 @@ const runDeepAgentWithEvents = async (
   event.reply("node-start", { nodeName });
   let chainDepth = 0;
 
-  // Maps a `task` tool call's run_id to the sub-agent node it delegated to,
-  // so that node can also show as running on the canvas during delegation.
-  const activeSubagentRuns = new Map<string, string>();
+  // While delegating, every chunk needs to be attributed to whichever node
+  // is actually producing it — the orchestrator while it's talking/calling
+  // `task`, then the sub-agent for everything inside that delegation, then
+  // back to the orchestrator once it returns. `baseDepth` records chainDepth
+  // at the moment a sub-agent starts, so its own chunks can be classified
+  // output-vs-thinking relative to its own nesting instead of the absolute
+  // depth (which is now offset by however many levels delegation added).
+  type Attribution = { name: string; baseDepth: number };
+  const attributionStack: Attribution[] = [{ name: nodeName, baseDepth: 0 }];
+  const currentAttribution = () => attributionStack[attributionStack.length - 1];
+  // Maps a `task` tool call's run_id to the attribution it pushed, so the
+  // matching on_tool_end can pop exactly that entry back off.
+  const activeSubagentRuns = new Map<string, Attribution>();
 
   const consumeStream = async (stream: any) => {
     for await (const chunk of stream) {
       if (controller.signal.aborted) break;
       const eventType = chunk.event;
+      const { name: attributedNode, baseDepth } = currentAttribution();
 
       if (eventType === "on_chain_start") {
         chainDepth++;
-        event.reply("node-chain-start", { nodeName, name: chunk.name, id: chunk.run_id });
+        event.reply("node-chain-start", {
+          nodeName: attributedNode,
+          name: chunk.name,
+          id: chunk.run_id,
+        });
       } else if (eventType === "on_chain_end") {
         chainDepth--;
-        event.reply("node-chain-end", { nodeName, name: chunk.name, id: chunk.run_id });
+        event.reply("node-chain-end", {
+          nodeName: attributedNode,
+          name: chunk.name,
+          id: chunk.run_id,
+        });
       } else if (eventType === "on_chat_model_stream") {
         const text = chunk.data?.chunk?.content;
         if (text) {
-          // chainDepth 1 → outer graph chain (ignore raw)
-          // chainDepth 2 → main model generation → node-stream (output)
-          // chainDepth >= 3 → nested reasoning/tool-call → node-thinking
-          if (chainDepth > 2) {
-            event.reply("node-thinking", { nodeName, chunk: text });
+          // relDepth 1 → outer graph chain (ignore raw)
+          // relDepth 2 → main model generation → node-stream (output)
+          // relDepth >= 3 → nested reasoning/tool-call → node-thinking
+          const relDepth = chainDepth - baseDepth;
+          if (relDepth > 2) {
+            event.reply("node-thinking", { nodeName: attributedNode, chunk: text });
           } else {
-            event.reply("node-stream", { nodeName, chunk: text });
+            event.reply("node-stream", { nodeName: attributedNode, chunk: text });
           }
         }
       } else if (eventType === "on_tool_start") {
-        event.reply("node-tool-call", { nodeName, toolName: chunk.name });
+        event.reply("node-tool-call", { nodeName: attributedNode, toolName: chunk.name });
         if (chunk.name === "task") {
           const subagentName = extractSubagentName(chunk.data?.input);
           if (subagentName) {
-            activeSubagentRuns.set(chunk.run_id, subagentName);
+            const entry: Attribution = { name: subagentName, baseDepth: chainDepth };
+            activeSubagentRuns.set(chunk.run_id, entry);
+            attributionStack.push(entry);
             event.reply("node-start", { nodeName: subagentName });
           }
         }
       } else if (eventType === "on_tool_end") {
-        event.reply("node-tool-finished", { nodeName, toolName: chunk.name, status: "success" });
         if (chunk.name === "task") {
-          const subagentName = activeSubagentRuns.get(chunk.run_id);
-          if (subagentName) {
+          const entry = activeSubagentRuns.get(chunk.run_id);
+          if (entry) {
             activeSubagentRuns.delete(chunk.run_id);
-            event.reply("node-finished", { nodeName: subagentName });
+            const idx = attributionStack.lastIndexOf(entry);
+            if (idx !== -1) attributionStack.splice(idx, 1);
+            event.reply("node-finished", { nodeName: entry.name });
           }
         }
+        event.reply("node-tool-finished", {
+          nodeName: currentAttribution().name,
+          toolName: chunk.name,
+          status: "success",
+        });
       }
     }
   };
