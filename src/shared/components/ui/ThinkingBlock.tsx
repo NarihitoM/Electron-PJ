@@ -27,7 +27,13 @@ export default function ThinkingBlock({ thinking, isStreaming }: ThinkingBlockPr
         >
           <Brain size={14} className="shrink-0 text-cyan-500" />
           {isStreaming ? (
-            <GradientShimmer gradient="tonic" className="text-foreground">
+            <GradientShimmer
+              gradient={[
+                { color: "#06b6d4", position: 0 },
+                { color: "#ffffff", position: 1 },
+              ]}
+              className="text-foreground"
+            >
               Thinking...
             </GradientShimmer>
           ) : (

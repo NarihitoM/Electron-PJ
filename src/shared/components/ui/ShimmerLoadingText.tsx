@@ -35,7 +35,13 @@ export default function ShimmerLoadingText({
           transition={{ duration: 0.2 }}
           className="inline-block font-medium"
         >
-          <GradientShimmer gradient="tonic" className="text-muted-foreground">
+          <GradientShimmer
+            gradient={[
+              { color: "#06b6d4", position: 0 },
+              { color: "#ffffff", position: 1 },
+            ]}
+            className="text-muted-foreground"
+          >
             {phrases[index]}
           </GradientShimmer>
         </motion.span>
