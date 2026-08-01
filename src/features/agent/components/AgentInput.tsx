@@ -36,6 +36,15 @@ export const AgentInput = () => {
 
   const agents = nodesData ?? [];
 
+  // An Orchestrator node with no edges connecting it to any other node has
+  // nothing to delegate to and would just error out if run.
+  const orchestratorNode = agents.find((n) => n.actor?.trim().toLowerCase() === "orchestrator");
+  const orchestratorNeedsSubagents =
+    !!orchestratorNode &&
+    !store.flowEdges.some(
+      (e) => e.source === orchestratorNode.id || e.target === orchestratorNode.id,
+    );
+
   const [recordstatus, setRecordstatus] = useState(false);
   const [loadingrecord, setLoadingrecord] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -491,9 +500,15 @@ export const AgentInput = () => {
                   !store.workflowloading &&
                   (!store.input ||
                     agents.length === 0 ||
+                    orchestratorNeedsSubagents ||
                     store.messageloading ||
                     loadingrecord ||
                     recordstatus)
+                }
+                title={
+                  orchestratorNeedsSubagents
+                    ? "Connect a sub-agent to the Orchestrator node first"
+                    : undefined
                 }
                 className={
                   store.workflowloading
