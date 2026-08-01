@@ -66,7 +66,9 @@ export class BrowserManager {
               this.activePage = page;
               await page.bringToFront();
             }
-          } catch {}
+          } catch {
+            // page may have closed before we could patch it, ignore
+          }
         }
       });
     }
@@ -91,7 +93,9 @@ export class BrowserManager {
         await this.activePage.bringToFront();
         return this.activePage;
       }
-    } catch {}
+    } catch {
+      // no existing pages reachable, fall back to opening a new one
+    }
 
     this.activePage = await browser.newPage();
     await this.activePage.bringToFront();

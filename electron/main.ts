@@ -1,4 +1,5 @@
 import { app, BrowserWindow, Menu, shell, ipcMain } from "electron";
+import { EventEmitter } from "node:events";
 import { fileURLToPath } from "node:url";
 import * as dotenv from "dotenv";
 import path from "node:path";
@@ -25,6 +26,38 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL
   : RENDERER_DIST;
 
 let win: BrowserWindow | null = null;
+
+const PROTOCOL = "multimateai";
+export const oauthCallbackEmitter = new EventEmitter();
+
+const handleOauthCallbackUrl = (url: string) => {
+  if (url.startsWith(`${PROTOCOL}://`)) {
+    oauthCallbackEmitter.emit("callback", url);
+  }
+};
+
+if (!app.isDefaultProtocolClient(PROTOCOL)) {
+  app.setAsDefaultProtocolClient(PROTOCOL);
+}
+
+const singleInstanceLock = app.requestSingleInstanceLock();
+if (!singleInstanceLock) {
+  app.quit();
+} else {
+  app.on("second-instance", (_event, argv) => {
+    const url = argv.find((arg) => arg.startsWith(`${PROTOCOL}://`));
+    if (url) handleOauthCallbackUrl(url);
+    if (win) {
+      if (win.isMinimized()) win.restore();
+      win.focus();
+    }
+  });
+}
+
+app.on("open-url", (event, url) => {
+  event.preventDefault();
+  handleOauthCallbackUrl(url);
+});
 
 const isAllowedUrl = (url: string): boolean => {
   try {
