@@ -1,7 +1,6 @@
-import { ipcMain, safeStorage, shell } from "electron";
+import { ipcMain, safeStorage, BrowserWindow } from "electron";
 import Store from "electron-store";
 import crypto from "crypto";
-import { oauthCallbackEmitter } from "../main";
 
 const store = new Store({
   name: "user-preferences",
@@ -68,13 +67,27 @@ export const Auth = () => {
         if (settled) return;
         settled = true;
         clearTimeout(timeout);
-        oauthCallbackEmitter.off("callback", onCallback);
         resolve(result);
       };
 
       const timeout = setTimeout(() => {
+        if (!authWindow.isDestroyed()) authWindow.close();
         settle({ success: false, error: "Login timed out. Please try again." });
       }, TIMEOUT_MS);
+
+      const authWindow = new BrowserWindow({
+        width: 800,
+        height: 700,
+        show: true,
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+        },
+      });
+
+      authWindow.on("closed", () => {
+        settle({ success: false, error: "Login window was closed." });
+      });
 
       const backendUrl = process.env.VITE_BACKEND_URL || "https://multimate-server.vercel.app";
       const backendRedirect = `${backendUrl}/auth/api/googlecallback`;
@@ -87,24 +100,26 @@ export const Auth = () => {
         `&state=${oauthState}` +
         `&scope=${encodeURIComponent("openid email profile")}`;
 
-      const onCallback = (url: string) => {
+      authWindow.webContents.on("did-navigate", (_event, url) => {
         try {
           const parsed = new URL(url);
-          const hash = parsed.hash || "";
-          if (hash.startsWith("#")) {
-            const params = new URLSearchParams(hash.substring(1));
-            const accessToken = params.get("access_token");
-            if (accessToken) {
-              settle({ success: true, access_token: accessToken });
+          if (parsed.origin === backendUrl && parsed.pathname === "/auth/api/googlecallback") {
+            const hash = parsed.hash || "";
+            if (hash.startsWith("#")) {
+              const params = new URLSearchParams(hash.substring(1));
+              const accessToken = params.get("access_token");
+              if (accessToken) {
+                if (!authWindow.isDestroyed()) authWindow.close();
+                settle({ success: true, access_token: accessToken });
+              }
             }
           }
         } catch {
           // malformed callback URL, ignore
         }
-      };
+      });
 
-      oauthCallbackEmitter.on("callback", onCallback);
-      shell.openExternal(nativeAuthUrl);
+      authWindow.loadURL(nativeAuthUrl);
     });
   });
 };
