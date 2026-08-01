@@ -80,7 +80,12 @@ export const FlowCanvas = () => {
     isError: nodesError,
     refetch: refetchNodes,
   } = useAgentNodes();
-  const { data: fetchedEdges = [], isError: edgesError, refetch: refetchEdges } = useAgentEdges();
+  const {
+    data: fetchedEdges = [],
+    isLoading: edgesLoading,
+    isError: edgesError,
+    refetch: refetchEdges,
+  } = useAgentEdges();
   const { mutate: saveEdgesToBackend } = useSaveAgentEdges();
   const { mutate: savePositionsToBackend } = useSaveNodePositions();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -316,6 +321,12 @@ export const FlowCanvas = () => {
   /* Listens to store.flowEdges (which mirrors edges via the effect above) */
   const latestFlowEdges = useagentstore((s) => s.flowEdges);
   useEffect(() => {
+    // Never save while the initial edges fetch is still in flight — the
+    // canvas mirrors its (still-empty) local state into the store on
+    // mount, and without this guard the debounce could fire and overwrite
+    // real saved edges with an empty array before the fetch even resolves.
+    if (edgesLoading) return;
+
     const edgeData = latestFlowEdges.map((e) => ({ source: e.source, target: e.target }));
     const prevCount = prevEdgeCountRef.current;
     const currCount = latestFlowEdges.length;
@@ -346,7 +357,7 @@ export const FlowCanvas = () => {
         debounceRef.current = null;
       }
     };
-  }, [latestFlowEdges, saveEdgesToBackend]);
+  }, [latestFlowEdges, saveEdgesToBackend, edgesLoading]);
 
   /* ── Drag handler — persist positions to store AND backend ── */
   /* Reads latest positions from store.getState() to avoid stale closure */
