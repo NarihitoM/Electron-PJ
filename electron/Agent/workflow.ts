@@ -46,6 +46,24 @@ function extractTokenUsage(finalState: any): { inputTokens: number; outputTokens
   return { inputTokens, outputTokens };
 }
 
+// The `task` tool's on_tool_start event nests its raw args as a JSON string
+// under `data.input.input` (LangChain's tracer wraps every tool's inputs as
+// `{ input: <string|object> }`), not a parsed object with `subagent_type`
+// directly — so this has to unwrap and parse it defensively.
+function extractSubagentName(rawInput: any): string | undefined {
+  const inner = rawInput?.input ?? rawInput;
+  if (!inner) return undefined;
+  if (typeof inner === "object") return inner.subagent_type;
+  if (typeof inner === "string") {
+    try {
+      return JSON.parse(inner)?.subagent_type;
+    } catch {
+      return undefined;
+    }
+  }
+  return undefined;
+}
+
 const runDeepAgentWithEvents = async (
   agent: any,
   messages: any[],
@@ -88,7 +106,7 @@ const runDeepAgentWithEvents = async (
       } else if (eventType === "on_tool_start") {
         event.reply("node-tool-call", { nodeName, toolName: chunk.name });
         if (chunk.name === "task") {
-          const subagentName = chunk.data?.input?.subagent_type;
+          const subagentName = extractSubagentName(chunk.data?.input);
           if (subagentName) {
             activeSubagentRuns.set(chunk.run_id, subagentName);
             event.reply("node-start", { nodeName: subagentName });
