@@ -15,6 +15,41 @@ export interface NodeUsage {
   latencyMs: number;
 }
 
+const NODE_INACTIVITY_TIMEOUT_MS = 90_000;
+
+// Wraps a stream so a model/provider that stops producing any events at all
+// (hangs, silently dropped connection, etc.) fails loudly after a timeout
+// instead of leaving the workflow looking like it's still "Working"
+// forever with no error and no reply.
+async function* withInactivityTimeout(
+  stream: AsyncIterable<any>,
+  timeoutMs: number,
+  nodeName: string,
+): AsyncGenerator<any> {
+  const iterator = stream[Symbol.asyncIterator]();
+  while (true) {
+    let timer: ReturnType<typeof setTimeout>;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timer = setTimeout(
+        () =>
+          reject(
+            new Error(
+              `"${nodeName}" stopped responding for ${Math.round(timeoutMs / 1000)}s — the model or provider may be hung.`,
+            ),
+          ),
+        timeoutMs,
+      );
+    });
+    try {
+      const result = await Promise.race([iterator.next(), timeoutPromise]);
+      if (result.done) return;
+      yield result.value;
+    } finally {
+      clearTimeout(timer!);
+    }
+  }
+}
+
 function extractTokenUsage(finalState: any): { inputTokens: number; outputTokens: number } {
   const messages = finalState?.values?.messages;
   if (!messages?.length) return { inputTokens: 0, outputTokens: 0 };
@@ -91,7 +126,7 @@ const runDeepAgentWithEvents = async (
   const activeSubagentRuns = new Map<string, Attribution>();
 
   const consumeStream = async (stream: any) => {
-    for await (const chunk of stream) {
+    for await (const chunk of withInactivityTimeout(stream, NODE_INACTIVITY_TIMEOUT_MS, nodeName)) {
       if (controller.signal.aborted) break;
       const eventType = chunk.event;
       const { name: attributedNode, baseDepth } = currentAttribution();
