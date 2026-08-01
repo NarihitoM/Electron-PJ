@@ -58,6 +58,7 @@ export const AgentNodeForm = () => {
         store.setModel(models[0].model);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- store is a zustand hook, its identity is unstable and must not retrigger this effect
   }, [store.provider, open]);
 
   const onSubmit = async () => {
@@ -151,10 +152,16 @@ export const AgentNodeForm = () => {
               <Label htmlFor="role">Role</Label>
               <Input
                 id="role"
-                placeholder="e.g. Researcher, Coder, Writer..."
+                placeholder="e.g. Researcher, Coder, Writer, Orchestrator..."
                 value={store.actor}
                 onChange={(e) => store.setActor(e.target.value)}
               />
+              {store.actor?.trim().toLowerCase() === "orchestrator" && (
+                <p className="text-xs text-muted-foreground">
+                  This node will delegate to all other nodes in the workflow as sub-agents instead
+                  of running as its own step.
+                </p>
+              )}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="prompt">Prompt</Label>

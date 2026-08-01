@@ -2,7 +2,7 @@ import { type MemorySaver, Command } from "@langchain/langgraph";
 import { HumanMessage, AIMessage } from "@langchain/core/messages";
 import { nodes } from "../../src/shared/types/globaltype";
 import { Servicefetch } from "../../src/features/services/types/type";
-import { createNodeDeepAgent } from "./node-deepagent";
+import { createNodeDeepAgent, buildSubAgentSpec } from "./node-deepagent";
 import crypto from "crypto";
 
 export interface NodeUsage {
@@ -158,14 +158,27 @@ export const runAgentOrchestration = async (
   });
 
   // Nodes arrive pre-sorted from the frontend (topological order when edges exist)
-  const activenode = nodes;
+  let activenode = nodes;
   if (activenode.length === 0) {
     throw new Error("No nodes to execute. Please add at least one node.");
+  }
+
+  // A node whose Role is set to "Orchestrator" delegates to the other nodes
+  // as sub-agents (via deepagents' built-in `task` tool) instead of them
+  // running as separate workflow steps.
+  const orchestratorNode = activenode.find((n) => n.actor?.trim().toLowerCase() === "orchestrator");
+  const workerNodes = orchestratorNode ? activenode.filter((n) => n !== orchestratorNode) : [];
+  if (orchestratorNode && workerNodes.length > 0) {
+    activenode = [orchestratorNode];
   }
 
   const agents: any[] = [];
   for (const n of activenode) {
     try {
+      const subagents =
+        n === orchestratorNode
+          ? workerNodes.map((w) => buildSubAgentSpec(w, memoryContext))
+          : undefined;
       const agent = await createNodeDeepAgent(
         n,
         keyMap,
@@ -173,6 +186,7 @@ export const runAgentOrchestration = async (
         checkpointer,
         hostMap,
         memoryContext,
+        subagents,
       );
       agents.push(agent);
     } catch (err) {
