@@ -120,17 +120,19 @@ const runDeepAgentWithEvents = async (
 
     const interruptValue = interruptedTask.interrupts[0].value;
     const actionRequests = interruptValue.actionRequests ?? [];
-    const firstRequest = actionRequests[0] || {};
 
-    const approved = await requestApproval(
-      nodeName,
-      firstRequest.name || "",
-      firstRequest.args || null,
-    );
+    // Resume needs exactly one decision per pending action request, in
+    // order — approving/rejecting only the first left the rest unanswered
+    // and deepagents rejects the resume as a decision-count mismatch.
+    const decisions: { type: "approve" | "reject" }[] = [];
+    for (const request of actionRequests) {
+      const approved = await requestApproval(nodeName, request.name || "", request.args || null);
+      decisions.push({ type: approved ? "approve" : "reject" });
+    }
 
     stream = agent.streamEvents(
       new Command({
-        resume: { decisions: [{ type: approved ? ("approve" as const) : ("reject" as const) }] },
+        resume: { decisions },
       }),
       { version: "v2", ...config },
     );
