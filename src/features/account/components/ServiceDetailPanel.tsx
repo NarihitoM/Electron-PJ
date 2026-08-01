@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,7 @@ import { accountstore } from "../store/store";
 export const ServiceDetailPanel = () => {
   const dialogService = accountstore((s) => s.dialogService);
   const setDialogService = accountstore((s) => s.setDialogService);
+  const queryClient = useQueryClient();
 
   const {
     data: telegramData,
@@ -175,6 +177,7 @@ export const ServiceDetailPanel = () => {
       const response = await telegramauth.telegramresetservice();
       if (response.success) {
         toast.success(response.message);
+        queryClient.invalidateQueries({ queryKey: ["telegram"] });
         setDialogService(null);
       }
     } catch (err: unknown) {
@@ -195,6 +198,7 @@ export const ServiceDetailPanel = () => {
       const response = await googleauth.deleteservice();
       if (response.success) {
         toast.success(response.message);
+        queryClient.invalidateQueries({ queryKey: ["google"] });
         setDialogService(null);
       }
     } catch (err: unknown) {
@@ -215,6 +219,7 @@ export const ServiceDetailPanel = () => {
       const response = await notionauth.notiondeleteservice();
       if (response.success) {
         toast.success(response.message);
+        queryClient.invalidateQueries({ queryKey: ["notion"] });
         setDialogService(null);
       }
     } catch (err: unknown) {
@@ -234,6 +239,7 @@ export const ServiceDetailPanel = () => {
       const response = await slackauth.deleteslackservice();
       if (response.success) {
         toast.success(response.message);
+        queryClient.invalidateQueries({ queryKey: ["slack"] });
         setDialogService(null);
       }
     } catch (err: unknown) {
@@ -251,6 +257,7 @@ export const ServiceDetailPanel = () => {
       const response = await n8nauth.n8ndeleteservice();
       if (response.success) {
         toast.success(response.message);
+        queryClient.invalidateQueries({ queryKey: ["n8n"] });
         setDialogService(null);
       }
     } catch (err: unknown) {
@@ -269,6 +276,7 @@ export const ServiceDetailPanel = () => {
       const response = await githubauth.githubdeleteservice();
       if (response.success) {
         toast.success(response.message);
+        queryClient.invalidateQueries({ queryKey: ["github"] });
         setDialogService(null);
       }
     } catch (err: unknown) {
@@ -289,6 +297,7 @@ export const ServiceDetailPanel = () => {
       const response = await discordauth.deletediscordservice();
       if (response.success) {
         toast.success(response.message);
+        queryClient.invalidateQueries({ queryKey: ["discord"] });
         setDialogService(null);
       }
     } catch (err: unknown) {
@@ -309,6 +318,7 @@ export const ServiceDetailPanel = () => {
       const response = await viberauth.deleteviberservice();
       if (response.success) {
         toast.success(response.message);
+        queryClient.invalidateQueries({ queryKey: ["viber"] });
         setDialogService(null);
       }
     } catch (err: unknown) {
