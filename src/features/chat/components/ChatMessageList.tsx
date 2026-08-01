@@ -42,6 +42,7 @@ export const ChatMessageList = () => {
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const isNearBottomRef = useRef(true);
+  const loadedChatIdRef = useRef<string | undefined>(undefined);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
@@ -123,6 +124,14 @@ export const ChatMessageList = () => {
       store.setloadingfetch(false);
       return;
     }
+
+    // If this is a genuinely different chat than what's currently in the store,
+    // the leftover sessionmessage belongs to the OLD chat — never treat it as a
+    // valid "unsaved messages" fallback for a different chat id.
+    const isChatSwitch = loadedChatIdRef.current !== id;
+    loadedChatIdRef.current = id;
+    if (isChatSwitch) store.setsessionmessage([]);
+
     store.setloadingfetch(true);
     store.setloadingerror(false);
     store.setSending(false);
@@ -130,7 +139,7 @@ export const ChatMessageList = () => {
     store.setHasMore(false);
 
     // Keep existing session messages as fallback — only replace once server data arrives
-    const existingMessages = store.sessionmessage;
+    const existingMessages = isChatSwitch ? [] : store.sessionmessage;
 
     try {
       const response = await chatauth.fetchchatmessage(id);
