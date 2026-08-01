@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { ArrowUp, Box, Mic, RefreshCw, Square, ToolCaseIcon, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
-import { Input } from "@/shared/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -15,6 +15,7 @@ import { ImagePreview, ImagePicker } from "@/shared/components/ImageUpload";
 import { toast } from "sonner";
 import { getProviderModels } from "@/shared/config/providermodels";
 import { useDiscordAccount } from "../hooks/useDiscordAccount";
+import { useDiscordChannels } from "../hooks/useDiscordChannels";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { discordauth } from "../api/api";
 import { chatauth } from "@/features/chat/api/api";
@@ -38,14 +39,14 @@ const ToolButton: React.FC<{
       disabled={sending}
       onMouseEnter={() => setLocalHover(true)}
       onMouseLeave={() => setLocalHover(false)}
-      className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-[#5865F2]/5 border-[#5865F2]/20 hover:bg-[#5865F2]/20"
+      className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
     >
       {localHover ? (
-        <X size={17} className="text-[#5865F2]" />
+        <X size={17} className="text-blue-400" />
       ) : (
-        <Box size={17} className="text-[#5865F2]" />
+        <Box size={17} className="text-blue-400" />
       )}
-      <span className="text-[13px] text-[#5865F2]">{label}</span>
+      <span className="text-[13px] text-blue-400">{label}</span>
     </button>
   );
 };
@@ -79,6 +80,7 @@ export const DiscordInput = () => {
 
   const guildName = (discordAccount as any)?.guildName ?? "";
   const guildId = (discordAccount as any)?.guildId ?? "";
+  const { data: channels = [], isLoading: loadingChannels } = useDiscordChannels(!!guildId);
 
   const [input, setInput] = useState("");
   const [type, settype] = useState<string | null>("text");
@@ -113,6 +115,13 @@ export const DiscordInput = () => {
   useEffect(() => {
     return () => abortControllerRef.current?.abort();
   }, []);
+
+  useEffect(() => {
+    if (!channelid && channels.length > 0) {
+      setChannelid(channels[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channels]);
 
   const scrollToBottom = () => {
     const el = document.querySelector("[data-messages-end]");
@@ -417,7 +426,7 @@ export const DiscordInput = () => {
           <Button
             onClick={deletediscordmessage}
             disabled={sessionmessage.length === 0 || loadingdiscorddelmsg}
-            className="bg-[#5865F2] text-white"
+            className="bg-cyan-500 dark:bg-white"
           >
             {loadingdiscorddelmsg ? (
               <Spinner />
@@ -431,13 +440,26 @@ export const DiscordInput = () => {
         </div>
         <div className="flex gap-2 items-center">
           {guildId && (
-            <Input
+            <Select
               value={channelid}
-              onChange={(e) => setChannelid(e.target.value)}
-              placeholder="Channel ID"
-              className="w-40"
+              onValueChange={(value) => setChannelid(value ?? "")}
               disabled={!provider}
-            />
+            >
+              <SelectTrigger className="w-40">
+                {loadingChannels
+                  ? "Loading channels..."
+                  : channels.find((c) => c.id === channelid)?.name
+                    ? `#${channels.find((c) => c.id === channelid)?.name}`
+                    : "Select Channel"}
+              </SelectTrigger>
+              <SelectContent>
+                {channels.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    #{c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
         </div>
       </div>
@@ -521,7 +543,7 @@ export const DiscordInput = () => {
               disabled={loadingrecord || !guildId || !model || !provider}
               onClick={recordstatus ? stopRecording : startRecording}
               size="icon"
-              className="bg-[#5865F2] text-white rounded-full"
+              className="bg-cyan-500 dark:bg-white rounded-full"
             >
               {recordstatus ? (
                 <Square size={14} className="fill-current" />
@@ -548,7 +570,7 @@ export const DiscordInput = () => {
               className={
                 sending
                   ? "bg-red-500 hover:bg-red-600 rounded-full"
-                  : "bg-[#5865F2] text-white rounded-full"
+                  : "bg-cyan-500 dark:bg-white rounded-full"
               }
             >
               {sending ? <Square size={16} className="fill-current" /> : <ArrowUp size={16} />}

@@ -94,7 +94,7 @@ export const DiscordChatHeader = () => {
             </Button>
           </div>
         ) : (
-          <Button className="bg-[#5865F2] text-white" onClick={() => navigate("/app/settings")}>
+          <Button className="bg-cyan-500 dark:bg-white" onClick={() => navigate("/app/settings")}>
             Add Provider
           </Button>
         )}

@@ -98,7 +98,11 @@ export const DiscordConnectionPanel = () => {
       {guildName ? (
         ""
       ) : (
-        <Button disabled={isChecking} className="bg-[#5865F2] text-white" onClick={connectDiscord}>
+        <Button
+          disabled={isChecking}
+          className="bg-cyan-500 dark:bg-white"
+          onClick={connectDiscord}
+        >
           {isChecking ? <Spinner /> : "Connect Discord"}
         </Button>
       )}

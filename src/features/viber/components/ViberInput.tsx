@@ -37,14 +37,14 @@ const ToolButton: React.FC<{
       disabled={sending}
       onMouseEnter={() => setLocalHover(true)}
       onMouseLeave={() => setLocalHover(false)}
-      className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-[#7360F2]/5 border-[#7360F2]/20 hover:bg-[#7360F2]/20"
+      className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
     >
       {localHover ? (
-        <X size={17} className="text-[#7360F2]" />
+        <X size={17} className="text-blue-400" />
       ) : (
-        <Box size={17} className="text-[#7360F2]" />
+        <Box size={17} className="text-blue-400" />
       )}
-      <span className="text-[13px] text-[#7360F2]">{label}</span>
+      <span className="text-[13px] text-blue-400">{label}</span>
     </button>
   );
 };
@@ -410,7 +410,7 @@ export const ViberInput = () => {
           <Button
             onClick={deletevibermessage}
             disabled={sessionmessage.length === 0 || loadingviberdelmsg}
-            className="bg-[#7360F2] text-white"
+            className="bg-cyan-500 dark:bg-white"
           >
             {loadingviberdelmsg ? (
               <Spinner />
@@ -502,7 +502,7 @@ export const ViberInput = () => {
               disabled={loadingrecord || !viberUserId || !model || !provider}
               onClick={recordstatus ? stopRecording : startRecording}
               size="icon"
-              className="bg-[#7360F2] text-white rounded-full"
+              className="bg-cyan-500 dark:bg-white rounded-full"
             >
               {recordstatus ? (
                 <Square size={14} className="fill-current" />
@@ -528,7 +528,7 @@ export const ViberInput = () => {
               className={
                 sending
                   ? "bg-red-500 hover:bg-red-600 rounded-full"
-                  : "bg-[#7360F2] text-white rounded-full"
+                  : "bg-cyan-500 dark:bg-white rounded-full"
               }
             >
               {sending ? <Square size={16} className="fill-current" /> : <ArrowUp size={16} />}

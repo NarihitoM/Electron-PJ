@@ -94,7 +94,7 @@ export const ViberChatHeader = () => {
             </Button>
           </div>
         ) : (
-          <Button className="bg-[#7360F2] text-white" onClick={() => navigate("/app/settings")}>
+          <Button className="bg-cyan-500 dark:bg-white" onClick={() => navigate("/app/settings")}>
             Add Provider
           </Button>
         )}

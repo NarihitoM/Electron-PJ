@@ -15,6 +15,13 @@ export const discordauth = {
     const response = await Server.get("/discord/api/discordacc");
     return response.data;
   },
+  discordchannels: async (): Promise<{
+    success: boolean;
+    data?: { id: string; name: string; type: number }[];
+  }> => {
+    const response = await Server.get("/discord/api/channels");
+    return response.data;
+  },
   fetchdiscordmessage: async (cursor?: string, limit?: number): Promise<returndiscordmsg> => {
     const response = await Server.get("/discord/api/fetchmessage", {
       params: {

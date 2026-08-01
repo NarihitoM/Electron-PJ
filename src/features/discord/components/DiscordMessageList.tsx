@@ -221,7 +221,7 @@ export const DiscordMessageList = () => {
           <p className="text-sm text-muted-foreground">
             There was a problem connecting to the server.
           </p>
-          <Button onClick={fetchMessages} className="bg-[#5865F2] text-white">
+          <Button onClick={fetchMessages} className="bg-cyan-500 dark:bg-white">
             Retry
           </Button>
         </div>
@@ -254,7 +254,7 @@ export const DiscordMessageList = () => {
         {loadingMore && (
           <div className="flex justify-center py-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Spinner className="h-5 w-5 text-[#5865F2]" />
+              <Spinner className="h-5 w-5 text-cyan-500 dark:text-white" />
               Loading...
             </div>
           </div>
@@ -279,7 +279,7 @@ export const DiscordMessageList = () => {
                       }
                       alt={userdata?.username}
                     />
-                    <AvatarFallback className="bg-[#5865F2] border text-white">
+                    <AvatarFallback className="bg-cyan-500 dark:bg-white border text-white dark:text-black">
                       {userdata?.username.substring(0, 1)}
                     </AvatarFallback>
                   </Avatar>
@@ -384,7 +384,7 @@ export const DiscordMessageList = () => {
                                 }`}
                               >
                                 {tool.status === "loading" && (
-                                  <Spinner className="w-4 h-4 animate-spin text-[#5865F2]" />
+                                  <Spinner className="w-4 h-4 animate-spin text-cyan-500 dark:text-white" />
                                 )}
                                 {tool.status === "done" && (
                                   <CheckCircle2 size={12} className="text-green-500" />

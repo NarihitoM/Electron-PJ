@@ -98,7 +98,7 @@ export const ViberConnectionPanel = () => {
       {name ? (
         ""
       ) : (
-        <Button disabled={isChecking} className="bg-[#7360F2] text-white" onClick={connectViber}>
+        <Button disabled={isChecking} className="bg-cyan-500 dark:bg-white" onClick={connectViber}>
           {isChecking ? <Spinner /> : "Connect Viber"}
         </Button>
       )}
