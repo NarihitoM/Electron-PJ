@@ -95,7 +95,11 @@ export const createNodeDeepAgent = async (
     hostMap,
   );
 
-  const tools = resolveNodeTools(nodeConfig);
+  // Running as an orchestrator (has sub-agents) means pure delegation — its
+  // own directly-assigned tool must not be attached, or it'll just do the
+  // work itself instead of delegating to the matching sub-agent.
+  const isOrchestrating = !!subagents && subagents.length > 0;
+  const tools = isOrchestrating ? [] : resolveNodeTools(nodeConfig);
   const systemPrompt = buildNodeSystemPrompt(nodeConfig, tools, memoryContext);
 
   return createDeepAgent({

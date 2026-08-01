@@ -38,6 +38,12 @@ export const AgentNodeForm = () => {
 
   const mode = store.nodeDialogMode;
   const open = store.nodeDialogOpen;
+  const isOrchestrator = store.actor?.trim().toLowerCase() === "orchestrator";
+
+  useEffect(() => {
+    if (isOrchestrator && store.tool) store.setTool("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- store is a zustand hook, its identity is unstable and must not retrigger this effect
+  }, [isOrchestrator]);
 
   const apiWithLogos = Api.map((item: any) => ({
     ...item,
@@ -156,10 +162,10 @@ export const AgentNodeForm = () => {
                 value={store.actor}
                 onChange={(e) => store.setActor(e.target.value)}
               />
-              {store.actor?.trim().toLowerCase() === "orchestrator" && (
+              {isOrchestrator && (
                 <p className="text-xs text-muted-foreground">
-                  This node will delegate to all other nodes in the workflow as sub-agents instead
-                  of running as its own step.
+                  This node will delegate to the nodes connected to it on the canvas as sub-agents,
+                  instead of using a tool directly.
                 </p>
               )}
             </div>
@@ -242,13 +248,18 @@ export const AgentNodeForm = () => {
                 <div className="relative overflow-visible">
                   <Button
                     variant="outline"
+                    disabled={isOrchestrator}
                     onClick={() => store.setToolOpen(!store.toolOpen)}
                     className="w-full justify-between"
                   >
-                    {store.tool ? ToolLabels[store.tool] : "Select tool..."}
+                    {isOrchestrator
+                      ? "Delegates to sub-agents"
+                      : store.tool
+                        ? ToolLabels[store.tool]
+                        : "Select tool..."}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
-                  {store.toolOpen && (
+                  {store.toolOpen && !isOrchestrator && (
                     <div className="absolute left-0 right-0 bottom-full mb-1 z-100 min-w-full rounded-lg border bg-popover text-popover-foreground shadow-md">
                       <div className="flex items-center gap-2 border-b px-3 py-2">
                         <Search className="h-4 w-4 shrink-0 opacity-50" />
