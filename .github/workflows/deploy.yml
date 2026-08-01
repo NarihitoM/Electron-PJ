@@ -28,3 +28,5 @@ jobs:
           VITE_CLIENTID: ${{ secrets.VITE_CLIENTID }}
           VITE_SLACK_CLIENT_ID: ${{ secrets.VITE_SLACK_CLIENT_ID }}
           VITE_NOTION_CLIENT_ID: ${{ secrets.VITE_NOTION_CLIENT_ID }}
+          VITE_GITHUB_CLIENT_ID: ${{ secrets.VITE_GITHUB_CLIENT_ID }}
+          VITE_DISCORD_CLIENT_ID: ${{ secrets.VITE_DISCORD_CLIENT_ID }}
