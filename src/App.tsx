@@ -27,6 +27,7 @@ import { Verifychangepassword } from "./pages/VerifyChangePassword";
 import { Passwordchange } from "./pages/ChangePasswordPage";
 import { Aivideoanalyse } from "./pages/Aivideoanalyse";
 import { Usage } from "./pages/Usage";
+import { Memory } from "./pages/Memory";
 
 function App() {
   return (
@@ -64,6 +65,7 @@ function App() {
                 //done
                 <Route path="usage" element={<Usage />} />
                 <Route path="settings" element={<Settings />} /> //done
+                <Route path="memory" element={<Memory />} />
                 <Route path="account" element={<Account />} /> //done
               </Route>
             </Route>

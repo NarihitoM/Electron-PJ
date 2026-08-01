@@ -46,7 +46,14 @@ import { useDeleteChat } from "../../../features/chat/hooks/useDeleteChat";
 import { authservicestore } from "../../../features/services/store/store";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { navItems, Agent, Localagent, Settings, mainItems } from "../../routes/Navigationroute";
+import {
+  navItems,
+  Agent,
+  Localagent,
+  MemoryNav,
+  Settings,
+  mainItems,
+} from "../../routes/Navigationroute";
 import { telegramauthstore } from "../../../features/telegram/store/store";
 import { useagentstore } from "../../../features/agent/store/store";
 import Multimate from "../../assets/Multimate.png";
@@ -499,6 +506,29 @@ export const Sidebarprovider = () => {
               <SidebarGroupContent>
                 <SidebarGroupLabel>Workflow Agent</SidebarGroupLabel>
                 {Localagent.map((element) => (
+                  <SidebarMenu key={element.title}>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        className={
+                          location.pathname.startsWith(`${element.url}`)
+                            ? "bg-linear-to-r from-card hover:text-cyan-500 active:text-cyan-500 from-30% to-cyan-300 text-cyan-500 dark:text-white/70 dark:to-white/20"
+                            : ""
+                        }
+                        onClick={() => navigate(`${element.url}`)}
+                      >
+                        <element.icon className="text-cyan-500 dark:text-white" />
+                        {element.title}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                ))}
+              </SidebarGroupContent>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarGroupLabel>Memory</SidebarGroupLabel>
+                {MemoryNav.map((element) => (
                   <SidebarMenu key={element.title}>
                     <SidebarMenuItem>
                       <SidebarMenuButton

@@ -7,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui
 import { ServiceApiKeyList } from "./ServiceApiKeyList";
 import { ServiceIntegrationList } from "./ServiceIntegrationList";
 import { ServiceDetailPanel } from "./ServiceDetailPanel";
-import { MemorySettings } from "@/features/memory/components/MemorySettings";
 
 export const SettingsPage = () => {
   const { isLoading, isError, refetch } = useServiceKeys();
@@ -98,18 +97,12 @@ export const SettingsPage = () => {
           <TabsTrigger value="integrations" className="flex-1">
             Integrations
           </TabsTrigger>
-          <TabsTrigger value="memory" className="flex-1">
-            Memory
-          </TabsTrigger>
         </TabsList>
         <TabsContent value="providers">
           <ServiceApiKeyList />
         </TabsContent>
         <TabsContent value="integrations">
           <ServiceIntegrationList />
-        </TabsContent>
-        <TabsContent value="memory">
-          <MemorySettings />
         </TabsContent>
       </Tabs>
       <ServiceDetailPanel />

@@ -1,4 +1,12 @@
-import { BotIcon, LayoutDashboard, SquarePen, SettingsIcon, Video, BarChart3 } from "lucide-react";
+import {
+  BotIcon,
+  LayoutDashboard,
+  SquarePen,
+  SettingsIcon,
+  Video,
+  BarChart3,
+  Brain,
+} from "lucide-react";
 
 export const mainItems = [
   { title: "Dashboard", url: "/app/dashboard", icon: LayoutDashboard },
@@ -63,5 +71,7 @@ export const Agent = [
 
 //LocalAiAgent
 export const Localagent = [{ title: "MultiAgents", url: "/app/localagent", icon: BotIcon }];
+
+export const MemoryNav = [{ title: "Memory", url: "/app/memory", icon: Brain }];
 
 export const Settings = [{ title: "Service Settings", url: "/app/settings", icon: SettingsIcon }];
