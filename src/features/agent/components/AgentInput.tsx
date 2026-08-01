@@ -74,6 +74,15 @@ export const AgentInput = () => {
       if (!store.input.trim()) return;
     }
     if (!store.input.trim() || store.messageloading) return;
+
+    const hasOrchestrator = agents.some((n) => n.actor?.trim().toLowerCase() === "orchestrator");
+    if (agents.length > 1 && !hasOrchestrator) {
+      toast.info("No Orchestrator agent found", {
+        description:
+          'Add a node with Role set to "Orchestrator" to have it delegate to the other nodes automatically.',
+      });
+    }
+
     const controller = new AbortController();
     abortControllerRef.current = controller;
     const messageText = store.input;
