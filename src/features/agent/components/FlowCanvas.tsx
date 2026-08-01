@@ -20,6 +20,7 @@ import "@xyflow/react/dist/style.css";
 
 import { toast } from "sonner";
 import { Button } from "@/shared/components/ui/button";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useAgentNodes } from "@/features/agent/hooks/useAgentNodes";
 import { useAgentEdges } from "@/features/agent/hooks/useAgentEdges";
@@ -429,8 +430,10 @@ export const FlowCanvas = () => {
   /* ── Loading state ── */
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-80 text-muted-foreground text-sm">
-        Loading agents...
+      <div className="h-80 p-4 flex flex-col gap-3">
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <Skeleton className="h-24 w-full rounded-xl" />
+        <Skeleton className="h-24 w-full rounded-xl" />
       </div>
     );
   }
