@@ -138,6 +138,7 @@ export const runAgentOrchestration = async (
   initialMessages?: { role: string; content: string }[],
   memoryContext?: string,
   continuous?: boolean,
+  edges?: { source: string; target: string }[],
 ): Promise<{ messages: any[]; usageData: NodeUsage[] }> => {
   const keyMap: Record<string, string> = {};
   const hostMap: Record<string, string> = {};
@@ -163,12 +164,25 @@ export const runAgentOrchestration = async (
     throw new Error("No nodes to execute. Please add at least one node.");
   }
 
-  // A node whose Role is set to "Orchestrator" delegates to the other nodes
-  // as sub-agents (via deepagents' built-in `task` tool) instead of them
-  // running as separate workflow steps.
+  // A node whose Role is set to "Orchestrator" delegates to the nodes
+  // connected to it by an edge (in either direction) as sub-agents (via
+  // deepagents' built-in `task` tool) instead of them running as separate
+  // workflow steps.
   const orchestratorNode = activenode.find((n) => n.actor?.trim().toLowerCase() === "orchestrator");
-  const workerNodes = orchestratorNode ? activenode.filter((n) => n !== orchestratorNode) : [];
-  if (orchestratorNode && workerNodes.length > 0) {
+  let workerNodes: nodes[] = [];
+  if (orchestratorNode) {
+    const connectedIds = new Set(
+      (edges ?? [])
+        .filter((e) => e.source === orchestratorNode.id || e.target === orchestratorNode.id)
+        .map((e) => (e.source === orchestratorNode.id ? e.target : e.source)),
+    );
+    workerNodes = activenode.filter((n) => n !== orchestratorNode && connectedIds.has(n.id));
+
+    if (workerNodes.length === 0) {
+      throw new Error(
+        `"${orchestratorNode.name}" is an Orchestrator but has no sub-agents connected. Connect it to at least one other node on the canvas before running.`,
+      );
+    }
     activenode = [orchestratorNode];
   }
 

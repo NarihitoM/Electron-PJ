@@ -37,7 +37,7 @@ async function logUsageToServer(usageData: any[], token: string | null) {
 
 export const RunAgent = () => {
   ipcMain.on("run-workflow", async (event, data) => {
-    const { nodes, encryptkey, useremail, simultaneous, input, continuous } = data;
+    const { nodes, encryptkey, useremail, simultaneous, input, continuous, edges } = data;
 
     if (currentAbortController) {
       currentAbortController.abort();
@@ -94,6 +94,7 @@ export const RunAgent = () => {
         input,
         memoryContext,
         continuous,
+        edges,
       );
       console.log("Workflow Completed");
       await logUsageToServer(usageData, token);

@@ -146,6 +146,7 @@ export const AgentInput = () => {
       useremail,
       simultaneous: !hasEdges || isLoop,
       continuous: isLoop,
+      edges: store.flowEdges,
     });
     store.setInput("");
   };
