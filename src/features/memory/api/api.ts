@@ -31,4 +31,11 @@ export const memoryauth = {
     const response = await Server.post("/memory/api/togglememory", { enabled });
     return response.data;
   },
+  memorysimilarity: async (): Promise<{
+    success: boolean;
+    data?: { id: string; relatedIds: string[] }[];
+  }> => {
+    const response = await Server.get("/memory/api/similarity");
+    return response.data;
+  },
 };

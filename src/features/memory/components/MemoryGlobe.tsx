@@ -4,6 +4,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import * as THREE from "three";
 import { Bot, User, X } from "lucide-react";
 import { useMemories } from "../hooks/useMemories";
+import { useMemorySimilarity } from "../hooks/useMemorySimilarity";
 import type { Memoryitem } from "../types/type";
 
 extend({ OrbitControls });
@@ -60,30 +61,39 @@ const GlobeCore = () => (
   </mesh>
 );
 
-const Edges = ({ positions }: { positions: [number, number, number][] }) => {
+const Edges = ({
+  positionById,
+  similarity,
+}: {
+  positionById: Map<string, [number, number, number]>;
+  similarity: { id: string; relatedIds: string[] }[];
+}) => {
   const geometry = useMemo(() => {
     const points: THREE.Vector3[] = [];
-    // connect each node to its two nearest neighbours for a network-mesh look
-    positions.forEach((p, i) => {
-      const vp = new THREE.Vector3(...p);
-      const distances = positions
-        .map((q, j) => ({ j, d: vp.distanceTo(new THREE.Vector3(...q)) }))
-        .filter((e) => e.j !== i)
-        .sort((a, b) => a.d - b.d)
-        .slice(0, 2);
-      distances.forEach(({ j }) => {
-        points.push(vp, new THREE.Vector3(...positions[j]));
+    // connect each memory to the other memories it's semantically related to (via embedding similarity)
+    similarity.forEach(({ id, relatedIds }) => {
+      const from = positionById.get(id);
+      if (!from) return;
+      relatedIds.forEach((relatedId) => {
+        const to = positionById.get(relatedId);
+        if (!to) return;
+        points.push(new THREE.Vector3(...from), new THREE.Vector3(...to));
       });
     });
     return new THREE.BufferGeometry().setFromPoints(points);
-  }, [positions]);
+  }, [positionById, similarity]);
+
+  if (isGeometryEmpty(geometry)) return null;
 
   return (
     <lineSegments geometry={geometry}>
-      <lineBasicMaterial color="#06b6d4" transparent opacity={0.25} />
+      <lineBasicMaterial color="#06b6d4" transparent opacity={0.35} />
     </lineSegments>
   );
 };
+
+const isGeometryEmpty = (geometry: THREE.BufferGeometry) =>
+  (geometry.getAttribute("position")?.count ?? 0) === 0;
 
 const MemoryNode = ({
   position,
@@ -122,19 +132,25 @@ const MemoryNode = ({
 
 const Scene = ({
   memories,
+  similarity,
   onSelect,
 }: {
   memories: Memoryitem[];
+  similarity: { id: string; relatedIds: string[] }[];
   onSelect: (m: Memoryitem) => void;
 }) => {
   const positions = useMemo(() => fibonacciSphere(memories.length), [memories.length]);
+  const positionById = useMemo(
+    () => new Map(memories.map((m, i) => [m.id, positions[i]])),
+    [memories, positions],
+  );
 
   return (
     <>
       <ambientLight intensity={0.6} />
       <pointLight position={[5, 5, 5]} intensity={1.2} />
       <GlobeCore />
-      <Edges positions={positions} />
+      <Edges positionById={positionById} similarity={similarity} />
       {memories.map((memory, i) => (
         <MemoryNode key={memory.id} position={positions[i]} memory={memory} onSelect={onSelect} />
       ))}
@@ -145,6 +161,7 @@ const Scene = ({
 
 export const MemoryGlobe = () => {
   const { data: memories = [] } = useMemories();
+  const { data: similarity = [] } = useMemorySimilarity(memories.length > 0);
   const [selected, setSelected] = useState<Memoryitem | null>(null);
 
   if (memories.length === 0) {
@@ -161,7 +178,7 @@ export const MemoryGlobe = () => {
   return (
     <div className="relative w-full h-105 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-black overflow-hidden">
       <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
-        <Scene memories={memories} onSelect={setSelected} />
+        <Scene memories={memories} similarity={similarity} onSelect={setSelected} />
       </Canvas>
 
       {selected && (
