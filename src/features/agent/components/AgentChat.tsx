@@ -47,6 +47,7 @@ export const AgentChat = () => {
       }
     };
     fetchMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- store is a zustand hook, its identity is unstable and must not retrigger this effect; intentionally mount-only
   }, []);
 
   useEffect(() => {
@@ -80,13 +81,23 @@ export const AgentChat = () => {
       store.setNodes((prev) => {
         if (store.workflowGenRef.current !== gen) return prev;
 
-        const updatedNodes = prev.map((n: any) =>
-          n.name === data.nodeName ? { ...n, status: "idle" as const } : n,
+        let updatedNodes = prev.map((n: any) =>
+          n.name === data.nodeName ? { ...n, status: "idle" as const, activeTool: null } : n,
         );
 
         const isWorkflowStillRunning = updatedNodes.some((n) => n.status === "running");
 
         if (!isWorkflowStillRunning) {
+          // The workflow as a whole has ended — clear every node's status/
+          // activeTool, not just the one that reported finishing. A
+          // delegated sub-agent that hung mid tool-call may never send its
+          // own node-finished, and would otherwise stay stuck showing
+          // "running"/"Tool: task" forever even after the run is over.
+          updatedNodes = updatedNodes.map((n: any) => ({
+            ...n,
+            status: "idle" as const,
+            activeTool: null,
+          }));
           store.setWorkflowloading(false);
           store.setMessageloading(false);
           store.setLoopIteration({ current: 0, max: 0 });
@@ -219,6 +230,7 @@ export const AgentChat = () => {
       window.ipcRenderer.removeAllListeners("tool-approval-request");
       window.ipcRenderer.removeAllListeners("loop-iteration");
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- store/queryClient identities are unstable and must not retrigger this IPC listener setup; intentionally mount-only
   }, []);
 
   const handleToolApprovalResponse = (approved: boolean) => {
