@@ -1,51 +1,28 @@
-﻿import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+﻿import { motion } from "framer-motion";
 import { GradientShimmer } from "gradient-shimmer";
-
-const PHRASES = ["Thinking"];
 
 interface ShimmerLoadingTextProps {
   phrases?: string[];
-  interval?: number;
   className?: string;
 }
 
 export default function ShimmerLoadingText({
-  phrases = PHRASES,
-  interval = 2200,
+  phrases = ["Thinking"],
   className = "",
 }: ShimmerLoadingTextProps) {
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % phrases.length);
-    }, interval);
-    return () => clearInterval(timer);
-  }, [phrases.length, interval]);
-
   return (
     <span className={`inline-flex items-center gap-1 text-sm text-muted-foreground ${className}`}>
-      <AnimatePresence mode="wait">
-        <motion.span
-          key={index}
-          initial={{ opacity: 0, y: 3 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -3 }}
-          transition={{ duration: 0.2 }}
-          className="inline-block font-medium"
+      <span className="inline-block font-medium">
+        <GradientShimmer
+          gradient={[
+            { color: "#06b6d4", position: 0 },
+            { color: "#ffffff", position: 1 },
+          ]}
+          className="text-muted-foreground"
         >
-          <GradientShimmer
-            gradient={[
-              { color: "#06b6d4", position: 0 },
-              { color: "#ffffff", position: 1 },
-            ]}
-            className="text-muted-foreground"
-          >
-            {phrases[index]}
-          </GradientShimmer>
-        </motion.span>
-      </AnimatePresence>
+          {phrases[0]}
+        </GradientShimmer>
+      </span>
       <span className="inline-flex overflow-hidden">
         {[0, 1, 2].map((i) => (
           <motion.span
