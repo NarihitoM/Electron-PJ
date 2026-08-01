@@ -12,7 +12,13 @@ export interface Apiresponse<T = void> {
   data?: T;
 }
 
+export interface MemoryPage {
+  memories: Memoryitem[];
+  nextCursor: string | null;
+  hasMore: boolean;
+}
+
 export type authmemoryfeedback = Apiresponse;
-export type authmemorydata = Apiresponse<Memoryitem[]>;
+export type authmemorydata = Apiresponse<MemoryPage>;
 export type authmemoryitem = Apiresponse<Memoryitem>;
 export type authmemorystatus = Apiresponse<{ enabled: boolean }>;

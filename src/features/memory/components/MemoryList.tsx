@@ -5,7 +5,7 @@ import { Spinner } from "@/shared/components/ui/spinner";
 import { Bot, Brain, Check, Pencil, Trash, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { memorystore } from "../store/store";
-import { useMemories } from "../hooks/useMemories";
+import { useMemoriesPaginated } from "../hooks/useMemoriesPaginated";
 import { useUpdateMemory } from "../hooks/useUpdateMemory";
 import { useDeleteMemory } from "../hooks/useDeleteMemory";
 
@@ -16,7 +16,8 @@ const formatDate = (iso: string) => {
 };
 
 export const MemoryList = () => {
-  const { data: memories = [] } = useMemories();
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useMemoriesPaginated();
+  const memories = data?.pages.flatMap((page) => page.memories) ?? [];
   const editingId = memorystore((s) => s.editingId);
   const editingContent = memorystore((s) => s.editingContent);
   const setEditingId = memorystore((s) => s.setEditingId);
@@ -179,6 +180,19 @@ export const MemoryList = () => {
           </CardContent>
         </Card>
       ))}
+      {hasNextPage && (
+        <div className="flex justify-center pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-lg"
+            disabled={isFetchingNextPage}
+            onClick={() => fetchNextPage()}
+          >
+            {isFetchingNextPage ? <Spinner /> : "Load more"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
