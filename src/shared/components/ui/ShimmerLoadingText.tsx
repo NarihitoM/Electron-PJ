@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { GradientShimmer } from "gradient-shimmer";
 
-const PHRASES = ["Thinking", "Searching", "Processing", "Generating", "Analyzing", "Working on it"];
+const PHRASES = ["Thinking"];
 
 interface ShimmerLoadingTextProps {
   phrases?: string[];
