@@ -139,7 +139,7 @@ const AgentFlowNode = memo(({ data }: NodeProps<Node<AgentFlowNodeData>>) => {
       {/* --- Body — runtime output (only rendered once there's something to show) --- */}
       {hasBody && (
         <div
-          className="px-2.5 pb-2.5 max-h-40 overflow-y-auto text-xs border-t border-border/60 pt-2"
+          className="nowheel nodrag px-2.5 pb-2.5 max-h-40 overflow-y-auto text-xs border-t border-border/60 pt-2"
           style={{ scrollbarWidth: "none" }}
         >
           {/* Active tool indicator */}
