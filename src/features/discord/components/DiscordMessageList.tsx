@@ -25,18 +25,13 @@ import AiContent from "@/shared/components/layout/LayoutAiresponse";
 import ThinkingBlock from "@/shared/components/ui/ThinkingBlock";
 import ShimmerLoadingText from "@/shared/components/ui/ShimmerLoadingText";
 import { BRAND_ASSETS } from "@/shared/config/providermodels";
+import { Discordtool } from "@/shared/config/toolsselection";
 import { extractToolMessage } from "@/shared/utils/toolutils";
 import { toast } from "sonner";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { discordauth } from "../api/api";
 import { discordauthstore } from "../store/store";
 import { DiscordConnectionPanel } from "./DiscordConnectionPanel";
-
-const Discordtool: Record<string, string> = {
-  list_channels: "List Channels",
-  send_message: "Send Message",
-  read_messages: "Read Messages",
-};
 
 export const DiscordMessageList = () => {
   const {
