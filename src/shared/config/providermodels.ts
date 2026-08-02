@@ -279,7 +279,7 @@ function inferCapabilities(id: string): string[] {
   )
     caps.push("code");
   if (
-    /reason|think|o1|o3|o4|gpt-5|claude-(opus|sonnet)-4|gemini-3|gemini-2\.5|glm-5[.\d]|deepseek|nemotron.*reasoning|lfm.*thinking|mimo|north-mini|nemotron-3-ultra|big-pickle/.test(
+    /reason|think|o1|o3|o4|gpt-5|gpt-oss|qwen3|claude-(opus|sonnet)-4|gemini-3|gemini-2\.5|glm-5[.\d]|deepseek|nemotron.*reasoning|lfm.*thinking|mimo|north-mini|nemotron-3-ultra|big-pickle/.test(
       lower,
     )
   )
