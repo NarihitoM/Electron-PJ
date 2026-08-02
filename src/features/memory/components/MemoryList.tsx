@@ -212,6 +212,11 @@ export const MemoryList = () => {
                     e.preventDefault();
                     setPage(p);
                   }}
+                  className={
+                    p === page
+                      ? "bg-cyan-500 text-white hover:bg-cyan-500 hover:text-white dark:bg-white dark:text-black dark:hover:bg-white dark:hover:text-black"
+                      : ""
+                  }
                 >
                   {p}
                 </PaginationLink>
