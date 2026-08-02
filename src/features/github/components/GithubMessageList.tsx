@@ -31,19 +31,7 @@ import { useGithubAccount } from "../hooks/useGithubAccount";
 import { githubauth } from "../api/api";
 import { githubauthstore } from "../store/store";
 import { toast } from "sonner";
-
-const Githubtool: Record<string, string> = {
-  list_repos: "Listing Repositories",
-  list_issues: "Reading Issues",
-  create_issue: "Creating Issue",
-  comment_issue: "Commenting On Issue",
-  list_pull_requests: "Reading Pull Requests",
-  web_search: "Searching The Web",
-  image_generation: "Generating Image",
-  image_generator: "Generating Image",
-  image_review: "Reviewing Image",
-  image_analyzer: "Reviewing Image",
-};
+import { Githubtool } from "@/shared/config/toolsselection";
 
 export const GithubMessageList = () => {
   const { data: userdata } = useUser();

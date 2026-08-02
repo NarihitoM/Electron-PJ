@@ -31,11 +31,7 @@ import { useUser } from "@/features/auth/hooks/useUser";
 import { viberauth } from "../api/api";
 import { viberauthstore } from "../store/store";
 import { ViberConnectionPanel } from "./ViberConnectionPanel";
-
-const Vibertool: Record<string, string> = {
-  send_message: "Send Message",
-  read_messages: "Read Messages",
-};
+import { Vibertool } from "@/shared/config/toolsselection";
 
 export const ViberMessageList = () => {
   const {

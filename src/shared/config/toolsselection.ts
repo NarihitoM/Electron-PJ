@@ -51,9 +51,48 @@ export const Notiontool: Record<string, string> = {
 export const Slacktool: Record<string, string> = {
   send_slack_message: "Sending Slack Message",
   read_slack_history: "Reading the Slack Message",
-  list_conversations: "Retrieving Channels Lists",
+  list_conversations: "Retrieving Channels List",
   get_user_info: "Getting User Info",
   get_team_info: "Getting Workspace Info",
+  web_search: "Searching The Web",
+  web_scrape: "Scraping Web Page",
+  image_generation: "Generating Image",
+  image_generator: "Generating Image",
+  image_review: "Reviewing Image",
+  image_analyzer: "Reviewing Image",
+};
+
+export const Discordtool: Record<string, string> = {
+  discord_send_message: "Sending Discord Message",
+  discord_read_messages: "Reading The Discord Message",
+  discord_list_channels: "Listing Discord Channels",
+  web_search: "Searching The Web",
+  web_scrape: "Scraping Web Page",
+  image_generation: "Generating Image",
+  image_generator: "Generating Image",
+  image_review: "Reviewing Image",
+  image_analyzer: "Reviewing Image",
+};
+
+export const Githubtool: Record<string, string> = {
+  list_repos: "Listing Repositories",
+  list_issues: "Reading Issues",
+  create_issue: "Creating Issue",
+  comment_issue: "Commenting On Issue",
+  list_pull_requests: "Reading Pull Requests",
+  get_profile: "Getting User Profile",
+  commit_file: "Committing File",
+  list_notifications: "Listing Notifications",
+  web_search: "Searching The Web",
+  image_generation: "Generating Image",
+  image_generator: "Generating Image",
+  image_review: "Reviewing Image",
+  image_analyzer: "Reviewing Image",
+};
+
+export const Vibertool: Record<string, string> = {
+  send_message: "Sending Viber Message",
+  read_messages: "Reading The Viber Message",
   web_search: "Searching The Web",
   web_scrape: "Scraping Web Page",
   image_generation: "Generating Image",
@@ -115,6 +154,8 @@ export const WRITE_TOOLS = new Set([
   "send_message",
   // Slack
   "send_slack_message",
+  // Discord
+  "discord_send_message",
   // Notion
   "update_notion_page",
   "append_notion_blocks",
@@ -146,6 +187,7 @@ export const WRITE_TOOLS = new Set([
 export const WRITE_TOOLS_LABELS: Record<string, string> = {
   send_message: "Sends a message via Telegram",
   send_slack_message: "Sends a message to a Slack channel",
+  discord_send_message: "Sends a message to a Discord channel",
   update_notion_page: "Updates a Notion page",
   append_notion_blocks: "Appends content to a Notion page",
   create_new_page: "Creates a new Notion page",
