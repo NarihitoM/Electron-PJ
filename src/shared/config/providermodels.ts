@@ -278,7 +278,11 @@ function inferCapabilities(id: string): string[] {
     /code|coder|codex|devstral|programming|starcoder|deepseek|qwen-coder|laguna|cobuddy/.test(lower)
   )
     caps.push("code");
-  if (/reason|think|o1|o3|o4|glm-5[.\d]|deepseek|nemotron.*reasoning|lfm.*thinking/.test(lower))
+  if (
+    /reason|think|o1|o3|o4|gpt-5|claude-(opus|sonnet)-4|gemini-3|gemini-2\.5|glm-5[.\d]|deepseek|nemotron.*reasoning|lfm.*thinking|mimo|north-mini|nemotron-3-ultra|big-pickle/.test(
+      lower,
+    )
+  )
     caps.push("reasoning");
   if (
     /gpt|claude|gemini|glm[.\-\d]|mistral-large|mistral-medium|devstral|open-mistral|function|tool/.test(
