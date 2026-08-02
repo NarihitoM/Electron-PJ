@@ -24,26 +24,30 @@ MultimateAi is a desktop application that orchestrates AI agents across multiple
 ### Core Features
 
 - **Multi-Agent Workflow** — Chain multiple AI models to solve complex tasks in sequence, range, or simultaneously
-- **Service Integrations** — Slack, Telegram, Notion, N8n, Google Sheets, Google Docs
-- **AI Chat** — Chat with any supported AI model (OpenAI, Anthropic, Groq, DeepSeek, Mistral, Ollama, OpenRouter)
+- **Service Integrations** — Slack, Telegram, Discord, GitHub, Notion, N8n, Google Sheets, Google Docs, Viber
+- **AI Chat** — Chat with any supported AI model (OpenAI, Anthropic, Gemini, Groq, DeepSeek, Mistral, Ollama, OpenRouter, Z.AI)
+- **Discord** — Connect a bot, list guild channels, read history, send messages, and schedule cron messages
+- **GitHub** — Manage repos, issues, pull requests, notifications, and commit files directly via the agent
 - **Video Analysis** — Upload videos, transcribe, and generate AI-powered summaries
 - **Email Automation** — Send emails via SMTP with AI-generated content
 - **Usage Analytics** — Track token usage, costs, and activity across providers
-- **Scheduling** — Cron-based message scheduling for Telegram and Slack
+- **Scheduling** — Cron-based message scheduling for Telegram, Slack, and Discord
 - **Voice Input** — Record and transcribe voice messages
 
 ### Supported AI Providers
 
-| Provider           | Models                                                          |
-| ------------------ | --------------------------------------------------------------- |
-| OpenAI             | GPT-4o, GPT-4o-mini, GPT-4.1, o1, o3, o4-mini                   |
-| Anthropic          | Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku                |
-| Groq               | Llama 3.3 70B, Mixtral 8x7B, Gemma 2 9B                         |
-| DeepSeek           | DeepSeek Chat, DeepSeek Reasoner                                |
-| Mistral            | Mistral Large, Mistral Small, Codestral                         |
-| Ollama             | Any local model                                                 |
-| OpenRouter         | All supported models                                            |
-| MultimateAi (Free) | DeepSeek V4 Flash, Mimo v2.5, Nemotron 3 Ultra, North Mini Code |
+| Provider           | Models                                                                      |
+| ------------------ | --------------------------------------------------------------------------- |
+| OpenAI             | GPT-5.5, GPT-5.4, GPT-5.4-mini, o3, o3-pro, o4-mini, GPT-4o                 |
+| Anthropic          | Claude Opus 4.7, Claude Sonnet 4.6, Claude Opus 4.5, Claude 3.5 Sonnet      |
+| Google Gemini      | Gemini 3.5 Flash, Gemini 3.1 Pro, Gemini 3 Flash, Gemini 2.5 Pro/Flash      |
+| Groq               | GPT-OSS-120B, Llama 3.3 70B, Llama 4 Scout, Qwen 3 32B                      |
+| DeepSeek           | DeepSeek V4 Flash, DeepSeek V4 Pro                                          |
+| Mistral            | Mistral Large, Mistral Medium, Mistral Small, Devstral                      |
+| Ollama             | Any local model (Llama, Qwen, DeepSeek, Gemma, Phi and more)                |
+| OpenRouter         | All supported models (Nemotron 3, GPT-OSS, Gemma 4, Qwen 3 and more)        |
+| Z.AI               | GLM-5.2, GLM-5.1, GLM-5, GLM-4.7, GLM-4.6, GLM-4.5 (Zhipu AI)               |
+| MultimateAi (Free) | DeepSeek V4 Flash, Mimo v2.5, Nemotron 3 Ultra, North Mini Code, Big Pickle |
 
 ---
 
