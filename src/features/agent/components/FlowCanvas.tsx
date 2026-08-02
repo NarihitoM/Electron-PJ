@@ -441,10 +441,24 @@ export const FlowCanvas = () => {
   /* ── Loading state ── */
   if (isLoading) {
     return (
-      <div className="h-80 p-4 flex flex-col gap-3">
-        <Skeleton className="h-24 w-full rounded-xl" />
-        <Skeleton className="h-24 w-full rounded-xl" />
-        <Skeleton className="h-24 w-full rounded-xl" />
+      <div className="w-full h-full min-h-100 rounded-xl border bg-card/50 p-6">
+        <div className="flex flex-wrap gap-10">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="w-64 rounded-2xl border bg-card p-2.5 space-y-2.5">
+              {/* Header row: icon chip + title/model + actions */}
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <Skeleton className="h-3.5 w-24" />
+                  <Skeleton className="h-3 w-16" />
+                </div>
+                <Skeleton className="h-6 w-6 rounded-full shrink-0" />
+              </div>
+              {/* Tools chip */}
+              <Skeleton className="h-3 w-20" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
