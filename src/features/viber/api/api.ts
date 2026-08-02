@@ -4,7 +4,7 @@ import { returnviberacc, returnviberfeedback, returnvibermsg } from "../types/ty
 
 export const viberauth = {
   viberconnectinfo: async (): Promise<{ botUri: string }> => {
-    const response = await Server.post("/viber/api/authurl");
+    const response = await Server.get("/viber/api/connectinfo");
     return response.data;
   },
   vibercheckstatus: async (): Promise<{ success: boolean }> => {
