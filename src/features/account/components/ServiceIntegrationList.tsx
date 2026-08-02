@@ -87,7 +87,7 @@ export const ServiceIntegrationList = () => {
     {
       id: "viber",
       name: "Viber",
-      icon: "https://upload.wikimedia.org/wikipedia/commons/1/1f/Viber_logo.svg",
+      icon: "https://cdn.simpleicons.org/viber",
       description: "Configure your Viber bot account.",
       isActive: !!vibername,
     },

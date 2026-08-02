@@ -65,7 +65,7 @@ export const Agent = [
   {
     title: "Viber",
     url: "/app/viber",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/1/1f/Viber_logo.svg",
+    icon: "https://cdn.simpleicons.org/viber",
   },
 ];
 

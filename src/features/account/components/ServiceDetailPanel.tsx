@@ -165,7 +165,7 @@ export const ServiceDetailPanel = () => {
     {
       id: "viber",
       name: "Viber",
-      icon: "https://upload.wikimedia.org/wikipedia/commons/1/1f/Viber_logo.svg",
+      icon: "https://cdn.simpleicons.org/viber",
       description: "Configure your Viber bot account.",
       isActive: !!vibername,
     },
@@ -817,10 +817,7 @@ export const ServiceDetailPanel = () => {
               ) : vibername ? (
                 <div className="flex items-center gap-4 w-full">
                   <div className="h-12 w-12 rounded-full flex items-center justify-center">
-                    <img
-                      src="https://upload.wikimedia.org/wikipedia/commons/1/1f/Viber_logo.svg"
-                      alt="icon"
-                    />
+                    <img src="https://cdn.simpleicons.org/viber" alt="icon" />
                   </div>
                   <div className="flex flex-col text-left">
                     <p className="text-sm font-medium">Connected Viber Account</p>
@@ -839,10 +836,7 @@ export const ServiceDetailPanel = () => {
                 <div className="flex flex-col items-center justify-center text-center py-4">
                   <div className="space-y-4 w-full">
                     <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
-                      <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/1/1f/Viber_logo.svg"
-                        alt="icon"
-                      />
+                      <img src="https://cdn.simpleicons.org/viber" alt="icon" />
                     </div>
                     <ViberForm
                       onComplete={async () => {

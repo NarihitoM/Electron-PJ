@@ -25,11 +25,7 @@ export const ViberChatHeader = () => {
     <div className="mx-auto w-full max-w-5xl flex justify-between gap-1">
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold flex items-center gap-3">
-          <img
-            src="https://upload.wikimedia.org/wikipedia/commons/1/1f/Viber_logo.svg"
-            className="w-7 h-7"
-            alt=""
-          />
+          <img src="https://cdn.simpleicons.org/viber" className="w-7 h-7" alt="" />
           ViberAgent
         </h1>
         <p className="text-muted-foreground">
@@ -45,11 +41,7 @@ export const ViberChatHeader = () => {
         ) : (
           name && (
             <span className="text-[13px] flex items-center gap-2 px-2 py-1 rounded-full border bg-card">
-              <img
-                src="https://upload.wikimedia.org/wikipedia/commons/1/1f/Viber_logo.svg"
-                className="w-4 h-4"
-                alt=""
-              />
+              <img src="https://cdn.simpleicons.org/viber" className="w-4 h-4" alt="" />
               {name.substring(0, 10) + "..."}
             </span>
           )

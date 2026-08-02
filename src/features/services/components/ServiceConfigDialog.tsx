@@ -83,7 +83,7 @@ const SERVICE_INFO: Record<ServiceType, { name: string; icon: string; descriptio
   },
   viber: {
     name: "Viber",
-    icon: "https://upload.wikimedia.org/wikipedia/commons/1/1f/Viber_logo.svg",
+    icon: "https://cdn.simpleicons.org/viber",
     description: "Connect the Multimate bot on Viber to send and read messages.",
   },
 };
