@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { ArrowUp, Box, Mic, RefreshCw, Square, ToolCaseIcon, X } from "lucide-react";
+import { ArrowUp, Box, Mic, RefreshCw, Square, Timer, ToolCaseIcon, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
@@ -21,6 +21,7 @@ import { discordauth } from "../api/api";
 import { chatauth } from "@/features/chat/api/api";
 import { voiceauth } from "@/features/voice/api/api";
 import { discordauthstore } from "../store/store";
+import { DiscordCronScheduler } from "./DiscordCronScheduler";
 import { useQueryClient } from "@tanstack/react-query";
 import type { chatsession } from "@/shared/types/globaltype";
 import type { ModelEntry } from "@/shared/lib/modelsapi";
@@ -72,6 +73,7 @@ export const DiscordInput = () => {
     setChannelid,
     loadingdiscorddelmsg,
     setLoadingdiscorddelmsg,
+    setOpencron,
   } = discordauthstore();
 
   const queryClient = useQueryClient();
@@ -421,6 +423,7 @@ export const DiscordInput = () => {
 
   return (
     <>
+      <DiscordCronScheduler />
       <div className="flex w-full gap-2 justify-between mx-auto max-w-5xl mb-3 mt-3">
         <div className="flex gap-2">
           <Button
@@ -437,6 +440,12 @@ export const DiscordInput = () => {
               </>
             )}
           </Button>
+          {guildId && (
+            <Button onClick={() => setOpencron(true)} className="bg-cyan-500 dark:bg-white">
+              <Timer />
+              Schedule Message
+            </Button>
+          )}
         </div>
         <div className="flex gap-2 items-center">
           {guildId && (

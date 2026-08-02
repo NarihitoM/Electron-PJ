@@ -19,6 +19,21 @@ export type returndiscordmsg = Apiresponse<{
   hasMore: boolean;
 }>;
 
+export interface discordcrondata {
+  isActive: boolean;
+  channelId: string;
+  channelName?: string;
+  model: string;
+  provider: string;
+  message: string;
+  crontype: string;
+  triggerAt: string;
+  timezone: string;
+  customSchedule?: string;
+}
+
+export type returndiscordcrondata = Apiresponse<discordcrondata>;
+
 export interface DiscordClientState {
   provider: string;
   model: string;
@@ -38,6 +53,12 @@ export interface DiscordClientState {
   hasMore: boolean;
   channelid: string;
   loadingdiscorddelmsg: boolean;
+  opencron: boolean;
+  loadingcroncreate: boolean;
+  discordcron: discordcrondata;
+  customDayOfWeek: number[];
+  customDayOfMonth: number[];
+  customMonth: number[];
   setProvider: (provider: string) => void;
   setModel: (model: string) => void;
   setSelectedChannelId: (id: string) => void;
@@ -54,6 +75,12 @@ export interface DiscordClientState {
   setHasMore: (v: boolean) => void;
   setChannelid: (v: string) => void;
   setLoadingdiscorddelmsg: (v: boolean) => void;
+  setOpencron: (v: boolean) => void;
+  setLoadingcroncreate: (v: boolean) => void;
+  setDiscordcron: (v: discordcrondata) => void;
+  setCustomDayOfWeek: (v: number[]) => void;
+  setCustomDayOfMonth: (v: number[]) => void;
+  setCustomMonth: (v: number[]) => void;
   resetdiscord: () => void;
 }
 

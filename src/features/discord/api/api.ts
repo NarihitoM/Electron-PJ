@@ -1,6 +1,12 @@
 import { Server } from "../../../shared/config/axioconfig";
 import { fetchurl } from "../../../shared/config/fetchconfig";
-import { returndiscordacc, returndiscordfeedback, returndiscordmsg } from "../types/type";
+import {
+  returndiscordacc,
+  returndiscordcrondata,
+  returndiscordfeedback,
+  returndiscordmsg,
+  discordcrondata,
+} from "../types/type";
 
 export const discordauth = {
   discordstate: async (): Promise<{ stateId: string }> => {
@@ -131,5 +137,13 @@ export const discordauth = {
         }
       }
     }
+  },
+  discordcroncreate: async (data: discordcrondata): Promise<returndiscordfeedback> => {
+    const response = await Server.post("/discord/api/discordcroncreate", { data });
+    return response.data;
+  },
+  discordcronget: async (): Promise<returndiscordcrondata> => {
+    const response = await Server.get("/discord/api/discordcronget");
+    return response.data;
   },
 };
