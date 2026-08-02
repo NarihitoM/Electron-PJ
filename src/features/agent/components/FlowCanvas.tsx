@@ -441,10 +441,29 @@ export const FlowCanvas = () => {
   /* ── Loading state ── */
   if (isLoading) {
     return (
-      <div className="w-full h-full min-h-100 rounded-xl border bg-card/50 p-6">
+      <div className="w-full h-full min-h-100 rounded-xl border bg-card/50 p-6 overflow-hidden">
+        {/* Connection lines between skeleton nodes */}
+        <svg className="absolute inset-0 w-full h-full pointer-events-none" aria-hidden>
+          <defs>
+            <linearGradient id="skeleton-edge" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.15" />
+              <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.15" />
+            </linearGradient>
+          </defs>
+          <line x1="256" y1="120" x2="420" y2="120" stroke="url(#skeleton-edge)" strokeWidth="2" />
+          <line x1="420" y1="120" x2="584" y2="120" stroke="url(#skeleton-edge)" strokeWidth="2" />
+        </svg>
         <div className="flex flex-wrap gap-10">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="w-64 rounded-2xl border bg-card p-2.5 space-y-2.5">
+            <div
+              key={i}
+              className="relative w-64 rounded-2xl border bg-card p-2.5 space-y-2.5 shadow-sm"
+            >
+              {/* Connection handles */}
+              <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full border-2 border-cyan-500 bg-background" />
+              <span className="absolute -right-1.5 top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full border-2 border-cyan-500 bg-background" />
+
               {/* Header row: icon chip + title/model + actions */}
               <div className="flex items-center gap-2">
                 <Skeleton className="h-8 w-8 rounded-full shrink-0" />
