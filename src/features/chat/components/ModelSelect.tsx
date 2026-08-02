@@ -109,9 +109,6 @@ export function ModelSelect({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const selectedModel = modelList.find((m) => m.model === model);
-  const hasReasoning = selectedModel?.capabilities.includes("reasoning") ?? false;
-
   return (
     <TooltipProvider>
       <div className="flex gap-2 items-center">
@@ -192,7 +189,7 @@ export function ModelSelect({
             </div>
           )}
         </div>
-        {hasReasoning && onReasoningLevelChange && (
+        {onReasoningLevelChange && (
           <ReasoningLevelSelect value={reasoningLevel ?? ""} onChange={onReasoningLevelChange} />
         )}
       </div>
