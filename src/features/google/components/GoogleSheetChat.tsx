@@ -55,10 +55,10 @@ export const GoogleSheetChat = () => {
         onApprove={handleApprove}
         onReject={handleReject}
       />
-      <GoogleSheetConnectionPanel />
       <div className="flex h-[92vh] w-full flex-col bg-background">
         <GoogleSheetHeader />
         <GoogleSheetMessageList />
+        <GoogleSheetConnectionPanel />
         <GoogleSheetInput />
       </div>
       <ImageLightbox

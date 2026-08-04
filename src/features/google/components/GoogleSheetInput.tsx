@@ -1,10 +1,11 @@
-import { useEffect, useRef } from "react";
-import { ArrowUp, Mic, Square, Box, Timer, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ArrowUp, Mic, Square, Box, Timer, X, RefreshCw, ToolCaseIcon } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { ModelSelect } from "@/features/chat/components/ModelSelect";
 import { ImagePreview, ImagePicker } from "@/shared/components/ImageUpload";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -14,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useGoogleService } from "@/features/google/hooks/useGoogleService";
+import { useGoogleConnect } from "@/features/google/hooks/useGoogleConnect";
 import { getProviderModels } from "@/shared/config/providermodels";
 import { googleauthstore } from "../store/store";
 import { googleauth } from "../api/api";
@@ -27,9 +29,50 @@ export const GoogleSheetInput = () => {
   const { data: googleService } = useGoogleService();
   const store = googleauthstore();
   const queryClient = useQueryClient();
+  const { connect, isChecking } = useGoogleConnect();
 
-  const serviceemail = (googleService as any)?.email ?? "";
-  const sheet = (googleService as any)?.googlesheet ?? [];
+  const serviceemail = (googleService as any)?.serviceemail ?? "";
+  const sheet = useMemo(() => (googleService as any)?.googlesheet ?? [], [googleService]);
+
+  const selectedsheetTitle = useMemo(() => {
+    return sheet.find((g: any) => g.url === store.sheeturl)?.name || "";
+  }, [store.sheeturl, sheet]);
+
+  const [loadingsheetdelete, setLoadingsheetdelete] = useState(false);
+
+  const connectGoogle = async () => {
+    try {
+      await connect();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
+    }
+  };
+
+  const sheetmsgdelete = async () => {
+    setLoadingsheetdelete(true);
+    try {
+      const response = await googleauth.deletesheetmsg();
+      if (response.success) {
+        toast.success(response.message);
+        store.setsessionmessage_sheet([]);
+        store.setNextCursor_sheet(null);
+        store.setHasMore_sheet(false);
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        const Error = err as any;
+        toast.error(Error.response?.data?.message || err.message);
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
+    } finally {
+      setLoadingsheetdelete(false);
+    }
+  };
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -373,17 +416,74 @@ export const GoogleSheetInput = () => {
   return (
     <>
       <GoogleSheetCronScheduler />
-      {serviceemail && (
-        <div className="flex w-full gap-2 mx-auto max-w-5xl mb-3">
+      <div className="flex w-full gap-2 justify-between mx-auto max-w-5xl mb-3">
+        <div className="flex gap-2">
           <Button
-            onClick={() => store.setOpensheetcron(true)}
+            onClick={sheetmsgdelete}
+            disabled={store.sessionmessage_sheet.length === 0 || loadingsheetdelete}
             className="bg-cyan-500 dark:bg-white"
           >
-            <Timer />
-            Schedule Task
+            {loadingsheetdelete ? (
+              <Spinner />
+            ) : (
+              <>
+                <RefreshCw />
+                Reset Chat
+              </>
+            )}
           </Button>
+          {serviceemail && (
+            <Button
+              onClick={() => store.setOpensheetcron(true)}
+              className="bg-cyan-500 dark:bg-white"
+            >
+              <Timer />
+              Schedule Task
+            </Button>
+          )}
         </div>
-      )}
+        <div className="flex gap-2 items-center">
+          {serviceemail ? (
+            sheet.length > 0 ? (
+              <Select
+                key={`${store.provider}-${store.type_sheet}`}
+                onValueChange={(val) => store.setsheeturl(val ?? "")}
+                value={store.sheeturl}
+                disabled={!store.provider}
+              >
+                <SelectTrigger>
+                  <span className="truncate">
+                    {store.sheeturl ? selectedsheetTitle : "Select sheeturl"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent className="p-1 w-60">
+                  {sheet.map((m: any) => (
+                    <SelectItem key={m.id} value={m.url}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                  <SelectItem onClick={() => store.setOpensheet(true)}>Add Sheeturl</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <Button
+                onClick={() => store.setOpensheet(true)}
+                className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
+              >
+                Add Sheeturl
+              </Button>
+            )
+          ) : (
+            <Button
+              onClick={connectGoogle}
+              disabled={isChecking}
+              className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
+            >
+              {isChecking ? <Spinner /> : "Connect Google"}
+            </Button>
+          )}
+        </div>
+      </div>
       <div className="w-full bg-card mx-auto max-w-5xl rounded-2xl border p-3 shadow-lg">
         <ImagePreview
           images={store.pendingImages_sheet}
@@ -421,6 +521,8 @@ export const GoogleSheetInput = () => {
             <DropdownMenu>
               <DropdownMenuTrigger>
                 <Button variant="outline" className="flex gap-1 items-center cursor-pointer">
+                  <ToolCaseIcon size={15} />
+
                   <span className="text-sm">Tools</span>
                 </Button>
               </DropdownMenuTrigger>

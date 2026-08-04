@@ -104,7 +104,7 @@ export const Sidebarprovider = () => {
   const { resetservice } = authservicestore();
 
   const { data: googleService } = useGoogleService();
-  const serviceemail = (googleService as any)?.email ?? "";
+  const serviceemail = (googleService as any)?.serviceemail ?? "";
   const { resetgoogle } = googleauthstore();
 
   const { data: telegramAccount } = useTelegramAccount();

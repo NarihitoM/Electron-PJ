@@ -15,7 +15,7 @@ export const GoogleDocsHeader = () => {
   const store = googleauthstore();
   const navigate = useNavigate();
 
-  const serviceemail = (googleService as any)?.email ?? "";
+  const serviceemail = (googleService as any)?.serviceemail ?? "";
   const loadingfetch = !googleService;
 
   const apiWithLogos = Api.map((provider: any) => ({

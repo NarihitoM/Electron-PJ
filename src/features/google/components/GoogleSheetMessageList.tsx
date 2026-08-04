@@ -40,7 +40,7 @@ export const GoogleSheetMessageList = () => {
   const store = googleauthstore();
   const { connect, isChecking } = useGoogleConnect();
 
-  const serviceemail = (googleService as any)?.email ?? "";
+  const serviceemail = (googleService as any)?.serviceemail ?? "";
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const topSentinelRef = useRef<HTMLDivElement | null>(null);

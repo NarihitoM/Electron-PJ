@@ -55,10 +55,10 @@ export const GoogleDocsChat = () => {
         onApprove={handleApprove}
         onReject={handleReject}
       />
-      <GoogleDocsConnectionPanel />
       <div className="flex h-[92vh] w-full flex-col bg-background">
         <GoogleDocsHeader />
         <GoogleDocsMessageList />
+        <GoogleDocsConnectionPanel />
         <GoogleDocsInput />
       </div>
       <ImageLightbox

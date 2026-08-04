@@ -4,7 +4,8 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { ImagePreview, ImagePicker } from "@/shared/components/ImageUpload";
 import { ModelSelect } from "@/features/chat/components/ModelSelect";
-import { ArrowUp, ToolCaseIcon, X, Square, Mic, Box, Timer } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
+import { ArrowUp, ToolCaseIcon, X, Square, Mic, Box, Timer, RefreshCw } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -14,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useGoogleService } from "@/features/google/hooks/useGoogleService";
+import { useGoogleConnect } from "@/features/google/hooks/useGoogleConnect";
 import { getProviderModels } from "@/shared/config/providermodels";
 import { googleauthstore } from "../store/store";
 import { googleauth } from "../api/api";
@@ -29,12 +31,27 @@ export const GoogleDocsInput = () => {
   const { data: googleService } = useGoogleService();
   const store = googleauthstore();
   const queryClient = useQueryClient();
+  const { connect, isChecking } = useGoogleConnect();
 
-  const serviceemail = (googleService as any)?.email ?? "";
+  const serviceemail = (googleService as any)?.serviceemail ?? "";
   const docs = (googleService as any)?.googledocs ?? [];
+  const selecteddocsTitle = docs.find((g: any) => g.url === store.docsurl)?.name || "";
+
+  const connectGoogle = async () => {
+    try {
+      await connect();
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
+    }
+  };
 
   const [recordstatus, setrecordstatus] = useState(false);
   const [loadingrecord, setloadingrecord] = useState(false);
+  const [loadingdocsdelete, setLoadingdocsdelete] = useState(false);
   const [modelList, setModelList] = useState<ModelEntry[]>([]);
   const [modelsLoading, setModelsLoading] = useState(false);
 
@@ -270,6 +287,7 @@ export const GoogleDocsInput = () => {
   };
 
   const deleteDocsMessage = async () => {
+    setLoadingdocsdelete(true);
     try {
       const response = await googleauth.deletedocsmsg();
       if (response.success) {
@@ -283,6 +301,8 @@ export const GoogleDocsInput = () => {
       } else {
         toast.error("An unexpected error occurred.");
       }
+    } finally {
+      setLoadingdocsdelete(false);
     }
   };
 
@@ -359,23 +379,17 @@ export const GoogleDocsInput = () => {
         <div className="flex gap-2">
           <Button
             onClick={deleteDocsMessage}
-            disabled={store.sessionmessage_docs.length === 0}
+            disabled={store.sessionmessage_docs.length === 0 || loadingdocsdelete}
             className="bg-cyan-500 dark:bg-white"
           >
-            {
+            {loadingdocsdelete ? (
+              <Spinner />
+            ) : (
               <>
-                <svg
-                  className="h-4 w-4 mr-1"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path d="M21 2v6H3V2M3 8l1.5 14h15L21 8M10 12v4M14 12v4M7.5 2L9 4h6l1.5-2" />
-                </svg>
+                <RefreshCw />
                 Reset Chat
               </>
-            }
+            )}
           </Button>
           {serviceemail && (
             <Button
@@ -384,6 +398,49 @@ export const GoogleDocsInput = () => {
             >
               <Timer />
               Schedule Task
+            </Button>
+          )}
+        </div>
+        <div className="flex gap-2 items-center">
+          {serviceemail ? (
+            docs.length > 0 ? (
+              <Select
+                key={`${store.provider}-${store.docsurl}`}
+                onValueChange={(val) => store.setdocsurl(val ?? "")}
+                value={store.docsurl ?? undefined}
+                disabled={!store.provider}
+              >
+                <SelectTrigger>
+                  <span className="truncate">
+                    {store.docsurl ? selecteddocsTitle : "Select docsurl"}
+                  </span>
+                </SelectTrigger>
+                <SelectContent className="p-1 w-60">
+                  {docs.map((m: any) => (
+                    <SelectItem key={m.id} value={m.url}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value="add_docsurl" onClick={() => store.setOpendocs(true)}>
+                    Add Docsurl
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <Button
+                onClick={() => store.setOpendocs(true)}
+                className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
+              >
+                Add Docsurl
+              </Button>
+            )
+          ) : (
+            <Button
+              onClick={connectGoogle}
+              disabled={isChecking}
+              className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
+            >
+              {isChecking ? <Spinner /> : "Connect Google"}
             </Button>
           )}
         </div>
