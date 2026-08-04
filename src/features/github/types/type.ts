@@ -27,6 +27,21 @@ export type returngithubmsg = Apiresponse<{
 export type returngithubfeedback = Apiresponse;
 export type returngithubacc = Apiresponse<githubdata>;
 
+export interface githubcrondata {
+  isActive: boolean;
+  repo: string;
+  repoName?: string;
+  model: string;
+  provider: string;
+  message: string;
+  crontype: string;
+  triggerAt: string;
+  timezone: string;
+  customSchedule?: string;
+}
+
+export type returngithubcrondata = Apiresponse<githubcrondata>;
+
 export interface GithubClientState {
   provider: string;
   model: string;
@@ -55,6 +70,12 @@ export interface GithubClientState {
   modelList: import("@/shared/lib/modelsapi").ModelEntry[];
   modelsLoading: boolean;
   reasoningLevel: "" | "low" | "medium" | "high";
+  opencron: boolean;
+  loadingcroncreate: boolean;
+  githubcron: githubcrondata;
+  customDayOfWeek: number[];
+  customDayOfMonth: number[];
+  customMonth: number[];
 
   setProvider: (v: string) => void;
   setModel: (v: string) => void;
@@ -81,6 +102,12 @@ export interface GithubClientState {
   setModelList: (v: import("@/shared/lib/modelsapi").ModelEntry[]) => void;
   setModelsLoading: (v: boolean) => void;
   setReasoningLevel: (v: "" | "low" | "medium" | "high") => void;
+  setOpencron: (v: boolean) => void;
+  setLoadingcroncreate: (v: boolean) => void;
+  setGithubcron: (v: githubcrondata) => void;
+  setCustomDayOfWeek: (v: number[]) => void;
+  setCustomDayOfMonth: (v: number[]) => void;
+  setCustomMonth: (v: number[]) => void;
 
   resetgithub: () => void;
   updateSessionMessages: (updater: (prev: chatsession[]) => chatsession[]) => void;

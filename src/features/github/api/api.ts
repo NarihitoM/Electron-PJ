@@ -1,6 +1,12 @@
 import { Server } from "../../../shared/config/axioconfig";
 import { fetchurl } from "../../../shared/config/fetchconfig";
-import { returngithubacc, returngithubfeedback, returngithubmsg } from "../types/type";
+import {
+  returngithubacc,
+  returngithubfeedback,
+  returngithubmsg,
+  returngithubcrondata,
+  githubcrondata,
+} from "../types/type";
 
 export const githubauth = {
   githubstate: async (): Promise<{ stateId: string }> => {
@@ -123,6 +129,14 @@ export const githubauth = {
   },
   githubdeletemessage: async (): Promise<returngithubfeedback> => {
     const response = await Server.post("/github/api/githubdeletemessage");
+    return response.data;
+  },
+  githubcroncreate: async (data: githubcrondata): Promise<returngithubfeedback> => {
+    const response = await Server.post("/github/api/githubcroncreate", { data });
+    return response.data;
+  },
+  githubcronget: async (): Promise<returngithubcrondata> => {
+    const response = await Server.get("/github/api/githubcronget");
     return response.data;
   },
 };

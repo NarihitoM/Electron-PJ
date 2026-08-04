@@ -1,5 +1,18 @@
 import { create } from "zustand";
-import type { GithubClientState } from "../types/type";
+import type { GithubClientState, githubcrondata } from "../types/type";
+
+export const initialGithubCron: githubcrondata = {
+  isActive: false,
+  repo: "",
+  repoName: "",
+  model: "",
+  provider: "",
+  message: "",
+  crontype: "minute",
+  triggerAt: "09:00",
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+  customSchedule: "",
+};
 
 export const githubauthstore = create<GithubClientState>((set) => ({
   provider: "",
@@ -29,6 +42,12 @@ export const githubauthstore = create<GithubClientState>((set) => ({
   modelList: [],
   modelsLoading: false,
   reasoningLevel: "",
+  opencron: false,
+  loadingcroncreate: false,
+  githubcron: { ...initialGithubCron },
+  customDayOfWeek: [],
+  customDayOfMonth: [],
+  customMonth: [],
 
   setProvider: (v) => set({ provider: v, model: "" }),
   setModel: (v) => set({ model: v }),
@@ -55,6 +74,12 @@ export const githubauthstore = create<GithubClientState>((set) => ({
   setModelList: (v) => set({ modelList: v }),
   setModelsLoading: (v) => set({ modelsLoading: v }),
   setReasoningLevel: (v) => set({ reasoningLevel: v }),
+  setOpencron: (v) => set({ opencron: v }),
+  setLoadingcroncreate: (v) => set({ loadingcroncreate: v }),
+  setGithubcron: (v) => set({ githubcron: v }),
+  setCustomDayOfWeek: (v) => set({ customDayOfWeek: v }),
+  setCustomDayOfMonth: (v) => set({ customDayOfMonth: v }),
+  setCustomMonth: (v) => set({ customMonth: v }),
 
   resetgithub: () => set({ provider: "", model: "" }),
   updateSessionMessages: (updater) =>

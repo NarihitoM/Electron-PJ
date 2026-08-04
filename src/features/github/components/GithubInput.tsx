@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Box, Mic, RefreshCw, Square, ToolCaseIcon, X } from "lucide-react";
+import { ArrowUp, Box, Mic, RefreshCw, Square, Timer, ToolCaseIcon, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Spinner } from "@/shared/components/ui/spinner";
@@ -20,6 +20,7 @@ import { voiceauth } from "@/features/voice/api/api";
 import { githubauth } from "../api/api";
 import { useGithubAccount } from "../hooks/useGithubAccount";
 import { githubauthstore } from "../store/store";
+import { GithubCronScheduler } from "./GithubCronScheduler";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const GithubInput = () => {
@@ -298,21 +299,30 @@ export const GithubInput = () => {
 
   return (
     <>
+      <GithubCronScheduler />
       <div className="flex w-full gap-2 justify-between mx-auto max-w-5xl mb-3 mt-3">
-        <Button
-          onClick={deletemessages}
-          disabled={store.sessionmessage.length === 0 || store.loadinggithubmsg}
-          className="bg-cyan-500 dark:bg-white"
-        >
-          {store.loadinggithubmsg ? (
-            <Spinner />
-          ) : (
-            <>
-              <RefreshCw />
-              Reset Chat
-            </>
+        <div className="flex gap-2">
+          <Button
+            onClick={deletemessages}
+            disabled={store.sessionmessage.length === 0 || store.loadinggithubmsg}
+            className="bg-cyan-500 dark:bg-white"
+          >
+            {store.loadinggithubmsg ? (
+              <Spinner />
+            ) : (
+              <>
+                <RefreshCw />
+                Reset Chat
+              </>
+            )}
+          </Button>
+          {username && (
+            <Button onClick={() => store.setOpencron(true)} className="bg-cyan-500 dark:bg-white">
+              <Timer />
+              Schedule Task
+            </Button>
           )}
-        </Button>
+        </div>
         <div className="flex gap-2 items-center">
           {username && repos.length > 0 && (
             <Select
