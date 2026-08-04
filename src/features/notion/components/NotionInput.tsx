@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ArrowUp, Box, Mic, RefreshCw, Square, ToolCaseIcon, X } from "lucide-react";
+import { ArrowUp, Box, Mic, RefreshCw, Square, Timer, ToolCaseIcon, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Spinner } from "@/shared/components/ui/spinner";
@@ -20,6 +20,7 @@ import { voiceauth } from "@/features/voice/api/api";
 import { notionauth } from "../api/api";
 import { useNotionAccount } from "../hooks/useNotionAccount";
 import { notionauthstore } from "../store/store";
+import { NotionCronScheduler } from "./NotionCronScheduler";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const NotionInput = () => {
@@ -56,6 +57,7 @@ export const NotionInput = () => {
         store.setModel(models[0].model);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.provider]);
 
   useEffect(() => () => abortControllerRef.current?.abort(), []);
@@ -297,21 +299,30 @@ export const NotionInput = () => {
 
   return (
     <>
+      <NotionCronScheduler />
       <div className="flex w-full gap-2 justify-between mx-auto max-w-5xl mb-3 mt-3">
-        <Button
-          onClick={deletemessages}
-          disabled={store.sessionmessage.length === 0 || store.loadingnotionmsg}
-          className="bg-cyan-500 dark:bg-white"
-        >
-          {store.loadingnotionmsg ? (
-            <Spinner />
-          ) : (
-            <>
-              <RefreshCw />
-              Reset Chat
-            </>
+        <div className="flex gap-2">
+          <Button
+            onClick={deletemessages}
+            disabled={store.sessionmessage.length === 0 || store.loadingnotionmsg}
+            className="bg-cyan-500 dark:bg-white"
+          >
+            {store.loadingnotionmsg ? (
+              <Spinner />
+            ) : (
+              <>
+                <RefreshCw />
+                Reset Chat
+              </>
+            )}
+          </Button>
+          {workspacename && (
+            <Button onClick={() => store.setOpencron(true)} className="bg-cyan-500 dark:bg-white">
+              <Timer />
+              Schedule Task
+            </Button>
           )}
-        </Button>
+        </div>
         <div className="flex gap-2 items-center">
           {workspacename && pages.length > 0 && (
             <Select

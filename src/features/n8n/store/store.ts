@@ -1,5 +1,16 @@
 import { create } from "zustand";
-import type { N8nClientState } from "../types/type";
+import type { N8nClientState, n8ncrondata } from "../types/type";
+
+export const initialN8nCron: n8ncrondata = {
+  isActive: false,
+  model: "",
+  provider: "",
+  message: "",
+  crontype: "minute",
+  triggerAt: "09:00",
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+  customSchedule: "",
+};
 
 export const n8nauthstore = create<N8nClientState>((set, get) => ({
   provider: "",
@@ -33,6 +44,13 @@ export const n8nauthstore = create<N8nClientState>((set, get) => ({
   copiedIndex: null,
 
   pendingApproval: null,
+
+  opencron: false,
+  loadingcroncreate: false,
+  n8ncron: { ...initialN8nCron },
+  customDayOfWeek: [],
+  customDayOfMonth: [],
+  customMonth: [],
 
   abortControllerRef: { current: null },
   lastSentInputRef: { current: "" },
@@ -69,6 +87,13 @@ export const n8nauthstore = create<N8nClientState>((set, get) => ({
   setLightboxOpen: (v) => set({ lightboxOpen: v }),
   setCopiedIndex: (v) => set({ copiedIndex: v }),
   setPendingApproval: (v) => set({ pendingApproval: v }),
+
+  setOpencron: (v) => set({ opencron: v }),
+  setLoadingcroncreate: (v) => set({ loadingcroncreate: v }),
+  setN8ncron: (v) => set({ n8ncron: v }),
+  setCustomDayOfWeek: (v) => set({ customDayOfWeek: v }),
+  setCustomDayOfMonth: (v) => set({ customDayOfMonth: v }),
+  setCustomMonth: (v) => set({ customMonth: v }),
 
   resetSending: () => set({ sending: false }),
   scrollToBottom: () => {

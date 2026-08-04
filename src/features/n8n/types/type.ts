@@ -33,6 +33,19 @@ export interface N8nClientState {
 
   pendingApproval: { name: string; query: Record<string, unknown> | null } | null;
 
+  opencron: boolean;
+  loadingcroncreate: boolean;
+  n8ncron: n8ncrondata;
+  customDayOfWeek: number[];
+  customDayOfMonth: number[];
+  customMonth: number[];
+  setOpencron: (v: boolean) => void;
+  setLoadingcroncreate: (v: boolean) => void;
+  setN8ncron: (v: n8ncrondata) => void;
+  setCustomDayOfWeek: (v: number[]) => void;
+  setCustomDayOfMonth: (v: number[]) => void;
+  setCustomMonth: (v: number[]) => void;
+
   abortControllerRef: { current: AbortController | null };
   lastSentInputRef: { current: string };
   messagesEndRef: { current: HTMLDivElement | null };
@@ -134,4 +147,21 @@ export interface returnn8ntest {
     error?: string;
     mode: string;
   };
+}
+
+export interface n8ncrondata {
+  isActive: boolean;
+  model: string;
+  provider: string;
+  message: string;
+  crontype: string;
+  triggerAt: string;
+  timezone: string;
+  customSchedule?: string;
+}
+
+export interface returnn8ncrondata {
+  success: boolean;
+  message?: string;
+  data?: n8ncrondata;
 }

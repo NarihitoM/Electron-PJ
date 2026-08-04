@@ -26,6 +26,35 @@ export type returngooglefetchmessage = Apiresponse<{
   hasMore: boolean;
 }>;
 
+export interface sheetcrondata {
+  isActive: boolean;
+  sheetUrl: string;
+  sheetName?: string;
+  model: string;
+  provider: string;
+  message: string;
+  crontype: string;
+  triggerAt: string;
+  timezone: string;
+  customSchedule?: string;
+}
+
+export interface docscrondata {
+  isActive: boolean;
+  docsUrl: string;
+  docsName?: string;
+  model: string;
+  provider: string;
+  message: string;
+  crontype: string;
+  triggerAt: string;
+  timezone: string;
+  customSchedule?: string;
+}
+
+export type returnsheetcrondata = Apiresponse<sheetcrondata>;
+export type returndocscrondata = Apiresponse<docscrondata>;
+
 export interface GoogleClientState {
   provider: string;
   model: string;
@@ -123,6 +152,32 @@ export interface GoogleClientState {
   reasoningLevel_sheet: "" | "low" | "medium" | "high";
   recordstatus_sheet: boolean;
   loadingrecord_sheet: boolean;
+
+  opensheetcron: boolean;
+  loadingsheetcroncreate: boolean;
+  sheetcron: sheetcrondata;
+  customDayOfWeek_sheet: number[];
+  customDayOfMonth_sheet: number[];
+  customMonth_sheet: number[];
+  setOpensheetcron: (v: boolean) => void;
+  setLoadingsheetcroncreate: (v: boolean) => void;
+  setSheetcron: (v: sheetcrondata) => void;
+  setCustomDayOfWeek_sheet: (v: number[]) => void;
+  setCustomDayOfMonth_sheet: (v: number[]) => void;
+  setCustomMonth_sheet: (v: number[]) => void;
+
+  opendocscron: boolean;
+  loadingdocscroncreate: boolean;
+  doccron: docscrondata;
+  customDayOfWeek_docs: number[];
+  customDayOfMonth_docs: number[];
+  customMonth_docs: number[];
+  setOpendocscron: (v: boolean) => void;
+  setLoadingdocscroncreate: (v: boolean) => void;
+  setDoccron: (v: docscrondata) => void;
+  setCustomDayOfWeek_docs: (v: number[]) => void;
+  setCustomDayOfMonth_docs: (v: number[]) => void;
+  setCustomMonth_docs: (v: number[]) => void;
 
   setsheeturl: (url: string) => void;
   setdocsurl: (url: string) => void;

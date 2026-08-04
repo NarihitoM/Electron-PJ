@@ -1,5 +1,31 @@
 import { create } from "zustand";
-import type { GoogleClientState } from "../types/type";
+import type { GoogleClientState, sheetcrondata, docscrondata } from "../types/type";
+
+export const initialSheetCron: sheetcrondata = {
+  isActive: false,
+  sheetUrl: "",
+  sheetName: "",
+  model: "",
+  provider: "",
+  message: "",
+  crontype: "minute",
+  triggerAt: "09:00",
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+  customSchedule: "",
+};
+
+export const initialDocsCron: docscrondata = {
+  isActive: false,
+  docsUrl: "",
+  docsName: "",
+  model: "",
+  provider: "",
+  message: "",
+  crontype: "minute",
+  triggerAt: "09:00",
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+  customSchedule: "",
+};
 
 export const googleauthstore = create<GoogleClientState>((set) => ({
   provider: "",
@@ -69,6 +95,20 @@ export const googleauthstore = create<GoogleClientState>((set) => ({
   recordstatus_sheet: false,
   loadingrecord_sheet: false,
 
+  opensheetcron: false,
+  loadingsheetcroncreate: false,
+  sheetcron: { ...initialSheetCron },
+  customDayOfWeek_sheet: [],
+  customDayOfMonth_sheet: [],
+  customMonth_sheet: [],
+
+  opendocscron: false,
+  loadingdocscroncreate: false,
+  doccron: { ...initialDocsCron },
+  customDayOfWeek_docs: [],
+  customDayOfMonth_docs: [],
+  customMonth_docs: [],
+
   // Shared setters
   setsheeturl: (sheeturl) => set({ sheeturl }),
   setdocsurl: (docsurl) => set({ docsurl }),
@@ -137,4 +177,18 @@ export const googleauthstore = create<GoogleClientState>((set) => ({
   setloadingrecord_sheet: (v) => set({ loadingrecord_sheet: v }),
   updateSessionMessages_sheet: (updater) =>
     set((state) => ({ sessionmessage_sheet: updater(state.sessionmessage_sheet) })),
+
+  setOpensheetcron: (v) => set({ opensheetcron: v }),
+  setLoadingsheetcroncreate: (v) => set({ loadingsheetcroncreate: v }),
+  setSheetcron: (v) => set({ sheetcron: v }),
+  setCustomDayOfWeek_sheet: (v) => set({ customDayOfWeek_sheet: v }),
+  setCustomDayOfMonth_sheet: (v) => set({ customDayOfMonth_sheet: v }),
+  setCustomMonth_sheet: (v) => set({ customMonth_sheet: v }),
+
+  setOpendocscron: (v) => set({ opendocscron: v }),
+  setLoadingdocscroncreate: (v) => set({ loadingdocscroncreate: v }),
+  setDoccron: (v) => set({ doccron: v }),
+  setCustomDayOfWeek_docs: (v) => set({ customDayOfWeek_docs: v }),
+  setCustomDayOfMonth_docs: (v) => set({ customDayOfMonth_docs: v }),
+  setCustomMonth_docs: (v) => set({ customMonth_docs: v }),
 }));

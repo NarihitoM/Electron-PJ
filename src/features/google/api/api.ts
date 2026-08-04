@@ -1,6 +1,13 @@
 import { Server } from "../../../shared/config/axioconfig";
 import { fetchurl } from "../../../shared/config/fetchconfig";
-import { returngooglefeedback, returngooglefetchmessage } from "../types/type";
+import {
+  returngooglefeedback,
+  returngooglefetchmessage,
+  returnsheetcrondata,
+  returndocscrondata,
+  sheetcrondata,
+  docscrondata,
+} from "../types/type";
 
 export const googleauth = {
   addservice: async (serviceemail: string, servicekey: string): Promise<returngooglefeedback> => {
@@ -111,7 +118,7 @@ export const googleauth = {
     const decoder = new TextDecoder();
     let buffer = "";
 
-    while (true) {
+    for (;;) {
       const { value, done } = await reader.read();
       if (done) break;
 
@@ -202,7 +209,7 @@ export const googleauth = {
     const decoder = new TextDecoder();
     let buffer = "";
 
-    while (true) {
+    for (;;) {
       const { value, done } = await reader.read();
       if (done) break;
 
@@ -237,5 +244,21 @@ export const googleauth = {
         }
       }
     }
+  },
+  sheetcroncreate: async (data: sheetcrondata): Promise<returngooglefeedback> => {
+    const response = await Server.post("/google/api/sheetcroncreate", { data });
+    return response.data;
+  },
+  sheetcronget: async (): Promise<returnsheetcrondata> => {
+    const response = await Server.get("/google/api/sheetcronget");
+    return response.data;
+  },
+  docscroncreate: async (data: docscrondata): Promise<returngooglefeedback> => {
+    const response = await Server.post("/google/api/docscroncreate", { data });
+    return response.data;
+  },
+  docscronget: async (): Promise<returndocscrondata> => {
+    const response = await Server.get("/google/api/docscronget");
+    return response.data;
   },
 };

@@ -25,6 +25,21 @@ export type returnnotionmsg = Apiresponse<{
 export type returnnotionfeedback = Apiresponse;
 export type returnnotionacc = Apiresponse<notiondata>;
 
+export interface notioncrondata {
+  isActive: boolean;
+  pageId: string;
+  pageName?: string;
+  model: string;
+  provider: string;
+  message: string;
+  crontype: string;
+  triggerAt: string;
+  timezone: string;
+  customSchedule?: string;
+}
+
+export type returnnotioncrondata = Apiresponse<notioncrondata>;
+
 export interface NotionClientState {
   provider: string;
   model: string;
@@ -53,6 +68,12 @@ export interface NotionClientState {
   modelList: ModelEntry[];
   modelsLoading: boolean;
   reasoningLevel: "" | "low" | "medium" | "high";
+  opencron: boolean;
+  loadingcroncreate: boolean;
+  notioncron: notioncrondata;
+  customDayOfWeek: number[];
+  customDayOfMonth: number[];
+  customMonth: number[];
 
   setProvider: (v: string) => void;
   setModel: (v: string) => void;
@@ -79,6 +100,12 @@ export interface NotionClientState {
   setModelList: (v: ModelEntry[]) => void;
   setModelsLoading: (v: boolean) => void;
   setReasoningLevel: (v: "" | "low" | "medium" | "high") => void;
+  setOpencron: (v: boolean) => void;
+  setLoadingcroncreate: (v: boolean) => void;
+  setNotioncron: (v: notioncrondata) => void;
+  setCustomDayOfWeek: (v: number[]) => void;
+  setCustomDayOfMonth: (v: number[]) => void;
+  setCustomMonth: (v: number[]) => void;
 
   resetnotion: () => void;
   updateSessionMessages: (updater: (prev: chatsession[]) => chatsession[]) => void;

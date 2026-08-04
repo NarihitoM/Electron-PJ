@@ -4,7 +4,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { ModelSelect } from "@/features/chat/components/ModelSelect";
 import { ImagePreview, ImagePicker } from "@/shared/components/ImageUpload";
-import { Box, RefreshCw, Square, Mic, X, ArrowUp } from "lucide-react";
+import { Box, RefreshCw, Square, Mic, X, ArrowUp, Timer } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -21,6 +21,7 @@ import { voiceauth } from "@/features/voice/api/api";
 import { useN8nConfig } from "@/features/n8n/hooks/useN8nConfig";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ModelEntry } from "@/shared/lib/modelsapi";
+import { N8nCronScheduler } from "./N8nCronScheduler";
 
 export const N8nInput = () => {
   const { data: Api = [] } = useServiceKeys();
@@ -56,6 +57,7 @@ export const N8nInput = () => {
         store.setModel(models[0].model);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.provider]);
 
   useEffect(() => () => abortControllerRef.current?.abort(), []);
@@ -273,15 +275,24 @@ export const N8nInput = () => {
 
   return (
     <>
+      <N8nCronScheduler />
       <div className="flex w-full gap-2 justify-between mx-auto max-w-5xl mb-3 mt-3">
-        <Button
-          onClick={deletemessages}
-          disabled={store.sessionmessage.length === 0}
-          className="bg-cyan-500 dark:bg-white"
-        >
-          <RefreshCw />
-          Reset Chat
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={deletemessages}
+            disabled={store.sessionmessage.length === 0}
+            className="bg-cyan-500 dark:bg-white"
+          >
+            <RefreshCw />
+            Reset Chat
+          </Button>
+          {connected && (
+            <Button onClick={() => store.setOpencron(true)} className="bg-cyan-500 dark:bg-white">
+              <Timer />
+              Schedule Task
+            </Button>
+          )}
+        </div>
         <div className="flex gap-2 items-center">
           {connected && (
             <DropdownMenu>

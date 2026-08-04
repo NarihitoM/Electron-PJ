@@ -1,6 +1,13 @@
 import { Server } from "../../../shared/config/axioconfig";
 import { fetchurl } from "../../../shared/config/fetchconfig";
-import { returnn8nconfig, returnn8nmsg, returnn8nfeedback, returnn8ntest } from "../types/type";
+import {
+  returnn8nconfig,
+  returnn8nmsg,
+  returnn8nfeedback,
+  returnn8ntest,
+  returnn8ncrondata,
+  n8ncrondata,
+} from "../types/type";
 
 export const n8nauth = {
   testConnection: async (
@@ -93,7 +100,7 @@ export const n8nauth = {
     const decoder = new TextDecoder();
     let buffer = "";
 
-    while (true) {
+    for (;;) {
       const { value, done } = await reader.read();
       if (done) break;
 
@@ -135,6 +142,14 @@ export const n8nauth = {
   },
   n8ndeletemessage: async (): Promise<returnn8nfeedback> => {
     const response = await Server.post("/n8n/api/n8ndeletemessage");
+    return response.data;
+  },
+  n8ncroncreate: async (data: n8ncrondata): Promise<returnn8nfeedback> => {
+    const response = await Server.post("/n8n/api/n8ncroncreate", { data });
+    return response.data;
+  },
+  n8ncronget: async (): Promise<returnn8ncrondata> => {
+    const response = await Server.get("/n8n/api/n8ncronget");
     return response.data;
   },
 };

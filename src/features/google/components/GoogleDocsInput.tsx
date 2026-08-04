@@ -4,7 +4,7 @@ import { Textarea } from "@/shared/components/ui/textarea";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { ImagePreview, ImagePicker } from "@/shared/components/ImageUpload";
 import { ModelSelect } from "@/features/chat/components/ModelSelect";
-import { ArrowUp, ToolCaseIcon, X, Square, Mic, Box } from "lucide-react";
+import { ArrowUp, ToolCaseIcon, X, Square, Mic, Box, Timer } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -22,6 +22,7 @@ import { voiceauth } from "@/features/voice/api/api";
 import { useQueryClient } from "@tanstack/react-query";
 import type { chatsession } from "@/shared/types/globaltype";
 import type { ModelEntry } from "@/shared/lib/modelsapi";
+import { GoogleDocsCronScheduler } from "./GoogleDocsCronScheduler";
 
 export const GoogleDocsInput = () => {
   const { data: Api = [] } = useServiceKeys();
@@ -55,6 +56,7 @@ export const GoogleDocsInput = () => {
         store.setModel(models[0].model);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.provider]);
 
   useEffect(() => () => abortControllerRef.current?.abort(), []);
@@ -352,27 +354,39 @@ export const GoogleDocsInput = () => {
 
   return (
     <>
+      <GoogleDocsCronScheduler />
       <div className="flex w-full gap-2 justify-between mx-auto max-w-5xl mb-3 mt-3">
-        <Button
-          onClick={deleteDocsMessage}
-          disabled={store.sessionmessage_docs.length === 0}
-          className="bg-cyan-500 dark:bg-white"
-        >
-          {
-            <>
-              <svg
-                className="h-4 w-4 mr-1"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M21 2v6H3V2M3 8l1.5 14h15L21 8M10 12v4M14 12v4M7.5 2L9 4h6l1.5-2" />
-              </svg>
-              Reset Chat
-            </>
-          }
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={deleteDocsMessage}
+            disabled={store.sessionmessage_docs.length === 0}
+            className="bg-cyan-500 dark:bg-white"
+          >
+            {
+              <>
+                <svg
+                  className="h-4 w-4 mr-1"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M21 2v6H3V2M3 8l1.5 14h15L21 8M10 12v4M14 12v4M7.5 2L9 4h6l1.5-2" />
+                </svg>
+                Reset Chat
+              </>
+            }
+          </Button>
+          {serviceemail && (
+            <Button
+              onClick={() => store.setOpendocscron(true)}
+              className="bg-cyan-500 dark:bg-white"
+            >
+              <Timer />
+              Schedule Task
+            </Button>
+          )}
+        </div>
       </div>
       <div className="w-full bg-card mx-auto max-w-5xl rounded-2xl border p-3 shadow-lg">
         <ImagePreview

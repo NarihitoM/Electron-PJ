@@ -1,6 +1,12 @@
 import { Server } from "../../../shared/config/axioconfig";
 import { fetchurl } from "../../../shared/config/fetchconfig";
-import { returnnotionacc, returnnotionfeedback, returnnotionmsg } from "../types/type";
+import {
+  returnnotionacc,
+  returnnotionfeedback,
+  returnnotionmsg,
+  returnnotioncrondata,
+  notioncrondata,
+} from "../types/type";
 
 export const notionauth = {
   notionstate: async (): Promise<{ stateId: string }> => {
@@ -81,7 +87,7 @@ export const notionauth = {
     const decoder = new TextDecoder();
     let buffer = "";
 
-    while (true) {
+    for (;;) {
       const { value, done } = await reader.read();
       if (done) break;
 
@@ -123,6 +129,14 @@ export const notionauth = {
   },
   notiondeletemessage: async (): Promise<returnnotionfeedback> => {
     const response = await Server.post("/notion/api/notiondeletemessage");
+    return response.data;
+  },
+  notioncroncreate: async (data: notioncrondata): Promise<returnnotionfeedback> => {
+    const response = await Server.post("/notion/api/notioncroncreate", { data });
+    return response.data;
+  },
+  notioncronget: async (): Promise<returnnotioncrondata> => {
+    const response = await Server.get("/notion/api/notioncronget");
     return response.data;
   },
 };

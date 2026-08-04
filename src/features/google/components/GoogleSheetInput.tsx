@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { ArrowUp, Mic, Square, Box, X } from "lucide-react";
+import { ArrowUp, Mic, Square, Box, Timer, X } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Spinner } from "@/shared/components/ui/spinner";
@@ -20,6 +20,7 @@ import { googleauth } from "../api/api";
 import { chatauth } from "@/features/chat/api/api";
 import { voiceauth } from "@/features/voice/api/api";
 import { useQueryClient } from "@tanstack/react-query";
+import { GoogleSheetCronScheduler } from "./GoogleSheetCronScheduler";
 
 export const GoogleSheetInput = () => {
   const { data: Api = [] } = useServiceKeys();
@@ -48,6 +49,7 @@ export const GoogleSheetInput = () => {
         store.setModel(models[0].model);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.provider]);
 
   useEffect(() => () => abortControllerRef.current?.abort(), []);
@@ -369,130 +371,144 @@ export const GoogleSheetInput = () => {
   };
 
   return (
-    <div className="w-full bg-card mx-auto max-w-5xl rounded-2xl border p-3 shadow-lg">
-      <ImagePreview
-        images={store.pendingImages_sheet}
-        onImagesChange={store.setPendingImages_sheet}
-        uploading={store.uploadingImages_sheet}
-      />
-      <Textarea
-        disabled={isDisabled}
-        value={store.input_sheet}
-        onChange={(e) => store.setInput_sheet(e.target.value)}
-        placeholder={
-          store.recordstatus_sheet
-            ? "Listening..."
-            : store.loadingrecord_sheet
-              ? "Transcribing..."
-              : "Message..."
-        }
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSend();
-          }
-        }}
-        className="border-none max-h-50 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
-      />
-      <div className="flex items-center justify-between mt-2">
-        <div className="flex gap-2 items-center">
-          <ImagePicker
-            images={store.pendingImages_sheet}
-            onImagesChange={store.setPendingImages_sheet}
-            uploading={store.uploadingImages_sheet}
-            disabled={isDisabled}
-            maxImages={4}
-          />
-          <DropdownMenu>
-            <DropdownMenuTrigger>
-              <Button variant="outline" className="flex gap-1 items-center cursor-pointer">
-                <span className="text-sm">Tools</span>
-              </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent align="start" side="top" className="w-45">
-              <DropdownMenuItem onClick={() => store.settype_sheet("read")}>
-                <Box /> Read Sheet Data
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => store.settype_sheet("edit")}>
-                <Box /> Edit Sheet Data
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => store.settype_sheet("delete")}>
-                <Box /> Delete Sheet Data
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => store.settype_sheet("append")}>
-                <Box /> Append Sheet Data
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => store.settype_sheet("create")}>
-                <Box /> Create Sheet
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => store.settype_sheet("addsheet")}>
-                <Box /> Add Sheet Tab
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {renderTypeBadge()}
+    <>
+      <GoogleSheetCronScheduler />
+      {serviceemail && (
+        <div className="flex w-full gap-2 mx-auto max-w-5xl mb-3">
+          <Button
+            onClick={() => store.setOpensheetcron(true)}
+            className="bg-cyan-500 dark:bg-white"
+          >
+            <Timer />
+            Schedule Task
+          </Button>
         </div>
-        <div className="flex gap-2">
-          {Api.length > 0 && (
-            <ModelSelect
-              modelList={store.modelList_sheet}
-              provider={store.provider || ""}
-              model={store.model}
-              loading={store.modelsLoading_sheet}
-              disabled={!store.provider}
-              onSelect={store.setModel}
-              reasoningLevel={store.reasoningLevel_sheet}
-              onReasoningLevelChange={store.setReasoningLevel_sheet}
+      )}
+      <div className="w-full bg-card mx-auto max-w-5xl rounded-2xl border p-3 shadow-lg">
+        <ImagePreview
+          images={store.pendingImages_sheet}
+          onImagesChange={store.setPendingImages_sheet}
+          uploading={store.uploadingImages_sheet}
+        />
+        <Textarea
+          disabled={isDisabled}
+          value={store.input_sheet}
+          onChange={(e) => store.setInput_sheet(e.target.value)}
+          placeholder={
+            store.recordstatus_sheet
+              ? "Listening..."
+              : store.loadingrecord_sheet
+                ? "Transcribing..."
+                : "Message..."
+          }
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleSend();
+            }
+          }}
+          className="border-none max-h-50 resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
+        />
+        <div className="flex items-center justify-between mt-2">
+          <div className="flex gap-2 items-center">
+            <ImagePicker
+              images={store.pendingImages_sheet}
+              onImagesChange={store.setPendingImages_sheet}
+              uploading={store.uploadingImages_sheet}
+              disabled={isDisabled}
+              maxImages={4}
             />
-          )}
-          <Button
-            disabled={
-              store.loadingrecord_sheet ||
-              !serviceemail ||
-              sheet.length === 0 ||
-              !store.model ||
-              !store.provider
-            }
-            onClick={store.recordstatus_sheet ? stopRecording : startRecording}
-            size="icon"
-            className="bg-cyan-500 dark:bg-white rounded-full"
-          >
-            {store.recordstatus_sheet ? (
-              <Square size={14} className="fill-current" />
-            ) : store.loadingrecord_sheet ? (
-              <Spinner />
-            ) : (
-              <Mic size={14} />
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <Button variant="outline" className="flex gap-1 items-center cursor-pointer">
+                  <span className="text-sm">Tools</span>
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="start" side="top" className="w-45">
+                <DropdownMenuItem onClick={() => store.settype_sheet("read")}>
+                  <Box /> Read Sheet Data
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => store.settype_sheet("edit")}>
+                  <Box /> Edit Sheet Data
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => store.settype_sheet("delete")}>
+                  <Box /> Delete Sheet Data
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => store.settype_sheet("append")}>
+                  <Box /> Append Sheet Data
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => store.settype_sheet("create")}>
+                  <Box /> Create Sheet
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => store.settype_sheet("addsheet")}>
+                  <Box /> Add Sheet Tab
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            {renderTypeBadge()}
+          </div>
+          <div className="flex gap-2">
+            {Api.length > 0 && (
+              <ModelSelect
+                modelList={store.modelList_sheet}
+                provider={store.provider || ""}
+                model={store.model}
+                loading={store.modelsLoading_sheet}
+                disabled={!store.provider}
+                onSelect={store.setModel}
+                reasoningLevel={store.reasoningLevel_sheet}
+                onReasoningLevelChange={store.setReasoningLevel_sheet}
+              />
             )}
-          </Button>
-          <Button
-            onClick={store.sending_sheet ? () => abortControllerRef.current?.abort() : handleSend}
-            disabled={
-              !store.sending_sheet &&
-              (!store.provider ||
-                !store.model ||
-                (!store.input_sheet.trim() && store.pendingImages_sheet.length === 0) ||
-                sheet.length === 0 ||
+            <Button
+              disabled={
                 store.loadingrecord_sheet ||
-                store.recordstatus_sheet ||
-                store.uploadingImages_sheet)
-            }
-            size="icon"
-            className={
-              store.sending_sheet
-                ? "bg-red-500 hover:bg-red-600 rounded-full"
-                : "bg-cyan-500 dark:bg-white rounded-full"
-            }
-          >
-            {store.sending_sheet ? (
-              <Square size={16} className="fill-current" />
-            ) : (
-              <ArrowUp size={16} />
-            )}
-          </Button>
+                !serviceemail ||
+                sheet.length === 0 ||
+                !store.model ||
+                !store.provider
+              }
+              onClick={store.recordstatus_sheet ? stopRecording : startRecording}
+              size="icon"
+              className="bg-cyan-500 dark:bg-white rounded-full"
+            >
+              {store.recordstatus_sheet ? (
+                <Square size={14} className="fill-current" />
+              ) : store.loadingrecord_sheet ? (
+                <Spinner />
+              ) : (
+                <Mic size={14} />
+              )}
+            </Button>
+            <Button
+              onClick={store.sending_sheet ? () => abortControllerRef.current?.abort() : handleSend}
+              disabled={
+                !store.sending_sheet &&
+                (!store.provider ||
+                  !store.model ||
+                  (!store.input_sheet.trim() && store.pendingImages_sheet.length === 0) ||
+                  sheet.length === 0 ||
+                  store.loadingrecord_sheet ||
+                  store.recordstatus_sheet ||
+                  store.uploadingImages_sheet)
+              }
+              size="icon"
+              className={
+                store.sending_sheet
+                  ? "bg-red-500 hover:bg-red-600 rounded-full"
+                  : "bg-cyan-500 dark:bg-white rounded-full"
+              }
+            >
+              {store.sending_sheet ? (
+                <Square size={16} className="fill-current" />
+              ) : (
+                <ArrowUp size={16} />
+              )}
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };

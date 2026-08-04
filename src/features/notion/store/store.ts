@@ -1,5 +1,18 @@
 import { create } from "zustand";
-import type { NotionClientState } from "../types/type";
+import type { NotionClientState, notioncrondata } from "../types/type";
+
+export const initialNotionCron: notioncrondata = {
+  isActive: false,
+  pageId: "",
+  pageName: "",
+  model: "",
+  provider: "",
+  message: "",
+  crontype: "minute",
+  triggerAt: "09:00",
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+  customSchedule: "",
+};
 
 export const notionauthstore = create<NotionClientState>((set) => ({
   provider: "",
@@ -29,6 +42,12 @@ export const notionauthstore = create<NotionClientState>((set) => ({
   modelList: [],
   modelsLoading: false,
   reasoningLevel: "",
+  opencron: false,
+  loadingcroncreate: false,
+  notioncron: { ...initialNotionCron },
+  customDayOfWeek: [],
+  customDayOfMonth: [],
+  customMonth: [],
 
   setProvider: (v) => set({ provider: v, model: "" }),
   setModel: (v) => set({ model: v }),
@@ -55,6 +74,12 @@ export const notionauthstore = create<NotionClientState>((set) => ({
   setModelList: (v) => set({ modelList: v }),
   setModelsLoading: (v) => set({ modelsLoading: v }),
   setReasoningLevel: (v) => set({ reasoningLevel: v }),
+  setOpencron: (v) => set({ opencron: v }),
+  setLoadingcroncreate: (v) => set({ loadingcroncreate: v }),
+  setNotioncron: (v) => set({ notioncron: v }),
+  setCustomDayOfWeek: (v) => set({ customDayOfWeek: v }),
+  setCustomDayOfMonth: (v) => set({ customDayOfMonth: v }),
+  setCustomMonth: (v) => set({ customMonth: v }),
 
   resetnotion: () => set({ provider: "", model: "" }),
   updateSessionMessages: (updater) =>
