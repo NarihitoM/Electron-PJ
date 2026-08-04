@@ -50,12 +50,12 @@ const SERVICE_INFO: Record<ServiceType, { name: string; icon: string; descriptio
   googlesheet: {
     name: "Google Sheets",
     icon: "https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg",
-    description: "Connect Google Sheets with a service account.",
+    description: "Connect your Google account to read and edit Sheets.",
   },
   googledocs: {
     name: "Google Docs",
     icon: "https://upload.wikimedia.org/wikipedia/commons/0/01/Google_Docs_logo_%282014-2020%29.svg",
-    description: "Connect Google Docs with a service account.",
+    description: "Connect your Google account to read and edit Docs.",
   },
   n8n: {
     name: "n8n",
@@ -832,60 +832,91 @@ export const TelegramForm = ({ onComplete }: { onComplete: () => void }) => {
   );
 };
 
-export const GoogleForm = ({ onComplete }: { onComplete: () => void }) => {
-  const [serviceEmail, setServiceEmail] = useState("");
-  const [serviceKey, setServiceKey] = useState("");
-  const [loading, setLoading] = useState(false);
+const GOOGLE_SCOPES = [
+  "openid",
+  "email",
+  "profile",
+  "https://www.googleapis.com/auth/spreadsheets",
+  "https://www.googleapis.com/auth/drive",
+  "https://www.googleapis.com/auth/documents",
+].join(" ");
 
-  const handleConnect = async () => {
-    if (!serviceEmail.trim() || !serviceKey.trim()) {
-      toast.error("Please fill in both fields.");
-      return;
-    }
+export const GoogleForm = ({ onComplete }: { onComplete: () => void }) => {
+  const [checking, setChecking] = useState(false);
+  const [polling, setPolling] = useState(false);
+
+  const connect = async () => {
     try {
-      setLoading(true);
-      const response = await googleauth.addservice(serviceEmail, serviceKey);
-      if (response.success) {
-        toast.success(response.message || "Connected to Google!");
-        onComplete();
+      const response = await googleauth.googlestate();
+      const stateId = response.stateId;
+      const clientid = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      if (!clientid) {
+        toast.error("Google Client ID not configured.");
+        return;
       }
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://multimate-server.vercel.app";
+      const redirecturi = encodeURIComponent(`${backendUrl}/google/api/callback`);
+      const scopes = encodeURIComponent(GOOGLE_SCOPES);
+
+      const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientid}&scope=${scopes}&redirect_uri=${redirecturi}&response_type=code&access_type=offline&prompt=consent&state=${stateId}`;
+      (window.ipcRenderer as any).openInBrowser(url);
+      setChecking(true);
+      setPolling(true);
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to connect.");
-    } finally {
-      setLoading(false);
+      toast.error(err.response?.data?.message || "Failed to initiate Google connection.");
     }
   };
 
+  useEffect(() => {
+    if (!polling) return;
+    const poll = async () => {
+      try {
+        const status = await googleauth.googlecheckstatus();
+        if (status.success) {
+          setPolling(false);
+          toast.success("Connected to Google!");
+          onComplete();
+        }
+      } catch (err) {
+        console.error("Google status poll failed:", err);
+      }
+    };
+
+    const interval = setInterval(poll, 2000);
+    const timeout = setTimeout(() => {
+      setPolling(false);
+      clearInterval(interval);
+      toast.error("Connection timed out. Please try again.");
+    }, 180000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [polling, onComplete]);
+
   return (
     <div className="flex flex-col gap-4 py-4">
-      <p className="text-sm text-muted-foreground">
-        Enter your Google Cloud service account credentials. The service email and private key are
-        needed.
-      </p>
-      <div className="flex flex-col gap-2">
-        <Label>Service Account Email</Label>
-        <Input
-          value={serviceEmail}
-          onChange={(e) => setServiceEmail(e.target.value)}
-          placeholder="your-service@project.iam.gserviceaccount.com"
-        />
-      </div>
-      <div className="flex flex-col gap-2">
-        <Label>Private Key (JSON)</Label>
-        <textarea
-          value={serviceKey}
-          onChange={(e) => setServiceKey(e.target.value)}
-          placeholder="Paste the entire private key JSON here..."
-          className="min-h-25 w-full rounded-md border bg-transparent px-3 py-2 text-sm resize-none"
-        />
-      </div>
-      <Button
-        onClick={handleConnect}
-        disabled={loading || !serviceEmail || !serviceKey}
-        className="bg-cyan-500 dark:bg-white"
-      >
-        {loading ? <Spinner className="w-4 h-4" /> : "Connect"}
-      </Button>
+      {checking ? (
+        <div className="flex flex-col items-center gap-3 py-4">
+          <Spinner className="w-6 h-6 text-cyan-500" />
+          <p className="text-sm text-muted-foreground">Waiting for Google authorization...</p>
+          <p className="text-xs text-muted-foreground">
+            A browser window has opened. Complete the authorization there.
+          </p>
+        </div>
+      ) : (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Click the button below to open Google's authorization page. You'll be asked to grant
+            access to Sheets, Docs, and Drive.
+          </p>
+          <Button onClick={connect} className="bg-cyan-500 dark:bg-white gap-2">
+            <ExternalLink className="w-4 h-4" />
+            Authorize with Google
+          </Button>
+        </>
+      )}
     </div>
   );
 };

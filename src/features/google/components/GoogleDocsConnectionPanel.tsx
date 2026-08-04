@@ -14,6 +14,7 @@ import { RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useGoogleService } from "@/features/google/hooks/useGoogleService";
 import { useDeleteGoogleDocMessage } from "@/features/google/hooks/useDeleteGoogleDocMessage";
+import { useGoogleConnect } from "@/features/google/hooks/useGoogleConnect";
 import { googleauthstore } from "../store/store";
 import { googleauth } from "../api/api";
 
@@ -21,6 +22,7 @@ export const GoogleDocsConnectionPanel = () => {
   const { data: googleService } = useGoogleService();
   const deleteDocsMutation = useDeleteGoogleDocMessage();
   const store = googleauthstore();
+  const { connect, isChecking } = useGoogleConnect();
 
   const docs = (googleService as any)?.googledocs ?? [];
   const serviceemail = (googleService as any)?.email ?? "";
@@ -48,23 +50,15 @@ export const GoogleDocsConnectionPanel = () => {
     }
   };
 
-  const addservice = async () => {
+  const connectGoogle = async () => {
     try {
-      const response = await googleauth.addservice(store.useremail_docs, store.key_docs);
-      if (response.success) {
-        toast.success(response.message);
-      }
+      await connect();
     } catch (err: unknown) {
       if (err instanceof Error) {
-        const error = (err as any).response?.data?.message || err.message;
-        toast.error(error);
+        toast.error(err.message);
       } else {
         toast.error("An unexpected error occurred.");
       }
-    } finally {
-      store.setOpenservice(false);
-      store.setUseremail_docs("");
-      store.setKey_docs("");
     }
   };
 
@@ -107,12 +101,13 @@ export const GoogleDocsConnectionPanel = () => {
             <>
               {!loadingfetch && (
                 <Button
-                  onClick={() => store.setOpenservice(true)}
+                  onClick={connectGoogle}
+                  disabled={isChecking}
                   variant="outline"
                   size="sm"
                   className="text-xs"
                 >
-                  Manage Service
+                  {isChecking ? <Spinner /> : "Reconnect Google"}
                 </Button>
               )}
               {docs.length > 0 ? (
@@ -149,10 +144,11 @@ export const GoogleDocsConnectionPanel = () => {
             </>
           ) : (
             <Button
-              onClick={() => store.setOpenservice(true)}
+              onClick={connectGoogle}
+              disabled={isChecking}
               className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
             >
-              Add Service Account
+              {isChecking ? <Spinner /> : "Connect Google"}
             </Button>
           )}
         </div>
@@ -182,46 +178,6 @@ export const GoogleDocsConnectionPanel = () => {
               {loadingfetch ? <Spinner /> : "Add"}
             </Button>
             <Button variant="destructive" onClick={() => store.setOpendocs(false)}>
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={store.openservice} onOpenChange={store.setOpenservice} modal={false}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Add Service Account</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Service Email</Label>
-            <Input
-              id="email"
-              placeholder="Enter Service Email"
-              value={store.useremail_docs}
-              onChange={(e) => store.setUseremail_docs(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="key">Service Key</Label>
-            <Input
-              id="key"
-              type="password"
-              placeholder="Enter Service Key"
-              value={store.key_docs}
-              onChange={(e) => store.setKey_docs(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              onClick={addservice}
-              disabled={loadingfetch}
-              className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
-            >
-              {" "}
-              {loadingfetch ? <Spinner /> : "Create"}
-            </Button>
-            <Button variant="destructive" onClick={() => store.setOpenservice(false)}>
               Cancel
             </Button>
           </DialogFooter>

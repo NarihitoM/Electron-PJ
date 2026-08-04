@@ -30,6 +30,7 @@ import { Googlesheettool } from "@/shared/config/toolsselection";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { useGoogleService } from "@/features/google/hooks/useGoogleService";
 import { googleauthstore } from "../store/store";
+import { useGoogleConnect } from "../hooks/useGoogleConnect";
 import { googleauth } from "../api/api";
 import { toast } from "sonner";
 
@@ -37,6 +38,7 @@ export const GoogleSheetMessageList = () => {
   const { data: userdata } = useUser();
   const { data: googleService } = useGoogleService();
   const store = googleauthstore();
+  const { connect, isChecking } = useGoogleConnect();
 
   const serviceemail = (googleService as any)?.email ?? "";
 
@@ -453,9 +455,10 @@ export const GoogleSheetMessageList = () => {
               {!serviceemail && (
                 <Button
                   className="bg-cyan-500 dark:bg-white"
-                  onClick={() => store.setOpenservice(true)}
+                  onClick={() => connect()}
+                  disabled={isChecking}
                 >
-                  Add Service
+                  {isChecking ? <Spinner /> : "Connect Google"}
                 </Button>
               )}
             </div>

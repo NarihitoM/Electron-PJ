@@ -10,11 +10,12 @@ import {
 } from "../types/type";
 
 export const googleauth = {
-  addservice: async (serviceemail: string, servicekey: string): Promise<returngooglefeedback> => {
-    const response = await Server.post("/google/api/addservice", {
-      serviceemail,
-      servicekey,
-    });
+  googlestate: async (): Promise<{ stateId: string }> => {
+    const response = await Server.post("/google/api/authurl");
+    return response.data;
+  },
+  googlecheckstatus: async (): Promise<{ success: boolean }> => {
+    const response = await Server.get("/google/api/checkstatus");
     return response.data;
   },
   addgooglesheeturl: async (sheeturl: string): Promise<returngooglefeedback> => {

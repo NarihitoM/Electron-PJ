@@ -72,9 +72,6 @@ export interface GoogleClientState {
   loadingMore_docs: boolean;
   type_docs: string | null;
   opendocs: boolean;
-  openservice: boolean;
-  useremail_docs: string;
-  key_docs: string;
   docsinput: string;
   lightboxImages_docs: string[];
   lightboxIndex_docs: number;
@@ -101,9 +98,6 @@ export interface GoogleClientState {
   setLoadingMore_docs: (v: boolean) => void;
   settype_docs: (v: string | null) => void;
   setOpendocs: (v: boolean) => void;
-  setOpenservice: (v: boolean) => void;
-  setUseremail_docs: (v: string) => void;
-  setKey_docs: (v: string) => void;
   setDocsinput: (v: string) => void;
   setLightboxImages_docs: (v: string[]) => void;
   setLightboxIndex_docs: (v: number) => void;
@@ -132,8 +126,6 @@ export interface GoogleClientState {
   type_sheet: string | null;
   hover_sheet: boolean;
   opensheet: boolean;
-  useremail_sheet: string;
-  key_sheet: string;
   sheetinput: string;
   pendingApproval_sheet: { name: string; query: Record<string, unknown> | null } | null;
   pendingApprovalRef_sheet: {
@@ -196,8 +188,6 @@ export interface GoogleClientState {
   settype_sheet: (v: string | null) => void;
   setHover_sheet: (v: boolean) => void;
   setOpensheet: (v: boolean) => void;
-  setuseremail_sheet: (v: string) => void;
-  setkey_sheet: (v: string) => void;
   setsheetinput: (v: string) => void;
   setPendingApproval_sheet: (
     v: { name: string; query: Record<string, unknown> | null } | null,

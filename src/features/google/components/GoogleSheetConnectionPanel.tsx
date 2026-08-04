@@ -13,6 +13,7 @@ import { Spinner } from "@/shared/components/ui/spinner";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
 import { toast } from "sonner";
 import { useGoogleService } from "@/features/google/hooks/useGoogleService";
+import { useGoogleConnect } from "@/features/google/hooks/useGoogleConnect";
 import { googleauthstore } from "../store/store";
 import { googleauth } from "../api/api";
 import { useMemo } from "react";
@@ -20,9 +21,10 @@ import { useMemo } from "react";
 export const GoogleSheetConnectionPanel = () => {
   const { data: googleService } = useGoogleService();
   const store = googleauthstore();
+  const { connect, isChecking } = useGoogleConnect();
 
   const serviceemail = (googleService as any)?.email ?? "";
-  const sheet = (googleService as any)?.googlesheet ?? [];
+  const sheet = useMemo(() => (googleService as any)?.googlesheet ?? [], [googleService]);
 
   const selectedsheetTitle = useMemo(() => {
     return sheet.find((g: any) => g.url === store.sheeturl)?.name || "";
@@ -47,24 +49,15 @@ export const GoogleSheetConnectionPanel = () => {
     }
   };
 
-  const addservice = async () => {
+  const connectGoogle = async () => {
     try {
-      const response = await googleauth.addservice(store.useremail_sheet, store.key_sheet);
-      if (response.success) {
-        toast.success(response.message);
-      }
+      await connect();
     } catch (err: unknown) {
       if (err instanceof Error) {
-        const Error = err as any;
-        toast.error(Error.response?.data?.message || err.message);
+        toast.error(err.message);
       } else {
         toast.error("An unexpected error occurred.");
       }
-    } finally {
-      store.setOpenservice(false);
-      store.setuseremail_sheet("");
-      store.setsheetinput("");
-      store.setkey_sheet("");
     }
   };
 
@@ -119,46 +112,6 @@ export const GoogleSheetConnectionPanel = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <Dialog open={store.openservice} onOpenChange={store.setOpenservice} modal={false}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-2xl">Add Service Account</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Service Email</Label>
-            <Input
-              id="email"
-              placeholder="Enter Service Email"
-              value={store.useremail_sheet}
-              onChange={(e) => store.setuseremail_sheet(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="key">Service Key</Label>
-            <Input
-              id="key"
-              type="password"
-              placeholder="Enter Service Key"
-              value={store.key_sheet}
-              onChange={(e) => store.setkey_sheet(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              onClick={addservice}
-              disabled={store.loadingfetch_sheet}
-              className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
-            >
-              {" "}
-              {store.loadingfetch_sheet ? <Spinner /> : "Create"}
-            </Button>
-            <Button variant="destructive" onClick={() => store.setOpenservice(false)}>
-              {" "}
-              Cancel
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
       <div className="flex w-full gap-2 justify-between mx-auto max-w-5xl mb-3 mt-3">
         <Button
           onClick={sheetmsgdelete}
@@ -175,7 +128,7 @@ export const GoogleSheetConnectionPanel = () => {
           )}
         </Button>
         <div className="flex gap-2 items-center">
-          {serviceemail && (
+          {serviceemail ? (
             <>
               {sheet.length > 0 ? (
                 <Select
@@ -207,6 +160,14 @@ export const GoogleSheetConnectionPanel = () => {
                 </Button>
               )}
             </>
+          ) : (
+            <Button
+              onClick={connectGoogle}
+              disabled={isChecking}
+              className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
+            >
+              {isChecking ? <Spinner /> : "Connect Google"}
+            </Button>
           )}
         </div>
       </div>
