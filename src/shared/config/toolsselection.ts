@@ -90,17 +90,6 @@ export const Githubtool: Record<string, string> = {
   image_analyzer: "Reviewing Image",
 };
 
-export const Vibertool: Record<string, string> = {
-  send_message: "Sending Viber Message",
-  read_messages: "Reading The Viber Message",
-  web_search: "Searching The Web",
-  web_scrape: "Scraping Web Page",
-  image_generation: "Generating Image",
-  image_generator: "Generating Image",
-  image_review: "Reviewing Image",
-  image_analyzer: "Reviewing Image",
-};
-
 export const N8ntool: Record<string, string> = {
   n8n_list_workflows: "Listing Workflows",
   n8n_get_workflow: "Getting Workflow Details",

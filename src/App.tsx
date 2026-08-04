@@ -20,7 +20,6 @@ import { Account } from "./pages/Account";
 import { Slack } from "./pages/Slack";
 import { Github } from "./pages/Github";
 import { Discord } from "./pages/Discord";
-import { Viber } from "./pages/Viber";
 import { N8n } from "./pages/N8n";
 import { Emailcheck } from "./pages/SendEmail";
 import { Verifychangepassword } from "./pages/VerifyChangePassword";
@@ -56,7 +55,6 @@ function App() {
                 <Route path="slack" element={<Slack />} /> //done
                 <Route path="github" element={<Github />} />
                 <Route path="discord" element={<Discord />} />
-                <Route path="viber" element={<Viber />} />
                 <Route path="notion" element={<Notion />} /> //done
                 <Route path="googlesheet" element={<Googlesheet />} /> //done
                 <Route path="googledocs" element={<Googledocs />} /> //done

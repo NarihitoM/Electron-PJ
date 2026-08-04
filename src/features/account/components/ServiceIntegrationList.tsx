@@ -8,7 +8,6 @@ import { useSlackAccount } from "@/features/slack/hooks/useSlackAccount";
 import { useN8nConfig } from "@/features/n8n/hooks/useN8nConfig";
 import { useGithubAccount } from "@/features/github/hooks/useGithubAccount";
 import { useDiscordAccount } from "@/features/discord/hooks/useDiscordAccount";
-import { useViberAccount } from "@/features/viber/hooks/useViberAccount";
 import { accountstore } from "../store/store";
 
 export const ServiceIntegrationList = () => {
@@ -23,7 +22,6 @@ export const ServiceIntegrationList = () => {
   const { data: n8nConfig } = useN8nConfig();
   const { data: githubAccount } = useGithubAccount();
   const { data: discordAccount } = useDiscordAccount();
-  const { data: viberAccount } = useViberAccount();
 
   const userdata = telegramData;
   const serviceemail = (googleServiceData as any)?.serviceemail ?? "";
@@ -32,7 +30,6 @@ export const ServiceIntegrationList = () => {
   const n8nConnected = !!((n8nConfig as any)?.connected ?? false);
   const githubusername = (githubAccount as any)?.username ?? "";
   const guildName = (discordAccount as any)?.guildName ?? "";
-  const vibername = (viberAccount as any)?.name ?? "";
 
   const connectedServices: ServiceCardData[] = [
     {
@@ -83,13 +80,6 @@ export const ServiceIntegrationList = () => {
       icon: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
       description: "Configure your Discord bot server.",
       isActive: !!guildName,
-    },
-    {
-      id: "viber",
-      name: "Viber",
-      icon: "https://cdn.simpleicons.org/viber",
-      description: "Configure your Viber bot account.",
-      isActive: !!vibername,
     },
   ];
 

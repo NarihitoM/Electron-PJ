@@ -20,18 +20,9 @@ import { googleauth } from "../../google/api/api";
 import { n8nauth } from "../../n8n/api/api";
 import { githubauth } from "../../github/api/api";
 import { discordauth } from "../../discord/api/api";
-import { viberauth } from "../../viber/api/api";
 
 type ServiceType =
-  | "slack"
-  | "notion"
-  | "telegram"
-  | "googlesheet"
-  | "googledocs"
-  | "n8n"
-  | "github"
-  | "discord"
-  | "viber";
+  "slack" | "notion" | "telegram" | "googlesheet" | "googledocs" | "n8n" | "github" | "discord";
 
 interface ServiceConfigDialogProps {
   open: boolean;
@@ -80,11 +71,6 @@ const SERVICE_INFO: Record<ServiceType, { name: string; icon: string; descriptio
     name: "Discord",
     icon: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
     description: "Install the Multimate bot into your Discord server to send and read messages.",
-  },
-  viber: {
-    name: "Viber",
-    icon: "https://cdn.simpleicons.org/viber",
-    description: "Connect the Multimate bot on Viber to send and read messages.",
   },
 };
 
@@ -344,8 +330,6 @@ const ServiceForm = ({ service, onComplete }: { service: ServiceType; onComplete
       return <GithubForm onComplete={onComplete} />;
     case "discord":
       return <DiscordForm onComplete={onComplete} />;
-    case "viber":
-      return <ViberForm onComplete={onComplete} />;
     default:
       return null;
   }
@@ -595,79 +579,6 @@ export const DiscordForm = ({ onComplete }: { onComplete: () => void }) => {
           <Button onClick={connect} className="bg-cyan-500 dark:bg-white gap-2">
             <ExternalLink className="w-4 h-4" />
             Authorize with Discord
-          </Button>
-        </>
-      )}
-    </div>
-  );
-};
-
-export const ViberForm = ({ onComplete }: { onComplete: () => void }) => {
-  const [checking, setChecking] = useState(false);
-  const [polling, setPolling] = useState(false);
-
-  const connect = async () => {
-    try {
-      const response = await viberauth.viberconnectinfo();
-      const botUri = response.botUri;
-      if (!botUri) {
-        toast.error("Viber bot link not configured.");
-        return;
-      }
-      (window.ipcRenderer as any).openInBrowser(botUri);
-      setChecking(true);
-      setPolling(true);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to initiate Viber connection.");
-    }
-  };
-
-  useEffect(() => {
-    if (!polling) return;
-    const poll = async () => {
-      try {
-        const status = await viberauth.vibercheckstatus();
-        if (status.success) {
-          setPolling(false);
-          toast.success("Connected to Viber!");
-          onComplete();
-        }
-      } catch (err) {
-        console.error("Viber status poll failed:", err);
-      }
-    };
-
-    const interval = setInterval(poll, 2000);
-    const timeout = setTimeout(() => {
-      setPolling(false);
-      clearInterval(interval);
-      toast.error("Connection timed out. Please try again.");
-    }, 180000);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
-  }, [polling, onComplete]);
-
-  return (
-    <div className="flex flex-col gap-4 py-4">
-      {checking ? (
-        <div className="flex flex-col items-center gap-3 py-4">
-          <Spinner className="w-6 h-6 text-cyan-500" />
-          <p className="text-sm text-muted-foreground">Waiting for Viber connection...</p>
-          <p className="text-xs text-muted-foreground">
-            A browser window has opened. Follow the link to add the Multimate bot on Viber.
-          </p>
-        </div>
-      ) : (
-        <>
-          <p className="text-sm text-muted-foreground">
-            Click the button below to open Viber and add the Multimate bot to your account.
-          </p>
-          <Button onClick={connect} className="bg-cyan-500 dark:bg-white gap-2">
-            <ExternalLink className="w-4 h-4" />
-            Connect with Viber
           </Button>
         </>
       )}

@@ -8,7 +8,6 @@ export const BRAND_SERVICE: Record<string, any> = {
   n8n: "https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg",
   github: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
   discord: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
-  viber: "https://cdn.simpleicons.org/viber",
 };
 
 export const SERVICES = [
@@ -47,10 +46,5 @@ export const SERVICES = [
     name: "Discord",
     image: BRAND_SERVICE["discord"],
     description: "Connect Discord to send messages and read channels through a bot.",
-  },
-  {
-    name: "Viber",
-    image: BRAND_SERVICE["viber"],
-    description: "Connect Viber to send and read messages through a bot.",
   },
 ];
