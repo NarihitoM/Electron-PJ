@@ -5,6 +5,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { userauthapi } from "@/features/auth/api/api";
+import { useLogin } from "@/features/auth/hooks/useLogin";
 import { Eye, EyeOff, Lock, User2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +19,7 @@ export const LoginForm = () => {
   const [userpassword, setuserpassword] = useState<string>("");
   const [show, setshow] = useState<boolean>(false);
   const navigate = useNavigate();
+  const { mutateAsync: login } = useLogin();
 
   const handleLogin = async () => {
     try {
@@ -34,7 +36,7 @@ export const LoginForm = () => {
         return;
       }
       setLoading(true);
-      const data = await userauthapi.login(useremail, userpassword);
+      const data = await login({ useremail, userpassword });
       if (data.success) {
         if (data.token) {
           await (window as any).api.savetoken(data.token);

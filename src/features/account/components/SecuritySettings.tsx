@@ -14,7 +14,7 @@ import { Separator } from "@/shared/components/ui/separator";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { toast } from "sonner";
 import { useState } from "react";
-import { accountauth } from "../api/api";
+import { useChangePassword } from "../hooks/useChangePassword";
 import { accountstore } from "../store/store";
 
 export const SecuritySettings = () => {
@@ -30,6 +30,7 @@ export const SecuritySettings = () => {
   } = accountstore();
   const [show, setShow] = useState(false);
   const [show1, setShow1] = useState(false);
+  const { mutateAsync: changePassword } = useChangePassword();
 
   const handlePasswordReset = async () => {
     if (!currentpassword || !newpassword) {
@@ -46,7 +47,7 @@ export const SecuritySettings = () => {
     }
     try {
       setLoadingpassword(true);
-      const response = await accountauth.passwordreset(currentpassword, newpassword);
+      const response = await changePassword({ currentpassword, newpassword });
       if (response.success) {
         setOpenverify(true);
         setStateid(response.stateid);

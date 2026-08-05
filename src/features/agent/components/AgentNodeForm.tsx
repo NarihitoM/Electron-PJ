@@ -22,6 +22,8 @@ import { ToolLabels } from "@/shared/config/toolsselection";
 import { useagentstore } from "../store/store";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { agentauth } from "../api/api";
+import { useCreateAgentNode } from "../hooks/useCreateAgentNode";
+import { useDeleteAgentNode } from "../hooks/useDeleteAgentNode";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -31,6 +33,8 @@ export const AgentNodeForm = () => {
   const store = useagentstore();
   const { data: Api = [] } = useServiceKeys();
   const queryClient = useQueryClient();
+  const { mutateAsync: createAgentNode } = useCreateAgentNode();
+  const { mutateAsync: deleteAgentNode } = useDeleteAgentNode();
   const navigate = useNavigate();
   const [loadingnode, setLoadingnode] = useState(false);
   const [toolSearch, setToolSearch] = useState("");
@@ -71,14 +75,14 @@ export const AgentNodeForm = () => {
     setLoadingnode(true);
     try {
       if (mode === "create") {
-        const response = await agentauth.addnode(
-          store.name,
-          store.provider,
-          store.actor,
-          store.model,
-          store.tool ?? "",
-          store.prompt,
-        );
+        const response = await createAgentNode({
+          name: store.name,
+          provider: store.provider,
+          actor: store.actor,
+          model: store.model,
+          tool: store.tool ?? "",
+          prompt: store.prompt,
+        });
         if (response.success) {
           toast.success("Node created successfully");
           queryClient.invalidateQueries({ queryKey: ["node"] });
@@ -104,7 +108,7 @@ export const AgentNodeForm = () => {
           toast.error(response.message);
         }
       } else if (mode === "delete") {
-        const response = await agentauth.deletenode(store.nodeid);
+        const response = await deleteAgentNode(store.nodeid);
         if (response.success) {
           toast.success("Node deleted successfully");
           queryClient.invalidateQueries({ queryKey: ["node"] });

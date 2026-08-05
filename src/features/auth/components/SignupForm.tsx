@@ -5,12 +5,14 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { userauthapi } from "@/features/auth/api/api";
+import { useSignup } from "@/features/auth/hooks/useSignup";
 import { Eye, EyeOff, Lock, Mail, User2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 
 export const SignupForm = () => {
+  const { mutateAsync: signup } = useSignup();
   const [loading, setLoading] = useState(false);
   const [loadinggoogle, setLoadingGoogle] = useState(false);
   const [isAgreed, setIsAgreed] = useState<boolean>(false);
@@ -68,7 +70,7 @@ export const SignupForm = () => {
         return;
       }
       setLoading(true);
-      const data = await userauthapi.signup(username, useremail, userpassword, userconfirmpassword);
+      const data = await signup({ username, useremail, userpassword, userconfirmpassword });
       if (data.success && data.stateid) {
         navigate(`/verify/${data.stateid}`, { replace: true });
       }

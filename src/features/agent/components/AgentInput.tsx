@@ -16,7 +16,8 @@ import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useAgentNodes } from "@/features/agent/hooks/useAgentNodes";
 import { useResetAgentMessages } from "@/features/agent/hooks/useResetAgentMessages";
 import { useagentstore } from "../store/store";
-import { agentauth } from "../api/api";
+import { useAgentMessages } from "../hooks/useAgentMessages";
+import { useStoreAgentMessage } from "../hooks/useStoreAgentMessage";
 import { voiceauth } from "@/features/voice/api/api";
 import { AgentChatArea } from "./AgentChatArea";
 import { useUser } from "@/features/auth/hooks/useUser";
@@ -33,6 +34,8 @@ export const AgentInput = () => {
   const resetMsgMutation = useResetAgentMessages();
   const store = useagentstore();
   const { data: userdata } = useUser();
+  const fetchAgentMessages = useAgentMessages();
+  const { mutate: storeAgentMessage } = useStoreAgentMessage();
 
   const agents = nodesData ?? [];
 
@@ -113,7 +116,7 @@ export const AgentInput = () => {
 
     // With React Flow — the conversation is shared across all nodes
     store.updateHistory((prev) => [...prev, { role: "user", content: messageText, name: "" }]);
-    agentauth.storeagentmessage("user", messageText, "").catch(() => {});
+    storeAgentMessage({ role: "user", content: messageText, name: "" });
 
     const initialMessages: { role: string; content: string }[] = [
       { role: "user", content: messageText },
@@ -187,7 +190,7 @@ export const AgentInput = () => {
     if (open) {
       try {
         store.setLoadingfetch(true);
-        const response = await agentauth.fetchagentmessages(undefined);
+        const response = await fetchAgentMessages(undefined);
         if (response.success && response.data) {
           store.setHistory((response.data.messages ?? []).reverse());
           store.setNextCursor(response.data.nextCursor);

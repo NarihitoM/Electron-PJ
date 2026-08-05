@@ -5,16 +5,18 @@ import { toast } from "sonner";
 import { slackauth } from "../api/api";
 import { slackauthstore } from "../store/store";
 import { useSlackAccount } from "../hooks/useSlackAccount";
+import { useConnectSlack } from "../hooks/useConnectSlack";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const SlackConnectionPanel = () => {
   const { isChecking, setIsChecking } = slackauthstore();
   const { data: slackAccount } = useSlackAccount();
   const queryClient = useQueryClient();
+  const { mutateAsync: connectSlackState } = useConnectSlack();
   const workspace = (slackAccount as any)?.workspace ?? "";
 
   const connectSlack = async () => {
-    const response = await slackauth.slackstate();
+    const response = await connectSlackState();
     const stateId = response.stateId;
     const clientid = import.meta.env.VITE_SLACK_CLIENT_ID;
     if (!clientid) {
@@ -101,6 +103,7 @@ export const SlackConnectionPanel = () => {
       if (interval) clearInterval(interval);
       if (fallbackTimeout) clearTimeout(fallbackTimeout);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isChecking]);
 
   return (

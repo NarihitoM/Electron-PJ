@@ -17,9 +17,14 @@ import { slackauth } from "../../slack/api/api";
 import { notionauth } from "../../notion/api/api";
 import { telegramauth } from "../../telegram/api/api";
 import { googleauth } from "../../google/api/api";
-import { n8nauth } from "../../n8n/api/api";
 import { githubauth } from "../../github/api/api";
 import { discordauth } from "../../discord/api/api";
+import { useConnectSlack } from "../../slack/hooks/useConnectSlack";
+import { useNotionConnect } from "../../notion/hooks/useNotionConnect";
+import { useConnectGithub } from "../../github/hooks/useConnectGithub";
+import { useConnectDiscord } from "../../discord/hooks/useConnectDiscord";
+import { useConnectN8n } from "../../n8n/hooks/useConnectN8n";
+import { useTestN8n } from "../../n8n/hooks/useTestN8n";
 
 type ServiceType =
   "slack" | "notion" | "telegram" | "googlesheet" | "googledocs" | "n8n" | "github" | "discord";
@@ -338,10 +343,11 @@ const ServiceForm = ({ service, onComplete }: { service: ServiceType; onComplete
 export const SlackForm = ({ onComplete }: { onComplete: () => void }) => {
   const [checking, setChecking] = useState(false);
   const [polling, setPolling] = useState(false);
+  const { mutateAsync: slackState } = useConnectSlack();
 
   const connect = async () => {
     try {
-      const response = await slackauth.slackstate();
+      const response = await slackState();
       const stateId = response.stateId;
       const clientid = import.meta.env.VITE_SLACK_CLIENT_ID;
       if (!clientid) {
@@ -430,10 +436,11 @@ export const SlackForm = ({ onComplete }: { onComplete: () => void }) => {
 export const GithubForm = ({ onComplete }: { onComplete: () => void }) => {
   const [checking, setChecking] = useState(false);
   const [polling, setPolling] = useState(false);
+  const { mutateAsync: githubState } = useConnectGithub();
 
   const connect = async () => {
     try {
-      const response = await githubauth.githubstate();
+      const response = await githubState();
       const stateId = response.stateId;
       const clientid = import.meta.env.VITE_GITHUB_CLIENT_ID;
       if (!clientid) {
@@ -510,10 +517,11 @@ export const GithubForm = ({ onComplete }: { onComplete: () => void }) => {
 export const DiscordForm = ({ onComplete }: { onComplete: () => void }) => {
   const [checking, setChecking] = useState(false);
   const [polling, setPolling] = useState(false);
+  const { mutateAsync: discordState } = useConnectDiscord();
 
   const connect = async () => {
     try {
-      const response = await discordauth.discordstate();
+      const response = await discordState();
       const stateId = response.stateId;
       const clientid = import.meta.env.VITE_DISCORD_CLIENT_ID;
       if (!clientid) {
@@ -589,10 +597,11 @@ export const DiscordForm = ({ onComplete }: { onComplete: () => void }) => {
 export const NotionForm = ({ onComplete }: { onComplete: () => void }) => {
   const [checking, setChecking] = useState(false);
   const [polling, setPolling] = useState(false);
+  const { mutateAsync: notionState } = useNotionConnect();
 
   const connect = async () => {
     try {
-      const response = await notionauth.notionstate();
+      const response = await notionState();
       const stateId = response.stateId;
       const clientid = import.meta.env.VITE_NOTION_CLIENT_ID;
       if (!clientid) {
@@ -927,6 +936,8 @@ export const N8nForm = ({ onComplete }: { onComplete: () => void }) => {
   const [authValue, setAuthValue] = useState("");
   const [testing, setTesting] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const { mutateAsync: testN8n } = useTestN8n();
+  const { mutateAsync: connectN8n } = useConnectN8n();
 
   const handleTest = async () => {
     if (!url.trim()) {
@@ -935,7 +946,11 @@ export const N8nForm = ({ onComplete }: { onComplete: () => void }) => {
     }
     try {
       setTesting(true);
-      const result = await n8nauth.testConnection(url.trim(), authType, authValue || undefined);
+      const result = await testN8n({
+        n8nUrl: url.trim(),
+        authType,
+        authValue: authValue || undefined,
+      });
       if (result.success) {
         toast.success(`Connection successful! Mode: ${result.data.mode}`);
       }
@@ -954,7 +969,7 @@ export const N8nForm = ({ onComplete }: { onComplete: () => void }) => {
     try {
       setConnecting(true);
       const authVal = authType === "none" ? undefined : authValue || undefined;
-      const result = await n8nauth.connect(url.trim(), authType, authVal);
+      const result = await connectN8n({ n8nUrl: url.trim(), authType, authValue: authVal });
       if (result.success) {
         toast.success("Connected to n8n!");
         onComplete();

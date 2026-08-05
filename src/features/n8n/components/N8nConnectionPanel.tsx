@@ -14,12 +14,17 @@ import { Spinner } from "@/shared/components/ui/spinner";
 import { Globe, Key, Lock, Link, Unlink, Wifi, WifiOff } from "lucide-react";
 import { toast } from "sonner";
 import { useN8nConfig } from "@/features/n8n/hooks/useN8nConfig";
+import { useTestN8n } from "@/features/n8n/hooks/useTestN8n";
+import { useConnectN8n } from "@/features/n8n/hooks/useConnectN8n";
+import { useDisconnectN8n } from "@/features/n8n/hooks/useDisconnectN8n";
 import { n8nauthstore } from "../store/store";
-import { n8nauth } from "../api/api";
 
 export const N8nConnectionPanel = () => {
   const { data: n8nConfig } = useN8nConfig();
   const store = n8nauthstore();
+  const { mutateAsync: testN8n } = useTestN8n();
+  const { mutateAsync: connectN8n } = useConnectN8n();
+  const { mutateAsync: disconnectN8n } = useDisconnectN8n();
 
   const connected = !!(n8nConfig as any)?.connected;
   const loadingn8n = !n8nConfig;
@@ -32,11 +37,11 @@ export const N8nConnectionPanel = () => {
     store.setTestingMode(true);
     store.setTestResult(null);
     try {
-      const result = await n8nauth.testConnection(
-        store.urlInput.trim(),
-        store.authTypeInput,
-        store.authValueInput || undefined,
-      );
+      const result = await testN8n({
+        n8nUrl: store.urlInput.trim(),
+        authType: store.authTypeInput,
+        authValue: store.authValueInput || undefined,
+      });
       if (result.success) {
         store.setTestResult(result.data);
         if (result.data.restApiAvailable)
@@ -58,7 +63,11 @@ export const N8nConnectionPanel = () => {
     try {
       const authVal =
         store.authTypeInput === "none" ? undefined : store.authValueInput || undefined;
-      const result = await n8nauth.connect(store.urlInput.trim(), store.authTypeInput, authVal);
+      const result = await connectN8n({
+        n8nUrl: store.urlInput.trim(),
+        authType: store.authTypeInput,
+        authValue: authVal,
+      });
       if (result.success) {
         toast.success("Connected to n8n!");
         store.setSettingsOpen(false);
@@ -70,7 +79,7 @@ export const N8nConnectionPanel = () => {
 
   const handleDisconnect = async () => {
     try {
-      const result = await n8nauth.disconnect();
+      const result = await disconnectN8n();
       if (result.success) {
         toast.success("Disconnected from n8n.");
         store.setSettingsOpen(false);

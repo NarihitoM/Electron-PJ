@@ -2,13 +2,14 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Spinner } from "@/shared/components/ui/spinner";
-import { userauthapi } from "@/features/auth/api/api";
+import { useSendEmail } from "@/features/auth/hooks/useSendEmail";
 import { Mail } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 export const SendEmailForm = () => {
+  const { mutateAsync: sendEmail } = useSendEmail();
   const [loading, setLoading] = useState(false);
   const [useremail, setuseremail] = useState<string>("");
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export const SendEmailForm = () => {
   const verifycodeemail = async () => {
     try {
       setLoading(true);
-      const data = await userauthapi.changepasswordreset(useremail);
+      const data = await sendEmail(useremail);
       if (data.success) {
         toast.success(data.message);
         setTimeout(() => {

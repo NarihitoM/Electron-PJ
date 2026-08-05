@@ -5,16 +5,18 @@ import { toast } from "sonner";
 import { notionauth } from "../api/api";
 import { notionauthstore } from "../store/store";
 import { useNotionAccount } from "../hooks/useNotionAccount";
+import { useNotionConnect } from "../hooks/useNotionConnect";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const NotionConnectionPanel = () => {
   const store = notionauthstore();
   const { data: notionAccount, isLoading } = useNotionAccount();
   const queryClient = useQueryClient();
+  const { mutateAsync: connectNotionState } = useNotionConnect();
   const workspacename = (notionAccount as any)?.workspacename ?? "";
 
   const connectNotion = async () => {
-    const response = await notionauth.notionstate();
+    const response = await connectNotionState();
     const stateId = response.stateId;
     const clientid = import.meta.env.VITE_NOTION_CLIENT_ID;
     if (!clientid) {
@@ -57,6 +59,7 @@ export const NotionConnectionPanel = () => {
         clearTimeout(fallbackTimeout);
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.isChecking]);
 
   if (isLoading) {

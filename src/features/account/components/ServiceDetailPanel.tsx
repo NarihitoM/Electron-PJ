@@ -29,13 +29,13 @@ import { useSlackAccount } from "@/features/slack/hooks/useSlackAccount";
 import { useN8nConfig } from "@/features/n8n/hooks/useN8nConfig";
 import { useGithubAccount } from "@/features/github/hooks/useGithubAccount";
 import { useDiscordAccount } from "@/features/discord/hooks/useDiscordAccount";
-import { telegramauth } from "@/features/telegram/api/api";
-import { googleauth } from "@/features/google/api/api";
-import { notionauth } from "@/features/notion/api/api";
-import { slackauth } from "@/features/slack/api/api";
-import { n8nauth } from "@/features/n8n/api/api";
-import { githubauth } from "@/features/github/api/api";
-import { discordauth } from "@/features/discord/api/api";
+import { useDisconnectTelegram } from "@/features/telegram/hooks/useDisconnectTelegram";
+import { useDisconnectGoogle } from "@/features/google/hooks/useDisconnectGoogle";
+import { useDisconnectNotion } from "@/features/notion/hooks/useDisconnectNotion";
+import { useDisconnectSlack } from "@/features/slack/hooks/useDisconnectSlack";
+import { useDeleteN8nService } from "@/features/n8n/hooks/useDeleteN8nService";
+import { useDisconnectGithub } from "@/features/github/hooks/useDisconnectGithub";
+import { useDisconnectDiscord } from "@/features/discord/hooks/useDisconnectDiscord";
 import { accountstore } from "../store/store";
 
 export const ServiceDetailPanel = () => {
@@ -85,6 +85,14 @@ export const ServiceDetailPanel = () => {
     isError: discordError,
     refetch: discordRefetch,
   } = useDiscordAccount();
+
+  const { mutateAsync: disconnectTelegram } = useDisconnectTelegram();
+  const { mutateAsync: disconnectGoogle } = useDisconnectGoogle();
+  const { mutateAsync: disconnectNotion } = useDisconnectNotion();
+  const { mutateAsync: disconnectSlack } = useDisconnectSlack();
+  const { mutateAsync: deleteN8nService } = useDeleteN8nService();
+  const { mutateAsync: disconnectGithub } = useDisconnectGithub();
+  const { mutateAsync: disconnectDiscord } = useDisconnectDiscord();
 
   const userdata = telegramData;
   const serviceemail = (googleServiceData as any)?.serviceemail ?? "";
@@ -156,7 +164,7 @@ export const ServiceDetailPanel = () => {
   const deletetelegram = async () => {
     setDeletingTelegram(true);
     try {
-      const response = await telegramauth.telegramresetservice();
+      const response = await disconnectTelegram();
       if (response.success) {
         toast.success(response.message);
         queryClient.invalidateQueries({ queryKey: ["telegram"] });
@@ -177,7 +185,7 @@ export const ServiceDetailPanel = () => {
   const deletegoogle = async () => {
     setDeletingGoogle(true);
     try {
-      const response = await googleauth.deleteservice();
+      const response = await disconnectGoogle();
       if (response.success) {
         toast.success(response.message);
         queryClient.invalidateQueries({ queryKey: ["google"] });
@@ -198,7 +206,7 @@ export const ServiceDetailPanel = () => {
   const deletenotion = async () => {
     setDeletingNotion(true);
     try {
-      const response = await notionauth.notiondeleteservice();
+      const response = await disconnectNotion();
       if (response.success) {
         toast.success(response.message);
         queryClient.invalidateQueries({ queryKey: ["notion"] });
@@ -218,7 +226,7 @@ export const ServiceDetailPanel = () => {
 
   const deleteslack = async () => {
     try {
-      const response = await slackauth.deleteslackservice();
+      const response = await disconnectSlack();
       if (response.success) {
         toast.success(response.message);
         queryClient.invalidateQueries({ queryKey: ["slack"] });
@@ -236,7 +244,7 @@ export const ServiceDetailPanel = () => {
 
   const deleten8n = async () => {
     try {
-      const response = await n8nauth.n8ndeleteservice();
+      const response = await deleteN8nService();
       if (response.success) {
         toast.success(response.message);
         queryClient.invalidateQueries({ queryKey: ["n8n"] });
@@ -255,7 +263,7 @@ export const ServiceDetailPanel = () => {
   const deletegithub = async () => {
     setDeletingGithub(true);
     try {
-      const response = await githubauth.githubdeleteservice();
+      const response = await disconnectGithub();
       if (response.success) {
         toast.success(response.message);
         queryClient.invalidateQueries({ queryKey: ["github"] });
@@ -276,7 +284,7 @@ export const ServiceDetailPanel = () => {
   const deletediscord = async () => {
     setDeletingDiscord(true);
     try {
-      const response = await discordauth.deletediscordservice();
+      const response = await disconnectDiscord();
       if (response.success) {
         toast.success(response.message);
         queryClient.invalidateQueries({ queryKey: ["discord"] });

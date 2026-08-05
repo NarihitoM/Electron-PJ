@@ -9,12 +9,13 @@ import AiContent from "@/shared/components/layout/LayoutAiresponse";
 import ThinkingBlock from "@/shared/components/ui/ThinkingBlock";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { useagentstore } from "../store/store";
-import { agentauth } from "../api/api";
+import { useAgentMessages } from "../hooks/useAgentMessages";
 import { toast } from "sonner";
 
 export const AgentChatArea = () => {
   const { data: userdata } = useUser();
   const store = useagentstore();
+  const fetchAgentMessages = useAgentMessages();
   const prevMessageCountRef = useRef(store.history.length);
 
   useEffect(() => {
@@ -22,6 +23,7 @@ export const AgentChatArea = () => {
       store.historyEndRef.current?.scrollIntoView({ behavior: "auto" });
     }
     prevMessageCountRef.current = store.history.length;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.history]);
 
   useEffect(() => {
@@ -36,6 +38,7 @@ export const AgentChatArea = () => {
     const el = store.topSentinelRef.current;
     if (el) observer.observe(el);
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.hasMore, store.loadingMore]);
 
   const loadMoreHistory = async () => {
@@ -44,7 +47,7 @@ export const AgentChatArea = () => {
     try {
       const container = store.scrollContainerRef.current;
       const prevScrollHeight = container?.scrollHeight ?? 0;
-      const response = await agentauth.fetchagentmessages(store.nextCursor);
+      const response = await fetchAgentMessages(store.nextCursor);
       if (response.success && response.data) {
         const data = response.data;
         store.updateHistory((prev) => [...(data.messages ?? []).reverse(), ...prev]);

@@ -5,16 +5,18 @@ import { toast } from "sonner";
 import { githubauth } from "../api/api";
 import { githubauthstore } from "../store/store";
 import { useGithubAccount } from "../hooks/useGithubAccount";
+import { useConnectGithub } from "../hooks/useConnectGithub";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const GithubConnectionPanel = () => {
   const store = githubauthstore();
   const { data: githubAccount, isLoading } = useGithubAccount();
   const queryClient = useQueryClient();
+  const { mutateAsync: connectGithubState } = useConnectGithub();
   const username = (githubAccount as any)?.username ?? "";
 
   const connectGithub = async () => {
-    const response = await githubauth.githubstate();
+    const response = await connectGithubState();
     const stateId = response.stateId;
     const clientid = import.meta.env.VITE_GITHUB_CLIENT_ID;
     if (!clientid) {

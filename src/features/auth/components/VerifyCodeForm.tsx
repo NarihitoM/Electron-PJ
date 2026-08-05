@@ -2,6 +2,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Label } from "@/shared/components/ui/label";
 import { Spinner } from "@/shared/components/ui/spinner";
 import { userauthapi } from "@/features/auth/api/api";
+import { useVerifyCode } from "@/features/auth/hooks/useVerifyCode";
 import { Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +10,7 @@ import { toast } from "sonner";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/shared/components/ui/input-otp";
 
 export const VerifyCodeForm = ({ stateid }: { stateid: string }) => {
+  const { mutateAsync: verifyCode } = useVerifyCode();
   const [loadingverify, setLoadingVerify] = useState(false);
   const [loadingresend, setLoadingResend] = useState(false);
   const [code, setcode] = useState<string>("");
@@ -28,7 +30,7 @@ export const VerifyCodeForm = ({ stateid }: { stateid: string }) => {
   const verifycodesignup = async () => {
     try {
       setLoadingVerify(true);
-      const data = await userauthapi.verifycode(stateid, code);
+      const data = await verifyCode({ stateid, code });
       if (data.success) {
         toast.success(data.message);
         setTimeout(() => {

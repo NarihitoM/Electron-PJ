@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { accountauth } from "../api/api";
+import { useLogout } from "../hooks/useLogout";
 import { accountstore } from "../store/store";
 
 export const VerificationDialog = () => {
@@ -31,6 +32,7 @@ export const VerificationDialog = () => {
     setLoadingpasswordresend,
   } = accountstore();
   const navigate = useNavigate();
+  const { mutateAsync: logout } = useLogout();
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -38,6 +40,7 @@ export const VerificationDialog = () => {
       interval = setInterval(() => setTimer(timer - 1), 1000);
     }
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timer]);
 
   const handleVerify = async () => {
@@ -48,7 +51,7 @@ export const VerificationDialog = () => {
         setOpenverify(true);
         toast.success(response.message);
         setTimeout(() => {
-          accountauth.logout();
+          logout();
           navigate("/login", { replace: true });
         }, 2000);
       }

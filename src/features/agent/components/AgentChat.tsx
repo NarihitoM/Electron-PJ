@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useagentstore } from "../store/store";
-import { agentauth } from "../api/api";
+import { useAgentMessages } from "../hooks/useAgentMessages";
+import { useStoreAgentMessage } from "../hooks/useStoreAgentMessage";
 import { ToolApprovalDialog } from "@/shared/components/layout/ToolApprovalDialog";
 import { ImageLightbox } from "@/shared/components/ImageLightbox";
 import { Toaster } from "@/shared/components/ui/sonner";
@@ -14,6 +15,8 @@ import { AgentNodeForm } from "./AgentNodeForm";
 export const AgentChat = () => {
   const store = useagentstore();
   const queryClient = useQueryClient();
+  const fetchAgentMessages = useAgentMessages();
+  const { mutate: storeAgentMessage } = useStoreAgentMessage();
 
   useEffect(() => {
     return () => {
@@ -29,7 +32,7 @@ export const AgentChat = () => {
       store.setNextCursor(null);
       store.setHasMore(false);
       try {
-        const response = await agentauth.fetchagentmessages();
+        const response = await fetchAgentMessages();
         if (response.success && response.data) {
           store.setHistory((response.data.messages ?? []).reverse());
           store.setNextCursor(response.data.nextCursor);
@@ -127,13 +130,13 @@ export const AgentChat = () => {
           }
           store.updateHistory((element) => [...element, msg as any]);
 
-          agentauth.storeagentmessage(
-            "assistant",
-            finalContent,
-            finishedNode.name,
-            finishedNode.provider,
-            finishedNode.model,
-          );
+          storeAgentMessage({
+            role: "assistant",
+            content: finalContent,
+            name: finishedNode.name,
+            provider: finishedNode.provider,
+            model: finishedNode.model,
+          });
         }
       }
     };

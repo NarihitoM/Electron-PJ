@@ -30,13 +30,14 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { useParams } from "react-router-dom";
-import { chatauth } from "../api/api";
+import { useMessages } from "../hooks/useMessages";
 import { chatauthstore } from "../store/store";
 
 export const ChatMessageList = () => {
   const { data: userdata } = useUser();
   const store = chatauthstore();
   const { id } = useParams();
+  const fetchChatMessages = useMessages();
 
   const topSentinelRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -96,7 +97,7 @@ export const ChatMessageList = () => {
     try {
       const container = scrollContainerRef.current;
       const prevScrollHeight = container?.scrollHeight ?? 0;
-      const response = await chatauth.fetchchatmessage(id as string, store.nextCursor);
+      const response = await fetchChatMessages(id as string, store.nextCursor);
       if (response.success && response.data) {
         const data = response.data;
         store.updateSessionMessages((prev) => [...(data.messages ?? []), ...prev]);
@@ -142,7 +143,7 @@ export const ChatMessageList = () => {
     const existingMessages = isChatSwitch ? [] : store.sessionmessage;
 
     try {
-      const response = await chatauth.fetchchatmessage(id);
+      const response = await fetchChatMessages(id);
       if (response.success && response.data) {
         const serverMessages = response.data.messages ?? [];
         if (serverMessages.length > 0) {

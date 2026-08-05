@@ -5,16 +5,18 @@ import { toast } from "sonner";
 import { discordauth } from "../api/api";
 import { discordauthstore } from "../store/store";
 import { useDiscordAccount } from "../hooks/useDiscordAccount";
+import { useConnectDiscord } from "../hooks/useConnectDiscord";
 import { useQueryClient } from "@tanstack/react-query";
 
 export const DiscordConnectionPanel = () => {
   const { isChecking, setIsChecking } = discordauthstore();
   const { data: discordAccount } = useDiscordAccount();
   const queryClient = useQueryClient();
+  const { mutateAsync: connectDiscordState } = useConnectDiscord();
   const guildName = (discordAccount as any)?.guildName ?? "";
 
   const connectDiscord = async () => {
-    const response = await discordauth.discordstate();
+    const response = await connectDiscordState();
     const stateId = response.stateId;
     const clientid = import.meta.env.VITE_DISCORD_CLIENT_ID;
     if (!clientid) {
