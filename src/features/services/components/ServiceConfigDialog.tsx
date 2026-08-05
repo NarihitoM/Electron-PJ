@@ -848,6 +848,7 @@ const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/spreadsheets",
   "https://www.googleapis.com/auth/drive",
   "https://www.googleapis.com/auth/documents",
+  "https://www.googleapis.com/auth/calendar",
 ].join(" ");
 
 export const GoogleForm = ({ onComplete }: { onComplete: () => void }) => {
