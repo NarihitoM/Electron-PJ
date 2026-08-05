@@ -7,10 +7,17 @@ export interface googledata {
   url: string;
 }
 
+export interface googlecalendardata {
+  id: string;
+  name: string;
+  calendarId: string;
+}
+
 export interface google {
   serviceemail: string;
   googlesheet: googledata[];
   googledocs: googledata[];
+  googlecalendar: googlecalendardata[];
 }
 
 export interface Apiresponse<T = void> {
@@ -60,6 +67,7 @@ export interface GoogleClientState {
   model: string;
   sheeturl: string;
   docsurl: string;
+  calendarid: string;
 
   // Docs fields
   sessionmessage_docs: chatsession[];
@@ -173,9 +181,63 @@ export interface GoogleClientState {
 
   setsheeturl: (url: string) => void;
   setdocsurl: (url: string) => void;
+  setcalendarid: (id: string) => void;
   setProvider: (provider: string) => void;
   setModel: (model: string) => void;
   resetgoogle: () => void;
+
+  // Calendar fields
+  sessionmessage_calendar: chatsession[];
+  input_calendar: string;
+  sending_calendar: boolean;
+  loadingfetch_calendar: boolean;
+  loadingerror_calendar: boolean;
+  nextCursor_calendar: string | null;
+  hasMore_calendar: boolean;
+  loadingMore_calendar: boolean;
+  type_calendar: string | null;
+  pendingApproval_calendar: { name: string; query: Record<string, unknown> | null } | null;
+  pendingApprovalRef_calendar: {
+    current: { name: string; query: Record<string, unknown> | null } | null;
+  };
+  threadIdRef_calendar: { current: string | null };
+  lightboxImages_calendar: string[];
+  lightboxIndex_calendar: number;
+  lightboxOpen_calendar: boolean;
+  copiedIndex_calendar: number | null;
+  uploadingImages_calendar: boolean;
+  uploadingImageUrls_calendar: Set<string>;
+  pendingImages_calendar: File[];
+  modelList_calendar: ModelEntry[];
+  modelsLoading_calendar: boolean;
+  reasoningLevel_calendar: "" | "low" | "medium" | "high";
+  recordstatus_calendar: boolean;
+  loadingrecord_calendar: boolean;
+  setsessionmessage_calendar: (messages: chatsession[]) => void;
+  setInput_calendar: (input: string) => void;
+  setSending_calendar: (v: boolean) => void;
+  setloadingfetch_calendar: (v: boolean) => void;
+  setloadingerror_calendar: (v: boolean) => void;
+  setNextCursor_calendar: (v: string | null) => void;
+  setHasMore_calendar: (v: boolean) => void;
+  setLoadingMore_calendar: (v: boolean) => void;
+  settype_calendar: (v: string | null) => void;
+  setPendingApproval_calendar: (
+    v: { name: string; query: Record<string, unknown> | null } | null,
+  ) => void;
+  setLightboxImages_calendar: (v: string[]) => void;
+  setLightboxIndex_calendar: (v: number) => void;
+  setLightboxOpen_calendar: (v: boolean) => void;
+  setCopiedIndex_calendar: (v: number | null) => void;
+  setUploadingImages_calendar: (v: boolean) => void;
+  setUploadingImageUrls_calendar: (v: Set<string>) => void;
+  setPendingImages_calendar: (v: File[]) => void;
+  setModelList_calendar: (v: ModelEntry[]) => void;
+  setModelsLoading_calendar: (v: boolean) => void;
+  setReasoningLevel_calendar: (level: "" | "low" | "medium" | "high") => void;
+  setrecordstatus_calendar: (v: boolean) => void;
+  setloadingrecord_calendar: (v: boolean) => void;
+  updateSessionMessages_calendar: (updater: (prev: chatsession[]) => chatsession[]) => void;
 
   setsessionmessage_sheet: (messages: chatsession[]) => void;
   setInput_sheet: (input: string) => void;

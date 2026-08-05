@@ -326,6 +326,7 @@ export const Sidebarprovider = () => {
           return !!workspacename;
         case "GoogleSheet":
         case "GoogleDocs":
+        case "GoogleCalendar":
           return !!serviceemail;
         case "Telegram":
           return !!telegramUserdata;

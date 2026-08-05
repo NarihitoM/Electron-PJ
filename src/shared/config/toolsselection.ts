@@ -21,6 +21,18 @@ export const Googledocstool: Record<string, string> = {
   image_analyzer: "Reviewing Image",
 };
 
+export const Googlecalendartool: Record<string, string> = {
+  google_calendar_list_events: "Reading Google Calendar",
+  google_calendar_create_event: "Creating Calendar Event",
+  google_calendar_update_event: "Updating Calendar Event",
+  google_calendar_delete_event: "Deleting Calendar Event",
+  web_search: "Searching The Web",
+  image_generation: "Generating Image",
+  image_generator: "Generating Image",
+  image_review: "Reviewing Image",
+  image_analyzer: "Reviewing Image",
+};
+
 export const Telegramtool: Record<string, string> = {
   send_message: "Sending Telegram Message",
   fetch_message: "Reading The Telegram Message",
@@ -161,6 +173,10 @@ export const WRITE_TOOLS = new Set([
   "google_docs_create",
   "google_docs_edit",
   "google_docs_delete_file",
+  // Google Calendar
+  "google_calendar_create_event",
+  "google_calendar_update_event",
+  "google_calendar_delete_event",
   // n8n
   "n8n_create_workflow",
   "n8n_update_workflow",
@@ -190,6 +206,9 @@ export const WRITE_TOOLS_LABELS: Record<string, string> = {
   google_docs_create: "Creates a new Google Doc",
   google_docs_edit: "Edits content in a Google Doc",
   google_docs_delete_file: "Deletes a Google Doc permanently",
+  google_calendar_create_event: "Creates a new Google Calendar event",
+  google_calendar_update_event: "Updates a Google Calendar event",
+  google_calendar_delete_event: "Deletes a Google Calendar event",
   n8n_create_workflow: "Creates a new n8n workflow",
   n8n_update_workflow: "Updates an existing n8n workflow",
   n8n_delete_workflow: "Deletes an n8n workflow",

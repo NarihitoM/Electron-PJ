@@ -42,6 +42,11 @@ export const Agent = [
     icon: "https://upload.wikimedia.org/wikipedia/commons/0/01/Google_Docs_logo_%282014-2020%29.svg",
   },
   {
+    title: "GoogleCalendar",
+    url: "/app/googlecalendar",
+    icon: "https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg",
+  },
+  {
     title: "Telegram",
     url: "/app/telegram",
     icon: "https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg",

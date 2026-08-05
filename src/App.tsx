@@ -14,6 +14,7 @@ import { LocalAgent } from "./pages/LocalAgent";
 import { Telegram } from "./pages/Telegram";
 import { Googlesheet } from "./pages/Googlesheet";
 import { Googledocs } from "./pages/Googledocs";
+import { Googlecalendar } from "./pages/Googlecalendar";
 import { Notion } from "./pages/Notion";
 import { Verify } from "./pages/VerifyCode";
 import { Account } from "./pages/Account";
@@ -58,6 +59,7 @@ function App() {
                 <Route path="notion" element={<Notion />} /> //done
                 <Route path="googlesheet" element={<Googlesheet />} /> //done
                 <Route path="googledocs" element={<Googledocs />} /> //done
+                <Route path="googlecalendar" element={<Googlecalendar />} />
                 <Route path="n8n" element={<N8n />} />
                 <Route path="localagent" element={<LocalAgent />} />
                 //done
