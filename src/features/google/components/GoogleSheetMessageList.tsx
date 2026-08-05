@@ -31,7 +31,7 @@ import { useUser } from "@/features/auth/hooks/useUser";
 import { useGoogleService } from "@/features/google/hooks/useGoogleService";
 import { googleauthstore } from "../store/store";
 import { useGoogleConnect } from "../hooks/useGoogleConnect";
-import { googleauth } from "../api/api";
+import { useGoogleSheets } from "../hooks/useGoogleSheets";
 import { toast } from "sonner";
 
 export const GoogleSheetMessageList = () => {
@@ -39,6 +39,7 @@ export const GoogleSheetMessageList = () => {
   const { data: googleService } = useGoogleService();
   const store = googleauthstore();
   const { connect, isChecking } = useGoogleConnect();
+  const fetchSheetMessages = useGoogleSheets();
 
   const serviceemail = (googleService as any)?.serviceemail ?? "";
 
@@ -85,7 +86,7 @@ export const GoogleSheetMessageList = () => {
       const container = scrollContainerRef.current;
       const prevScrollHeight = container?.scrollHeight ?? 0;
 
-      const response = await googleauth.fetchsheetmessage(store.nextCursor_sheet);
+      const response = await fetchSheetMessages(store.nextCursor_sheet);
       if (response.success && response.data) {
         const data = response.data;
         store.updateSessionMessages_sheet((prev) => [...(data.messages ?? []), ...prev]);
@@ -136,7 +137,7 @@ export const GoogleSheetMessageList = () => {
       store.setsessionmessage_sheet([]);
       store.setNextCursor_sheet(null);
       store.setHasMore_sheet(false);
-      const response = await googleauth.fetchsheetmessage();
+      const response = await fetchSheetMessages();
       if (response.success && response.data) {
         store.setsessionmessage_sheet(response.data.messages ?? []);
         store.setNextCursor_sheet(response.data.nextCursor);

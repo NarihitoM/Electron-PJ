@@ -31,7 +31,7 @@ import { useUser } from "@/features/auth/hooks/useUser";
 import { useGoogleService } from "@/features/google/hooks/useGoogleService";
 import { googleauthstore } from "../store/store";
 import { useGoogleConnect } from "../hooks/useGoogleConnect";
-import { googleauth } from "../api/api";
+import { useGoogleCalendarMessages } from "../hooks/useGoogleCalendarMessages";
 import { toast } from "sonner";
 
 export const GoogleCalendarMessageList = () => {
@@ -39,6 +39,7 @@ export const GoogleCalendarMessageList = () => {
   const { data: googleService } = useGoogleService();
   const store = googleauthstore();
   const { connect, isChecking } = useGoogleConnect();
+  const fetchCalendarMessages = useGoogleCalendarMessages();
 
   const serviceemail = (googleService as any)?.serviceemail ?? "";
 
@@ -84,7 +85,7 @@ export const GoogleCalendarMessageList = () => {
       const container = scrollContainerRef.current;
       const prevScrollHeight = container?.scrollHeight ?? 0;
 
-      const response = await googleauth.fetchcalendarmessage(store.nextCursor_calendar);
+      const response = await fetchCalendarMessages(store.nextCursor_calendar);
       if (response.success && response.data) {
         const data = response.data;
         store.updateSessionMessages_calendar((prev) => [...(data.messages ?? []), ...prev]);
@@ -135,7 +136,7 @@ export const GoogleCalendarMessageList = () => {
       store.setsessionmessage_calendar([]);
       store.setNextCursor_calendar(null);
       store.setHasMore_calendar(false);
-      const response = await googleauth.fetchcalendarmessage();
+      const response = await fetchCalendarMessages();
       if (response.success && response.data) {
         store.setsessionmessage_calendar(response.data.messages ?? []);
         store.setNextCursor_calendar(response.data.nextCursor);

@@ -1,2 +1,3 @@
 import { discordauth } from "../api/api";
-export const sendDiscordMessage = discordauth.sendmessage;
+
+export const useSendDiscordMessage = () => discordauth.sendmessage;

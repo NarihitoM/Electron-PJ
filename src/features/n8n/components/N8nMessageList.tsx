@@ -27,12 +27,13 @@ import AiContent from "@/shared/components/layout/LayoutAiresponse";
 import ThinkingBlock from "@/shared/components/ui/ThinkingBlock";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { n8nauthstore } from "../store/store";
-import { n8nauth } from "../api/api";
+import { useN8nMessages } from "../hooks/useN8nMessages";
 import { toast } from "sonner";
 
 export const N8nMessageList = () => {
   const { data: userdata } = useUser();
   const store = n8nauthstore();
+  const fetchN8nMessages = useN8nMessages();
 
   const topSentinelRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -76,6 +77,7 @@ export const N8nMessageList = () => {
     const el = topSentinelRef.current;
     if (el) observer.observe(el);
     return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.hasMore, store.loadingMore]);
 
   const loadMore = async () => {
@@ -83,7 +85,7 @@ export const N8nMessageList = () => {
     store.setLoadingMore(true);
     try {
       const prevScrollHeight = scrollContainerRef.current?.scrollHeight ?? 0;
-      const response = await n8nauth.fetchn8nmsg(store.nextCursor);
+      const response = await fetchN8nMessages(store.nextCursor);
       if (response.success && response.data) {
         const data = response.data;
         store.updateSessionMessages((prev) => [...(data.messages ?? []), ...prev]);
@@ -108,7 +110,7 @@ export const N8nMessageList = () => {
     store.setNextCursor(null);
     store.setHasMore(false);
     try {
-      const response = await n8nauth.fetchn8nmsg();
+      const response = await fetchN8nMessages();
       if (response.success && response.data) {
         store.setsessionmessage(response.data.messages ?? []);
         store.setNextCursor(response.data.nextCursor);
@@ -128,6 +130,7 @@ export const N8nMessageList = () => {
 
   useEffect(() => {
     fetchMessages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const userperson = (

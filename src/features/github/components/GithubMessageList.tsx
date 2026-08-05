@@ -28,7 +28,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avat
 import { BRAND_ASSETS } from "@/shared/config/providermodels";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { useGithubAccount } from "../hooks/useGithubAccount";
-import { githubauth } from "../api/api";
+import { useGithubMessages } from "../hooks/useGithubMessages";
 import { githubauthstore } from "../store/store";
 import { toast } from "sonner";
 import { Githubtool } from "@/shared/config/toolsselection";
@@ -37,6 +37,7 @@ export const GithubMessageList = () => {
   const { data: userdata } = useUser();
   const { data: githubAccount } = useGithubAccount();
   const store = githubauthstore();
+  const fetchGithubMessages = useGithubMessages();
 
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const topSentinelRef = useRef<HTMLDivElement | null>(null);
@@ -96,7 +97,7 @@ export const GithubMessageList = () => {
     store.setLoadingMore(true);
     try {
       const prevScrollHeight = scrollContainerRef.current?.scrollHeight ?? 0;
-      const response = await githubauth.fetchgithubmsg(store.nextCursor);
+      const response = await fetchGithubMessages(store.nextCursor);
       if (response.success && response.data) {
         const data = response.data;
         store.updateSessionMessages((prev) => [...(data.messages ?? []), ...prev]);
@@ -122,7 +123,7 @@ export const GithubMessageList = () => {
     store.setNextCursor(null);
     store.setHasMore(false);
     try {
-      const response = await githubauth.fetchgithubmsg();
+      const response = await fetchGithubMessages();
       if (response.success && response.data) {
         store.setsessionmessage(response.data.messages ?? []);
         store.setNextCursor(response.data.nextCursor);

@@ -29,7 +29,7 @@ import { Slacktool } from "@/shared/config/toolsselection";
 import { extractToolMessage } from "@/shared/utils/toolutils";
 import { toast } from "sonner";
 import { useUser } from "@/features/auth/hooks/useUser";
-import { slackauth } from "../api/api";
+import { useSlackMessages } from "../hooks/useSlackMessages";
 import { slackauthstore } from "../store/store";
 import { SlackConnectionPanel } from "./SlackConnectionPanel";
 
@@ -49,6 +49,7 @@ export const SlackMessageList = () => {
     setHasMore,
   } = slackauthstore();
   const { data: userdata } = useUser();
+  const fetchSlackMessages = useSlackMessages();
 
   const [loadingfetch, setloadingfetch] = useState(false);
   const [loadingerror, setloadingerror] = useState(false);
@@ -98,7 +99,7 @@ export const SlackMessageList = () => {
     try {
       const container = scrollContainerRef.current;
       const prevScrollHeight = container?.scrollHeight ?? 0;
-      const response = await slackauth.fetchslackmessage(nextCursor);
+      const response = await fetchSlackMessages(nextCursor);
       if (response.success && response.data) {
         const data = response.data;
         setsessionmessage((prev) => [...(data.messages ?? []), ...prev]);
@@ -145,7 +146,7 @@ export const SlackMessageList = () => {
       setsessionmessage([]);
       setNextCursor(null);
       setHasMore(false);
-      const response = await slackauth.fetchslackmessage();
+      const response = await fetchSlackMessages();
       if (response.success && response.data) {
         setsessionmessage(response.data.messages ?? []);
         setNextCursor(response.data.nextCursor);

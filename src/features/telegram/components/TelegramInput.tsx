@@ -15,8 +15,9 @@ import { ModelSelect } from "@/features/chat/components/ModelSelect";
 import { toast } from "sonner";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useTelegramAccount } from "@/features/telegram/hooks/useTelegramAccount";
+import { useSendTelegramMessage } from "@/features/telegram/hooks/useSendTelegramMessage";
+import { useDeleteTelegramMessage } from "@/features/telegram/hooks/useDeleteTelegramMessage";
 import { getProviderModels } from "@/shared/config/providermodels";
-import { telegramauth } from "@/features/telegram/api/api";
 import { chatauth } from "@/features/chat/api/api";
 import { voiceauth } from "@/features/voice/api/api";
 import { telegramauthstore } from "@/features/telegram/store/store";
@@ -29,6 +30,8 @@ export const TelegramInput = () => {
   const { data: accountData } = useTelegramAccount();
   const store = telegramauthstore();
   const queryClient = useQueryClient();
+  const sendTelegramMessage = useSendTelegramMessage();
+  const { mutateAsync: deleteTelegramMessage } = useDeleteTelegramMessage();
 
   const [recordstatus, setrecordstatus] = useState(false);
   const [loadingrecord, setloadingrecord] = useState(false);
@@ -57,6 +60,7 @@ export const TelegramInput = () => {
         store.setModel(models[0].model);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store.provider]);
 
   useEffect(() => () => abortControllerRef.current?.abort(), []);
@@ -129,7 +133,7 @@ export const TelegramInput = () => {
     }
 
     try {
-      await telegramauth.sendmessage(
+      await sendTelegramMessage(
         currentInput,
         store.provider,
         store.model,
@@ -249,7 +253,7 @@ export const TelegramInput = () => {
   const telegrammsgdelete = async () => {
     try {
       store.setLoadingdeletemsg(true);
-      const response = await telegramauth.telegrammsgreset();
+      const response = await deleteTelegramMessage();
       if (response.success) {
         toast.success(response.message);
         store.setsessionmessage([]);

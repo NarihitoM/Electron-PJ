@@ -1,3 +1,3 @@
 import { googleauth } from "../api/api";
 
-export const sendGoogleDocMessage = googleauth.senddocsmessage;
+export const useSendGoogleDocMessage = () => googleauth.senddocsmessage;

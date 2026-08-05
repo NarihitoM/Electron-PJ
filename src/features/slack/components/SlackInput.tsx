@@ -17,6 +17,8 @@ import { toast } from "sonner";
 import { BRAND_ASSETS, getProviderModels } from "@/shared/config/providermodels";
 import { useNavigate } from "react-router-dom";
 import { useSlackAccount } from "../hooks/useSlackAccount";
+import { useSendSlackMessage } from "../hooks/useSendSlackMessage";
+import { useDeleteSlackMessage } from "../hooks/useDeleteSlackMessage";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { slackauth } from "../api/api";
 import { chatauth } from "@/features/chat/api/api";
@@ -96,12 +98,14 @@ export const SlackInput = () => {
   const queryClient = useQueryClient();
   const { data: slackAccount } = useSlackAccount();
   const { data: Api = [] } = useServiceKeys();
+  const sendSlackMessage = useSendSlackMessage();
+  const { mutateAsync: deleteSlackMessage } = useDeleteSlackMessage();
 
   const workspace = (slackAccount as any)?.workspace ?? "";
-  const publichannel = (slackAccount as any)?.public ?? [];
-  const privatechannel = (slackAccount as any)?.private ?? [];
-  const im = (slackAccount as any)?.im ?? [];
-  const mpim = (slackAccount as any)?.mpim ?? [];
+  const publichannel = useMemo(() => (slackAccount as any)?.public ?? [], [slackAccount]);
+  const privatechannel = useMemo(() => (slackAccount as any)?.private ?? [], [slackAccount]);
+  const im = useMemo(() => (slackAccount as any)?.im ?? [], [slackAccount]);
+  const mpim = useMemo(() => (slackAccount as any)?.mpim ?? [], [slackAccount]);
 
   const [input, setInput] = useState("");
   const [type, settype] = useState<string | null>("text");
@@ -212,6 +216,7 @@ export const SlackInput = () => {
     if (workspace) {
       setSlackcron((prev) => ({ ...prev, workspace }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [workspace]);
 
   useEffect(() => {
@@ -227,11 +232,13 @@ export const SlackInput = () => {
         setModel(models[0].model);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provider]);
 
   useEffect(() => {
     if (!slackcron.provider) return;
     getProviderModels(slackcron.provider).then((models) => setCronModelList(models));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slackcron.provider]);
 
   useEffect(() => {
@@ -258,6 +265,7 @@ export const SlackInput = () => {
       }
     };
     getslackcron();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -273,6 +281,7 @@ export const SlackInput = () => {
         setCustomMonth([]);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slackcron.customSchedule]);
 
   useEffect(() => {
@@ -349,7 +358,7 @@ export const SlackInput = () => {
     }
 
     try {
-      await slackauth.sendmessage(
+      await sendSlackMessage(
         currentInput,
         provider,
         model,
@@ -555,7 +564,7 @@ export const SlackInput = () => {
   const deleteslackmessage = async () => {
     try {
       setLoadingslackdelmsg(true);
-      const response = await slackauth.deleteslackmsg();
+      const response = await deleteSlackMessage();
       if (response.success) {
         toast.success(response.message);
         setsessionmessage([]);

@@ -29,7 +29,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/shared/components/ui/avat
 import { BRAND_ASSETS } from "@/shared/config/providermodels";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { useNotionAccount } from "../hooks/useNotionAccount";
-import { notionauth } from "../api/api";
+import { useNotionMessages } from "../hooks/useNotionMessages";
 import { notionauthstore } from "../store/store";
 import { toast } from "sonner";
 
@@ -37,6 +37,7 @@ export const NotionMessageList = () => {
   const { data: userdata } = useUser();
   const { data: notionAccount } = useNotionAccount();
   const store = notionauthstore();
+  const fetchNotionMessages = useNotionMessages();
 
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const topSentinelRef = useRef<HTMLDivElement | null>(null);
@@ -96,7 +97,7 @@ export const NotionMessageList = () => {
     store.setLoadingMore(true);
     try {
       const prevScrollHeight = scrollContainerRef.current?.scrollHeight ?? 0;
-      const response = await notionauth.fetchnotionmsg(store.nextCursor);
+      const response = await fetchNotionMessages(store.nextCursor);
       if (response.success && response.data) {
         const data = response.data;
         store.updateSessionMessages((prev) => [...(data.messages ?? []), ...prev]);
@@ -122,7 +123,7 @@ export const NotionMessageList = () => {
     store.setNextCursor(null);
     store.setHasMore(false);
     try {
-      const response = await notionauth.fetchnotionmsg();
+      const response = await fetchNotionMessages();
       if (response.success && response.data) {
         store.setsessionmessage(response.data.messages ?? []);
         store.setNextCursor(response.data.nextCursor);

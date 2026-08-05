@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { ArrowUp, Mic, Square, Box, X, RefreshCw, ToolCaseIcon } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -16,9 +16,10 @@ import { toast } from "sonner";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useGoogleService } from "@/features/google/hooks/useGoogleService";
 import { useGoogleConnect } from "@/features/google/hooks/useGoogleConnect";
+import { useSendGoogleCalendarMessage } from "@/features/google/hooks/useSendGoogleCalendarMessage";
+import { useDeleteGoogleCalendarMessage } from "@/features/google/hooks/useDeleteGoogleCalendarMessage";
 import { getProviderModels } from "@/shared/config/providermodels";
 import { googleauthstore } from "../store/store";
-import { googleauth } from "../api/api";
 import { chatauth } from "@/features/chat/api/api";
 import { voiceauth } from "@/features/voice/api/api";
 import { useQueryClient } from "@tanstack/react-query";
@@ -29,6 +30,9 @@ export const GoogleCalendarInput = () => {
   const store = googleauthstore();
   const queryClient = useQueryClient();
   const { connect, isChecking } = useGoogleConnect();
+  const sendCalendarMessage = useSendGoogleCalendarMessage();
+  const { mutateAsync: deleteCalendarMessage, isPending: loadingcalendardelete } =
+    useDeleteGoogleCalendarMessage();
 
   const serviceemail = (googleService as any)?.serviceemail ?? "";
   const calendars = useMemo(() => (googleService as any)?.googlecalendar ?? [], [googleService]);
@@ -39,8 +43,6 @@ export const GoogleCalendarInput = () => {
       (store.calendarid === "primary" ? "Primary Calendar" : "")
     );
   }, [store.calendarid, calendars]);
-
-  const [loadingcalendardelete, setLoadingcalendardelete] = useState(false);
 
   const connectGoogle = async () => {
     try {
@@ -55,9 +57,8 @@ export const GoogleCalendarInput = () => {
   };
 
   const calendarmsgdelete = async () => {
-    setLoadingcalendardelete(true);
     try {
-      const response = await googleauth.deletecalendarmsg();
+      const response = await deleteCalendarMessage();
       if (response.success) {
         toast.success(response.message);
         store.setsessionmessage_calendar([]);
@@ -71,8 +72,6 @@ export const GoogleCalendarInput = () => {
       } else {
         toast.error("An unexpected error occurred.");
       }
-    } finally {
-      setLoadingcalendardelete(false);
     }
   };
 
@@ -170,7 +169,7 @@ export const GoogleCalendarInput = () => {
     }
 
     try {
-      await googleauth.sendcalendarmessage(
+      await sendCalendarMessage(
         currentInput,
         store.provider,
         store.model,

@@ -15,10 +15,11 @@ import { toast } from "sonner";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { getProviderModels } from "@/shared/config/providermodels";
 import { n8nauthstore } from "../store/store";
-import { n8nauth } from "../api/api";
 import { chatauth } from "@/features/chat/api/api";
 import { voiceauth } from "@/features/voice/api/api";
 import { useN8nConfig } from "@/features/n8n/hooks/useN8nConfig";
+import { useSendN8nMessage } from "@/features/n8n/hooks/useSendN8nMessage";
+import { useDeleteN8nMessage } from "@/features/n8n/hooks/useDeleteN8nMessage";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ModelEntry } from "@/shared/lib/modelsapi";
 import { N8nCronScheduler } from "./N8nCronScheduler";
@@ -28,6 +29,8 @@ export const N8nInput = () => {
   const { data: n8nConfig } = useN8nConfig();
   const store = n8nauthstore();
   const queryClient = useQueryClient();
+  const sendN8nMessage = useSendN8nMessage();
+  const { mutateAsync: deleteN8nMessage } = useDeleteN8nMessage();
 
   const connected = !!(n8nConfig as any)?.connected;
   const n8nUrl = (n8nConfig as any)?.n8nUrl ?? "";
@@ -119,7 +122,7 @@ export const N8nInput = () => {
     }
 
     try {
-      await n8nauth.sendmessage(
+      await sendN8nMessage(
         currentInput,
         store.provider,
         store.model,
@@ -210,7 +213,7 @@ export const N8nInput = () => {
 
   const deletemessages = async () => {
     try {
-      const response = await n8nauth.n8ndeletemessage();
+      const response = await deleteN8nMessage();
       if (response.success) {
         toast.success(response.message);
         store.setsessionmessage([]);

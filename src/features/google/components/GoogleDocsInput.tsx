@@ -16,9 +16,10 @@ import { toast } from "sonner";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useGoogleService } from "@/features/google/hooks/useGoogleService";
 import { useGoogleConnect } from "@/features/google/hooks/useGoogleConnect";
+import { useSendGoogleDocMessage } from "@/features/google/hooks/useSendGoogleDocMessage";
+import { useDeleteGoogleDocMessage } from "@/features/google/hooks/useDeleteGoogleDocMessage";
 import { getProviderModels } from "@/shared/config/providermodels";
 import { googleauthstore } from "../store/store";
-import { googleauth } from "../api/api";
 import { chatauth } from "@/features/chat/api/api";
 import { voiceauth } from "@/features/voice/api/api";
 import { useQueryClient } from "@tanstack/react-query";
@@ -32,6 +33,9 @@ export const GoogleDocsInput = () => {
   const store = googleauthstore();
   const queryClient = useQueryClient();
   const { connect, isChecking } = useGoogleConnect();
+  const sendDocMessage = useSendGoogleDocMessage();
+  const { mutateAsync: deleteDocMessage, isPending: loadingdocsdelete } =
+    useDeleteGoogleDocMessage();
 
   const serviceemail = (googleService as any)?.serviceemail ?? "";
   const docs = (googleService as any)?.googledocs ?? [];
@@ -51,7 +55,6 @@ export const GoogleDocsInput = () => {
 
   const [recordstatus, setrecordstatus] = useState(false);
   const [loadingrecord, setloadingrecord] = useState(false);
-  const [loadingdocsdelete, setLoadingdocsdelete] = useState(false);
   const [modelList, setModelList] = useState<ModelEntry[]>([]);
   const [modelsLoading, setModelsLoading] = useState(false);
 
@@ -146,7 +149,7 @@ export const GoogleDocsInput = () => {
     }
 
     try {
-      await googleauth.senddocsmessage(
+      await sendDocMessage(
         currentInput,
         store.provider,
         store.model,
@@ -287,9 +290,8 @@ export const GoogleDocsInput = () => {
   };
 
   const deleteDocsMessage = async () => {
-    setLoadingdocsdelete(true);
     try {
-      const response = await googleauth.deletedocsmsg();
+      const response = await deleteDocMessage();
       if (response.success) {
         toast.success(response.message);
         store.setsessionmessage_docs([]);
@@ -301,8 +303,6 @@ export const GoogleDocsInput = () => {
       } else {
         toast.error("An unexpected error occurred.");
       }
-    } finally {
-      setLoadingdocsdelete(false);
     }
   };
 

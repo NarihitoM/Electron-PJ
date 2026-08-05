@@ -28,7 +28,7 @@ import { Telegramtool } from "@/shared/config/toolsselection";
 import { extractToolMessage } from "@/shared/utils/toolutils";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { useTelegramAccount } from "@/features/telegram/hooks/useTelegramAccount";
-import { telegramauth } from "@/features/telegram/api/api";
+import { useTelegramMessages } from "@/features/telegram/hooks/useTelegramMessages";
 import { telegramauthstore } from "@/features/telegram/store/store";
 import { toast } from "sonner";
 
@@ -36,6 +36,7 @@ export const TelegramMessageList = () => {
   const { data: userdata } = useUser();
   const { data: accountData, isLoading: accountLoading } = useTelegramAccount();
   const store = telegramauthstore();
+  const fetchTelegramMessages = useTelegramMessages();
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const topSentinelRef = useRef<HTMLDivElement | null>(null);
@@ -48,7 +49,7 @@ export const TelegramMessageList = () => {
     store.setNextCursor(null);
     store.setHasMore(false);
     try {
-      const response = await telegramauth.fetchtelegrammessage();
+      const response = await fetchTelegramMessages();
       if (response.success && response.data) {
         store.setsessionmessage(response.data.messages ?? []);
         store.setNextCursor(response.data.nextCursor);
@@ -78,7 +79,7 @@ export const TelegramMessageList = () => {
     try {
       const container = scrollContainerRef.current;
       const prevScrollHeight = container?.scrollHeight ?? 0;
-      const response = await telegramauth.fetchtelegrammessage(store.nextCursor);
+      const response = await fetchTelegramMessages(store.nextCursor);
       if (response.success && response.data) {
         const data = response.data;
         store.setsessionmessage([...(data.messages ?? []), ...store.sessionmessage]);

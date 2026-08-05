@@ -1,8 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
 import { googleauth } from "../api/api";
 
-export const useDeleteGoogleSheetMessage = () => {
+export const useDeleteGoogleCalendarMessage = () => {
   return useMutation({
-    mutationFn: () => googleauth.deletesheetmsg(),
+    mutationFn: () => googleauth.deletecalendarmsg(),
   });
 };

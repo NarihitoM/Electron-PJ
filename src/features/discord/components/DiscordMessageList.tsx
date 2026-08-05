@@ -29,7 +29,7 @@ import { Discordtool } from "@/shared/config/toolsselection";
 import { extractToolMessage } from "@/shared/utils/toolutils";
 import { toast } from "sonner";
 import { useUser } from "@/features/auth/hooks/useUser";
-import { discordauth } from "../api/api";
+import { useDiscordMessages } from "../hooks/useDiscordMessages";
 import { discordauthstore } from "../store/store";
 import { DiscordConnectionPanel } from "./DiscordConnectionPanel";
 
@@ -49,6 +49,7 @@ export const DiscordMessageList = () => {
     setHasMore,
   } = discordauthstore();
   const { data: userdata } = useUser();
+  const fetchDiscordMessages = useDiscordMessages();
 
   const [loadingfetch, setloadingfetch] = useState(false);
   const [loadingerror, setloadingerror] = useState(false);
@@ -97,7 +98,7 @@ export const DiscordMessageList = () => {
     try {
       const container = scrollContainerRef.current;
       const prevScrollHeight = container?.scrollHeight ?? 0;
-      const response = await discordauth.fetchdiscordmessage(nextCursor);
+      const response = await fetchDiscordMessages(nextCursor);
       if (response.success && response.data) {
         const data = response.data;
         setsessionmessage((prev) => [...(data.messages ?? []), ...prev]);
@@ -144,7 +145,7 @@ export const DiscordMessageList = () => {
       setsessionmessage([]);
       setNextCursor(null);
       setHasMore(false);
-      const response = await discordauth.fetchdiscordmessage();
+      const response = await fetchDiscordMessages();
       if (response.success && response.data) {
         setsessionmessage(response.data.messages ?? []);
         setNextCursor(response.data.nextCursor);

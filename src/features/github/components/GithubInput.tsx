@@ -17,8 +17,9 @@ import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { getProviderModels } from "@/shared/config/providermodels";
 import { chatauth } from "@/features/chat/api/api";
 import { voiceauth } from "@/features/voice/api/api";
-import { githubauth } from "../api/api";
 import { useGithubAccount } from "../hooks/useGithubAccount";
+import { useSendGithubMessage } from "../hooks/useSendGithubMessage";
+import { useDeleteGithubMessage } from "../hooks/useDeleteGithubMessage";
 import { githubauthstore } from "../store/store";
 import { GithubCronScheduler } from "./GithubCronScheduler";
 import { useQueryClient } from "@tanstack/react-query";
@@ -27,6 +28,8 @@ export const GithubInput = () => {
   const { data: Api = [] } = useServiceKeys();
   const { data: githubAccount } = useGithubAccount();
   const store = githubauthstore();
+  const sendGithubMessage = useSendGithubMessage();
+  const { mutateAsync: deleteGithubMessage } = useDeleteGithubMessage();
   const queryClient = useQueryClient();
 
   const username = (githubAccount as any)?.username ?? "";
@@ -120,7 +123,7 @@ export const GithubInput = () => {
     }
 
     try {
-      await githubauth.sendmessage(
+      await sendGithubMessage(
         currentInput,
         store.provider,
         store.model,
@@ -232,7 +235,7 @@ export const GithubInput = () => {
   const deletemessages = async () => {
     store.setloadinggithubmsg(true);
     try {
-      const response = await githubauth.githubdeletemessage();
+      const response = await deleteGithubMessage();
       if (response.success) {
         toast.success(response.message);
         store.setsessionmessage([]);

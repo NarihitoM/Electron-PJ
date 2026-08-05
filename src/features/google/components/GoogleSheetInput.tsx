@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { ArrowUp, Mic, Square, Box, Timer, X, RefreshCw, ToolCaseIcon } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
@@ -16,9 +16,10 @@ import { toast } from "sonner";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useGoogleService } from "@/features/google/hooks/useGoogleService";
 import { useGoogleConnect } from "@/features/google/hooks/useGoogleConnect";
+import { useSendGoogleSheetMessage } from "@/features/google/hooks/useSendGoogleSheetMessage";
+import { useDeleteGoogleSheetMessage } from "@/features/google/hooks/useDeleteGoogleSheetMessage";
 import { getProviderModels } from "@/shared/config/providermodels";
 import { googleauthstore } from "../store/store";
-import { googleauth } from "../api/api";
 import { chatauth } from "@/features/chat/api/api";
 import { voiceauth } from "@/features/voice/api/api";
 import { useQueryClient } from "@tanstack/react-query";
@@ -30,6 +31,9 @@ export const GoogleSheetInput = () => {
   const store = googleauthstore();
   const queryClient = useQueryClient();
   const { connect, isChecking } = useGoogleConnect();
+  const sendSheetMessage = useSendGoogleSheetMessage();
+  const { mutateAsync: deleteSheetMessage, isPending: loadingsheetdelete } =
+    useDeleteGoogleSheetMessage();
 
   const serviceemail = (googleService as any)?.serviceemail ?? "";
   const sheet = useMemo(() => (googleService as any)?.googlesheet ?? [], [googleService]);
@@ -37,8 +41,6 @@ export const GoogleSheetInput = () => {
   const selectedsheetTitle = useMemo(() => {
     return sheet.find((g: any) => g.url === store.sheeturl)?.name || "";
   }, [store.sheeturl, sheet]);
-
-  const [loadingsheetdelete, setLoadingsheetdelete] = useState(false);
 
   const connectGoogle = async () => {
     try {
@@ -53,9 +55,8 @@ export const GoogleSheetInput = () => {
   };
 
   const sheetmsgdelete = async () => {
-    setLoadingsheetdelete(true);
     try {
-      const response = await googleauth.deletesheetmsg();
+      const response = await deleteSheetMessage();
       if (response.success) {
         toast.success(response.message);
         store.setsessionmessage_sheet([]);
@@ -69,8 +70,6 @@ export const GoogleSheetInput = () => {
       } else {
         toast.error("An unexpected error occurred.");
       }
-    } finally {
-      setLoadingsheetdelete(false);
     }
   };
 
@@ -169,7 +168,7 @@ export const GoogleSheetInput = () => {
     }
 
     try {
-      await googleauth.sendsheetmessage(
+      await sendSheetMessage(
         currentInput,
         store.provider,
         store.model,

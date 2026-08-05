@@ -17,8 +17,9 @@ import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { getProviderModels } from "@/shared/config/providermodels";
 import { chatauth } from "@/features/chat/api/api";
 import { voiceauth } from "@/features/voice/api/api";
-import { notionauth } from "../api/api";
 import { useNotionAccount } from "../hooks/useNotionAccount";
+import { useSendNotionMessage } from "../hooks/useSendNotionMessage";
+import { useDeleteNotionMessage } from "../hooks/useDeleteNotionMessage";
 import { notionauthstore } from "../store/store";
 import { NotionCronScheduler } from "./NotionCronScheduler";
 import { useQueryClient } from "@tanstack/react-query";
@@ -28,6 +29,8 @@ export const NotionInput = () => {
   const { data: notionAccount } = useNotionAccount();
   const store = notionauthstore();
   const queryClient = useQueryClient();
+  const sendNotionMessage = useSendNotionMessage();
+  const { mutateAsync: deleteNotionMessage } = useDeleteNotionMessage();
 
   const workspacename = (notionAccount as any)?.workspacename ?? "";
   const pages = (notionAccount as any)?.pages ?? [];
@@ -120,7 +123,7 @@ export const NotionInput = () => {
     }
 
     try {
-      await notionauth.sendmessage(
+      await sendNotionMessage(
         currentInput,
         store.provider,
         store.model,
@@ -232,7 +235,7 @@ export const NotionInput = () => {
   const deletemessages = async () => {
     store.setloadingnotionmsg(true);
     try {
-      const response = await notionauth.notiondeletemessage();
+      const response = await deleteNotionMessage();
       if (response.success) {
         toast.success(response.message);
         store.setsessionmessage([]);

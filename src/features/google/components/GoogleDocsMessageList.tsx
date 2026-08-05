@@ -28,13 +28,14 @@ import AiContent from "@/shared/components/layout/LayoutAiresponse";
 import ThinkingBlock from "@/shared/components/ui/ThinkingBlock";
 import ShimmerLoadingText from "@/shared/components/ui/ShimmerLoadingText";
 import { useUser } from "@/features/auth/hooks/useUser";
-import { googleauth } from "../api/api";
+import { useGoogleDocs } from "../hooks/useGoogleDocs";
 import { googleauthstore } from "../store/store";
 import { toast } from "sonner";
 
 export const GoogleDocsMessageList = () => {
   const { data: userdata } = useUser();
   const store = googleauthstore();
+  const fetchDocMessages = useGoogleDocs();
 
   const topSentinelRef = useRef<HTMLDivElement | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
@@ -93,7 +94,7 @@ export const GoogleDocsMessageList = () => {
     try {
       const container = scrollContainerRef.current;
       const prevScrollHeight = container?.scrollHeight ?? 0;
-      const response = await googleauth.fetchdocsmessage(store.nextCursor_docs);
+      const response = await fetchDocMessages(store.nextCursor_docs);
       if (response.success && response.data) {
         const data = response.data;
         store.updateSessionMessages_docs((prev) => [...(data.messages ?? []), ...prev]);
@@ -125,7 +126,7 @@ export const GoogleDocsMessageList = () => {
     store.setNextCursor_docs(null);
     store.setHasMore_docs(false);
     try {
-      const response = await googleauth.fetchdocsmessage();
+      const response = await fetchDocMessages();
       if (response.success && response.data) {
         store.setsessionmessage_docs(response.data.messages ?? []);
         store.setNextCursor_docs(response.data.nextCursor);

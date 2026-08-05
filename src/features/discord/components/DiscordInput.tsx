@@ -16,8 +16,9 @@ import { toast } from "sonner";
 import { getProviderModels } from "@/shared/config/providermodels";
 import { useDiscordAccount } from "../hooks/useDiscordAccount";
 import { useDiscordChannels } from "../hooks/useDiscordChannels";
+import { useSendDiscordMessage } from "../hooks/useSendDiscordMessage";
+import { useDeleteDiscordMessage } from "../hooks/useDeleteDiscordMessage";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
-import { discordauth } from "../api/api";
 import { chatauth } from "@/features/chat/api/api";
 import { voiceauth } from "@/features/voice/api/api";
 import { discordauthstore } from "../store/store";
@@ -79,6 +80,8 @@ export const DiscordInput = () => {
   const queryClient = useQueryClient();
   const { data: discordAccount } = useDiscordAccount();
   const { data: Api = [] } = useServiceKeys();
+  const sendDiscordMessage = useSendDiscordMessage();
+  const { mutateAsync: deleteDiscordMessage } = useDeleteDiscordMessage();
 
   const guildName = (discordAccount as any)?.guildName ?? "";
   const guildId = (discordAccount as any)?.guildId ?? "";
@@ -195,7 +198,7 @@ export const DiscordInput = () => {
     }
 
     try {
-      await discordauth.sendmessage(
+      await sendDiscordMessage(
         currentInput,
         provider,
         model,
@@ -401,7 +404,7 @@ export const DiscordInput = () => {
   const deletediscordmessage = async () => {
     try {
       setLoadingdiscorddelmsg(true);
-      const response = await discordauth.deletediscordmsg();
+      const response = await deleteDiscordMessage();
       if (response.success) {
         toast.success(response.message);
         setsessionmessage([]);
