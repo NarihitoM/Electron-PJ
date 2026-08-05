@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import { CheckCircle2, ExternalLink, ChevronsUpDown, Search } from "lucide-react
 import { slackauth } from "../../slack/api/api";
 import { notionauth } from "../../notion/api/api";
 import { telegramauth } from "../../telegram/api/api";
-import { googleauth } from "../../google/api/api";
+import { useGoogleConnect } from "../../google/hooks/useGoogleConnect";
 import { githubauth } from "../../github/api/api";
 import { discordauth } from "../../discord/api/api";
 import { useConnectSlack } from "../../slack/hooks/useConnectSlack";
@@ -841,73 +841,21 @@ export const TelegramForm = ({ onComplete }: { onComplete: () => void }) => {
   );
 };
 
-const GOOGLE_SCOPES = [
-  "openid",
-  "email",
-  "profile",
-  "https://www.googleapis.com/auth/spreadsheets",
-  "https://www.googleapis.com/auth/drive",
-  "https://www.googleapis.com/auth/documents",
-  "https://www.googleapis.com/auth/calendar",
-].join(" ");
-
 export const GoogleForm = ({ onComplete }: { onComplete: () => void }) => {
-  const [checking, setChecking] = useState(false);
-  const [polling, setPolling] = useState(false);
-
-  const connect = async () => {
-    try {
-      const response = await googleauth.googlestate();
-      const stateId = response.stateId;
-      const clientid = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-      if (!clientid) {
-        toast.error("Google Client ID not configured.");
-        return;
-      }
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || "https://multimate-server.vercel.app";
-      const redirecturi = encodeURIComponent(`${backendUrl}/google/api/callback`);
-      const scopes = encodeURIComponent(GOOGLE_SCOPES);
-
-      const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientid}&scope=${scopes}&redirect_uri=${redirecturi}&response_type=code&access_type=offline&prompt=consent&state=${stateId}`;
-      (window.ipcRenderer as any).openInBrowser(url);
-      setChecking(true);
-      setPolling(true);
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to initiate Google connection.");
-    }
-  };
+  const { connect, isChecking } = useGoogleConnect();
+  const wasChecking = useRef(false);
 
   useEffect(() => {
-    if (!polling) return;
-    const poll = async () => {
-      try {
-        const status = await googleauth.googlecheckstatus();
-        if (status.success) {
-          setPolling(false);
-          toast.success("Connected to Google!");
-          onComplete();
-        }
-      } catch (err) {
-        console.error("Google status poll failed:", err);
-      }
-    };
-
-    const interval = setInterval(poll, 2000);
-    const timeout = setTimeout(() => {
-      setPolling(false);
-      clearInterval(interval);
-      toast.error("Connection timed out. Please try again.");
-    }, 180000);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
-  }, [polling, onComplete]);
+    if (wasChecking.current && !isChecking) {
+      toast.success("Connected to Google!");
+      onComplete();
+    }
+    wasChecking.current = isChecking;
+  }, [isChecking, onComplete]);
 
   return (
     <div className="flex flex-col gap-4 py-4">
-      {checking ? (
+      {isChecking ? (
         <div className="flex flex-col items-center gap-3 py-4">
           <Spinner className="w-6 h-6 text-cyan-500" />
           <p className="text-sm text-muted-foreground">Waiting for Google authorization...</p>
