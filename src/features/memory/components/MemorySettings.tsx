@@ -95,7 +95,7 @@ export const MemorySettings = () => {
 
   if (isError) {
     return (
-      <div className="flex flex-col gap-2 items-center justify-center py-16">
+      <div className="flex flex-col gap-2 items-center justify-center h-[80vh]">
         <AlertTriangle className="w-10 h-10 text-red-500" />
         <h2 className="text-xl font-semibold">Failed to load memories</h2>
         <p className="text-sm text-muted-foreground">
