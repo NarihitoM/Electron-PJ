@@ -3,6 +3,7 @@ import { ArrowUp, Box, Mic, RefreshCw, Square, Timer, ToolCaseIcon, X } from "lu
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
+import { BRAND_SERVICE } from "@/shared/config/service";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -458,16 +459,19 @@ export const DiscordInput = () => {
               disabled={!provider}
             >
               <SelectTrigger className="w-40">
-                {loadingChannels
-                  ? "Loading channels..."
-                  : channels.find((c) => c.id === channelid)?.name
-                    ? `#${channels.find((c) => c.id === channelid)?.name}`
-                    : "Select Channel"}
+                {channelid && <img src={BRAND_SERVICE["discord"]} className="w-4 h-4 shrink-0" />}
+                <span className="truncate">
+                  {loadingChannels
+                    ? "Loading channels..."
+                    : channels.find((c) => c.id === channelid)?.name
+                      ? `#${channels.find((c) => c.id === channelid)?.name}`
+                      : "Select Channel"}
+                </span>
               </SelectTrigger>
               <SelectContent>
                 {channels.map((c) => (
                   <SelectItem key={c.id} value={c.id}>
-                    #{c.name}
+                    <img src={BRAND_SERVICE["discord"]} className="w-4 h-4 shrink-0" />#{c.name}
                   </SelectItem>
                 ))}
               </SelectContent>

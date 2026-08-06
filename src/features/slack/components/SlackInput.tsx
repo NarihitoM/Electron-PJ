@@ -3,6 +3,7 @@ import { ArrowUp, Box, Mic, RefreshCw, Square, Timer, ToolCaseIcon, X } from "lu
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
+import { BRAND_SERVICE } from "@/shared/config/service";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -684,6 +685,7 @@ export const SlackInput = () => {
                   disabled={!provider}
                 >
                   <SelectTrigger>
+                    {channelid && <img src={BRAND_SERVICE["slack"]} className="w-4 h-4 shrink-0" />}
                     <span className="truncate">
                       {channelid
                         ? selectedPublicchannel?.substring(0, 15) + "..."
@@ -696,6 +698,7 @@ export const SlackInput = () => {
                   >
                     {publichannel.map((m: any) => (
                       <SelectItem key={m.id} value={m.id}>
+                        <img src={BRAND_SERVICE["slack"]} className="w-4 h-4 shrink-0" />
                         {m.name}
                       </SelectItem>
                     ))}
@@ -710,6 +713,7 @@ export const SlackInput = () => {
                   disabled={!provider}
                 >
                   <SelectTrigger>
+                    {channelid && <img src={BRAND_SERVICE["slack"]} className="w-4 h-4 shrink-0" />}
                     <span className="truncate">
                       {channelid
                         ? selectedPrivatechannel?.substring(0, 15) + "..."
@@ -722,6 +726,7 @@ export const SlackInput = () => {
                   >
                     {privatechannel.map((m: any) => (
                       <SelectItem key={m.id} value={m.id}>
+                        <img src={BRAND_SERVICE["slack"]} className="w-4 h-4 shrink-0" />
                         {m.name}
                       </SelectItem>
                     ))}
@@ -736,6 +741,7 @@ export const SlackInput = () => {
                   disabled={!provider}
                 >
                   <SelectTrigger>
+                    {channelid && <img src={BRAND_SERVICE["slack"]} className="w-4 h-4 shrink-0" />}
                     <span className="truncate">
                       {channelid
                         ? selectedimchannel?.substring(0, 15) + "..."
@@ -748,6 +754,7 @@ export const SlackInput = () => {
                   >
                     {im.map((m: any) => (
                       <SelectItem key={m.id} value={m.id}>
+                        <img src={BRAND_SERVICE["slack"]} className="w-4 h-4 shrink-0" />
                         {m.name}
                       </SelectItem>
                     ))}
@@ -762,6 +769,7 @@ export const SlackInput = () => {
                   disabled={!provider}
                 >
                   <SelectTrigger>
+                    {channelid && <img src={BRAND_SERVICE["slack"]} className="w-4 h-4 shrink-0" />}
                     <span className="truncate">
                       {channelid
                         ? selectedmpimchannel?.substring(0, 15) + "..."
@@ -774,6 +782,7 @@ export const SlackInput = () => {
                   >
                     {mpim.map((m: any) => (
                       <SelectItem key={m.id} value={m.id}>
+                        <img src={BRAND_SERVICE["slack"]} className="w-4 h-4 shrink-0" />
                         {m.name}
                       </SelectItem>
                     ))}

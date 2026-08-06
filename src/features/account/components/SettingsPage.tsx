@@ -1,5 +1,5 @@
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Key, Plug } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Toaster } from "@/shared/components/ui/sonner";
@@ -91,11 +91,11 @@ export const SettingsPage = () => {
       <Toaster position="top-right" richColors />
       <Tabs defaultValue="providers" className="w-full">
         <TabsList className="w-full max-w-md">
-          <TabsTrigger value="providers" className="flex-1">
-            Providers
+          <TabsTrigger value="providers" className="flex-1 gap-1.5">
+            <Key className="w-4 h-4" /> Providers
           </TabsTrigger>
-          <TabsTrigger value="integrations" className="flex-1">
-            Integrations
+          <TabsTrigger value="integrations" className="flex-1 gap-1.5">
+            <Plug className="w-4 h-4" /> Integrations
           </TabsTrigger>
         </TabsList>
         <TabsContent value="providers">

@@ -3,6 +3,7 @@ import { ArrowUp, ToolCaseIcon, X, RefreshCw, Square, Mic, Timer, Box } from "lu
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
+import { BRAND_SERVICE } from "@/shared/config/service";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -382,6 +383,9 @@ export const TelegramInput = () => {
                   disabled={!store.provider}
                 >
                   <SelectTrigger>
+                    {store.selectedGroupId && (
+                      <img src={BRAND_SERVICE["telegram"]} className="w-4 h-4 shrink-0" />
+                    )}
                     <span className="truncate">
                       {store.selectedGroupId
                         ? selectedGroupTitle.substring(0, 15) + "..."
@@ -394,6 +398,7 @@ export const TelegramInput = () => {
                   >
                     {groups.map((m) => (
                       <SelectItem key={m.id} value={m.id}>
+                        <img src={BRAND_SERVICE["telegram"]} className="w-4 h-4 shrink-0" />
                         {m.title}
                       </SelectItem>
                     ))}
@@ -408,6 +413,9 @@ export const TelegramInput = () => {
                   disabled={!store.provider}
                 >
                   <SelectTrigger>
+                    {store.selectedContactId && (
+                      <img src={BRAND_SERVICE["telegram"]} className="w-4 h-4 shrink-0" />
+                    )}
                     <span className="truncate">
                       {store.selectedContactId
                         ? selectContactName.substring(0, 15) + "..."
@@ -420,6 +428,7 @@ export const TelegramInput = () => {
                   >
                     {contacts.map((m) => (
                       <SelectItem key={m.id} value={m.id}>
+                        <img src={BRAND_SERVICE["telegram"]} className="w-4 h-4 shrink-0" />
                         {m.name}
                       </SelectItem>
                     ))}

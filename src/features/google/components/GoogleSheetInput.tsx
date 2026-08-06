@@ -451,6 +451,12 @@ export const GoogleSheetInput = () => {
                 disabled={!store.provider}
               >
                 <SelectTrigger>
+                  {store.sheeturl && (
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg"
+                      className="w-4 h-4 shrink-0"
+                    />
+                  )}
                   <span className="truncate">
                     {store.sheeturl ? selectedsheetTitle : "Select sheeturl"}
                   </span>
@@ -458,6 +464,10 @@ export const GoogleSheetInput = () => {
                 <SelectContent className="p-1 w-60">
                   {sheet.map((m: any) => (
                     <SelectItem key={m.id} value={m.url}>
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg"
+                        className="w-4 h-4 shrink-0"
+                      />
                       {m.name}
                     </SelectItem>
                   ))}

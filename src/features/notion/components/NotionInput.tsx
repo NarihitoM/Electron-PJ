@@ -335,6 +335,12 @@ export const NotionInput = () => {
               disabled={!store.provider || loadingnotion}
             >
               <SelectTrigger>
+                {store.pageid && (
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png"
+                    className="w-4 h-4 shrink-0"
+                  />
+                )}
                 <span className="truncate">
                   {store.pageid ? selectedPagename.substring(0, 15) + "..." : "Select Pages"}
                 </span>
@@ -342,6 +348,10 @@ export const NotionInput = () => {
               <SelectContent className="p-1 w-60">
                 {pages.map((m: any) => (
                   <SelectItem key={m.id} value={m.id}>
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png"
+                      className="w-4 h-4 shrink-0"
+                    />
                     {m.title}
                   </SelectItem>
                 ))}

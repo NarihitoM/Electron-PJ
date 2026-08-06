@@ -436,16 +436,32 @@ export const GoogleCalendarInput = () => {
               disabled={!store.provider}
             >
               <SelectTrigger>
+                {store.calendarid && (
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg"
+                    className="w-4 h-4 shrink-0"
+                  />
+                )}
                 <span className="truncate">
                   {store.calendarid ? selectedCalendarTitle : "Select calendar"}
                 </span>
               </SelectTrigger>
               <SelectContent className="p-1 w-60">
-                <SelectItem value="primary">Primary Calendar</SelectItem>
+                <SelectItem value="primary">
+                  <img
+                    src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg"
+                    className="w-4 h-4 shrink-0"
+                  />
+                  Primary Calendar
+                </SelectItem>
                 {calendars
                   .filter((c: any) => c.calendarId !== "primary")
                   .map((c: any) => (
                     <SelectItem key={c.id} value={c.calendarId}>
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg"
+                        className="w-4 h-4 shrink-0"
+                      />
                       {c.name}
                     </SelectItem>
                   ))}

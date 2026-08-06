@@ -411,6 +411,12 @@ export const GoogleDocsInput = () => {
                 disabled={!store.provider}
               >
                 <SelectTrigger>
+                  {store.docsurl && (
+                    <img
+                      src="https://upload.wikimedia.org/wikipedia/commons/0/01/Google_Docs_logo_%282014-2020%29.svg"
+                      className="w-4 h-4 shrink-0"
+                    />
+                  )}
                   <span className="truncate">
                     {store.docsurl ? selecteddocsTitle : "Select docsurl"}
                   </span>
@@ -418,6 +424,10 @@ export const GoogleDocsInput = () => {
                 <SelectContent className="p-1 w-60">
                   {docs.map((m: any) => (
                     <SelectItem key={m.id} value={m.url}>
+                      <img
+                        src="https://upload.wikimedia.org/wikipedia/commons/0/01/Google_Docs_logo_%282014-2020%29.svg"
+                        className="w-4 h-4 shrink-0"
+                      />
                       {m.name}
                     </SelectItem>
                   ))}
