@@ -30,7 +30,7 @@ export const SERVICES = [
     name: "Google Service",
     image: typeof BRAND_SERVICE["google"] === "string" ? BRAND_SERVICE["google"] : undefined,
     isComponent: true,
-    description: "Connect Google Sheets and Docs with a service account.",
+    description: "Connect Google to use Sheets, Docs, and Calendar.",
   },
   {
     name: "n8n",
