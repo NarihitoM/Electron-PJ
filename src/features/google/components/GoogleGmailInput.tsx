@@ -380,6 +380,7 @@ export const GoogleGmailInput = () => {
     const labels: Record<string, string> = {
       read: "List Emails",
       send: "Send Email",
+      reply: "Reply To Email",
       search: "Search Emails",
     };
     if (!store.type_gmail || !labels[store.type_gmail]) return null;
@@ -477,6 +478,9 @@ export const GoogleGmailInput = () => {
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => store.settype_gmail("send")}>
                   <Box /> Send Email
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => store.settype_gmail("reply")}>
+                  <Box /> Reply To Email
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => store.settype_gmail("search")}>
                   <Box /> Search Emails
