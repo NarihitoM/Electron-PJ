@@ -239,6 +239,59 @@ export interface GoogleClientState {
   setloadingrecord_calendar: (v: boolean) => void;
   updateSessionMessages_calendar: (updater: (prev: chatsession[]) => chatsession[]) => void;
 
+  // Gmail fields
+  sessionmessage_gmail: chatsession[];
+  input_gmail: string;
+  sending_gmail: boolean;
+  loadingfetch_gmail: boolean;
+  loadingerror_gmail: boolean;
+  nextCursor_gmail: string | null;
+  hasMore_gmail: boolean;
+  loadingMore_gmail: boolean;
+  type_gmail: string | null;
+  pendingApproval_gmail: { name: string; query: Record<string, unknown> | null } | null;
+  pendingApprovalRef_gmail: {
+    current: { name: string; query: Record<string, unknown> | null } | null;
+  };
+  threadIdRef_gmail: { current: string | null };
+  lightboxImages_gmail: string[];
+  lightboxIndex_gmail: number;
+  lightboxOpen_gmail: boolean;
+  copiedIndex_gmail: number | null;
+  uploadingImages_gmail: boolean;
+  uploadingImageUrls_gmail: Set<string>;
+  pendingImages_gmail: File[];
+  modelList_gmail: ModelEntry[];
+  modelsLoading_gmail: boolean;
+  reasoningLevel_gmail: "" | "low" | "medium" | "high";
+  recordstatus_gmail: boolean;
+  loadingrecord_gmail: boolean;
+  setsessionmessage_gmail: (messages: chatsession[]) => void;
+  setInput_gmail: (input: string) => void;
+  setSending_gmail: (v: boolean) => void;
+  setloadingfetch_gmail: (v: boolean) => void;
+  setloadingerror_gmail: (v: boolean) => void;
+  setNextCursor_gmail: (v: string | null) => void;
+  setHasMore_gmail: (v: boolean) => void;
+  setLoadingMore_gmail: (v: boolean) => void;
+  settype_gmail: (v: string | null) => void;
+  setPendingApproval_gmail: (
+    v: { name: string; query: Record<string, unknown> | null } | null,
+  ) => void;
+  setLightboxImages_gmail: (v: string[]) => void;
+  setLightboxIndex_gmail: (v: number) => void;
+  setLightboxOpen_gmail: (v: boolean) => void;
+  setCopiedIndex_gmail: (v: number | null) => void;
+  setUploadingImages_gmail: (v: boolean) => void;
+  setUploadingImageUrls_gmail: (v: Set<string>) => void;
+  setPendingImages_gmail: (v: File[]) => void;
+  setModelList_gmail: (v: ModelEntry[]) => void;
+  setModelsLoading_gmail: (v: boolean) => void;
+  setReasoningLevel_gmail: (level: "" | "low" | "medium" | "high") => void;
+  setrecordstatus_gmail: (v: boolean) => void;
+  setloadingrecord_gmail: (v: boolean) => void;
+  updateSessionMessages_gmail: (updater: (prev: chatsession[]) => chatsession[]) => void;
+
   setsessionmessage_sheet: (messages: chatsession[]) => void;
   setInput_sheet: (input: string) => void;
   setSending_sheet: (v: boolean) => void;

@@ -33,6 +33,17 @@ export const Googlecalendartool: Record<string, string> = {
   image_analyzer: "Reviewing Image",
 };
 
+export const Googlegmailtool: Record<string, string> = {
+  gmail_list_messages: "Listing Emails",
+  gmail_read_message: "Reading Email",
+  gmail_send_message: "Sending Email",
+  web_search: "Searching The Web",
+  image_generation: "Generating Image",
+  image_generator: "Generating Image",
+  image_review: "Reviewing Image",
+  image_analyzer: "Reviewing Image",
+};
+
 export const Telegramtool: Record<string, string> = {
   send_message: "Sending Telegram Message",
   fetch_message: "Reading The Telegram Message",
@@ -177,6 +188,8 @@ export const WRITE_TOOLS = new Set([
   "google_calendar_create_event",
   "google_calendar_update_event",
   "google_calendar_delete_event",
+  // Gmail
+  "gmail_send_message",
   // n8n
   "n8n_create_workflow",
   "n8n_update_workflow",
@@ -209,6 +222,7 @@ export const WRITE_TOOLS_LABELS: Record<string, string> = {
   google_calendar_create_event: "Creates a new Google Calendar event",
   google_calendar_update_event: "Updates a Google Calendar event",
   google_calendar_delete_event: "Deletes a Google Calendar event",
+  gmail_send_message: "Sends an email via Gmail",
   n8n_create_workflow: "Creates a new n8n workflow",
   n8n_update_workflow: "Updates an existing n8n workflow",
   n8n_delete_workflow: "Deletes an n8n workflow",
