@@ -1,4 +1,6 @@
-import { HashRouter, Navigate, Route, Routes } from "react-router-dom";
+import { HashRouter, Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { navigationRef } from "./shared/lib/navigationref";
 import { Login } from "./pages/Login";
 import { Sidebarprovider } from "./shared/components/layout/Sidebarprovider";
 import { Chat } from "./pages/Chat";
@@ -30,11 +32,22 @@ import { Aivideoanalyse } from "./pages/Aivideoanalyse";
 import { Usage } from "./pages/Usage";
 import { Memory } from "./pages/Memory";
 
+const NavigationRefSetter = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    navigationRef.navigate = navigate;
+  }, [navigate]);
+
+  return null;
+};
+
 function App() {
   return (
     <QueryClientProvider client={datafetch}>
       <HashRouter>
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+          <NavigationRefSetter />
           <Routes>
             //Default Route
             <Route index element={<Navigate to="/login" replace />} />

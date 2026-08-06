@@ -1,4 +1,5 @@
 import axios from "axios";
+import { navigationRef } from "../lib/navigationref";
 
 const backendUrl =
   import.meta.env.VITE_BACKEND_URL ||
@@ -37,7 +38,11 @@ Server.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 401 && typeof window !== "undefined" && (window as any).api) {
       await (window as any).api.logout();
-      window.location.hash = "/";
+      if (navigationRef.navigate) {
+        navigationRef.navigate("/login", { replace: true });
+      } else {
+        window.location.hash = "/";
+      }
     }
 
     if (error.response?.status === 429 && typeof window !== "undefined") {
