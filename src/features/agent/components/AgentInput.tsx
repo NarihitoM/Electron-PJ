@@ -75,6 +75,13 @@ export const AgentInput = () => {
     abortControllerRef.current = controller;
     const messageText = store.input;
     lastSentInputRef.current = messageText;
+    // Capture the prior conversation before it's cleared below — the
+    // workflow needs it as context (e.g. "add 2 to your previous answer").
+    // Cap to the most recent exchanges so the context window isn't blown out.
+    const priorHistory = store.history
+      .filter((m: any) => m.role === "user" || m.role === "assistant")
+      .slice(-20)
+      .map((m: any) => ({ role: m.role, content: m.content }));
     store.setWorkflowloading(true);
     store.setMessageloading(true);
     store.setHistory([]);
@@ -95,6 +102,7 @@ export const AgentInput = () => {
     storeAgentMessage({ role: "user", content: messageText, name: "" });
 
     const initialMessages: { role: string; content: string }[] = [
+      ...priorHistory,
       { role: "user", content: messageText },
     ];
 

@@ -155,64 +155,83 @@ const runDeepAgentWithEvents = async (
   const activeSubagentRuns = new Map<string, Attribution>();
 
   const consumeStream = async (stream: any) => {
-    for await (const chunk of withInactivityTimeout(stream, NODE_INACTIVITY_TIMEOUT_MS, nodeName)) {
-      if (controller.signal.aborted) break;
-      const eventType = chunk.event;
-      const { name: attributedNode, baseDepth } = currentAttribution();
+    try {
+      for await (const chunk of withInactivityTimeout(
+        stream,
+        NODE_INACTIVITY_TIMEOUT_MS,
+        nodeName,
+      )) {
+        if (controller.signal.aborted) break;
+        const eventType = chunk.event;
+        const { name: attributedNode, baseDepth } = currentAttribution();
 
-      if (eventType === "on_chain_start") {
-        chainDepth++;
-        event.reply("node-chain-start", {
-          nodeName: attributedNode,
-          name: chunk.name,
-          id: chunk.run_id,
-        });
-      } else if (eventType === "on_chain_end") {
-        chainDepth--;
-        event.reply("node-chain-end", {
-          nodeName: attributedNode,
-          name: chunk.name,
-          id: chunk.run_id,
-        });
-      } else if (eventType === "on_chat_model_stream") {
-        const text = chunk.data?.chunk?.content;
-        if (text) {
-          // relDepth 1 → outer graph chain (ignore raw)
-          // relDepth 2 → main model generation → node-stream (output)
-          // relDepth >= 3 → nested reasoning/tool-call → node-thinking
-          const relDepth = chainDepth - baseDepth;
-          if (relDepth > 2) {
-            event.reply("node-thinking", { nodeName: attributedNode, chunk: text });
-          } else {
-            event.reply("node-stream", { nodeName: attributedNode, chunk: text });
+        if (eventType === "on_chain_start") {
+          chainDepth++;
+          event.reply("node-chain-start", {
+            nodeName: attributedNode,
+            name: chunk.name,
+            id: chunk.run_id,
+          });
+        } else if (eventType === "on_chain_end") {
+          chainDepth--;
+          event.reply("node-chain-end", {
+            nodeName: attributedNode,
+            name: chunk.name,
+            id: chunk.run_id,
+          });
+        } else if (eventType === "on_chat_model_stream") {
+          const text = chunk.data?.chunk?.content;
+          if (text) {
+            // relDepth 1 → outer graph chain (ignore raw)
+            // relDepth 2 → main model generation → node-stream (output)
+            // relDepth >= 3 → nested reasoning/tool-call → node-thinking
+            const relDepth = chainDepth - baseDepth;
+            if (relDepth > 2) {
+              event.reply("node-thinking", { nodeName: attributedNode, chunk: text });
+            } else {
+              event.reply("node-stream", { nodeName: attributedNode, chunk: text });
+            }
           }
-        }
-      } else if (eventType === "on_tool_start") {
-        event.reply("node-tool-call", { nodeName: attributedNode, toolName: chunk.name });
-        if (chunk.name === "task") {
-          const subagentName = extractSubagentName(chunk.data?.input);
-          if (subagentName) {
-            const entry: Attribution = { name: subagentName, baseDepth: chainDepth };
-            activeSubagentRuns.set(chunk.run_id, entry);
-            attributionStack.push(entry);
-            event.reply("node-start", { nodeName: subagentName });
+        } else if (eventType === "on_tool_start") {
+          event.reply("node-tool-call", { nodeName: attributedNode, toolName: chunk.name });
+          if (chunk.name === "task") {
+            const subagentName = extractSubagentName(chunk.data?.input);
+            if (subagentName) {
+              const entry: Attribution = { name: subagentName, baseDepth: chainDepth };
+              activeSubagentRuns.set(chunk.run_id, entry);
+              attributionStack.push(entry);
+              event.reply("node-start", { nodeName: subagentName });
+            }
           }
-        }
-      } else if (eventType === "on_tool_end") {
-        if (chunk.name === "task") {
-          const entry = activeSubagentRuns.get(chunk.run_id);
-          if (entry) {
-            activeSubagentRuns.delete(chunk.run_id);
-            const idx = attributionStack.lastIndexOf(entry);
-            if (idx !== -1) attributionStack.splice(idx, 1);
-            event.reply("node-finished", { nodeName: entry.name });
+        } else if (eventType === "on_tool_end") {
+          if (chunk.name === "task") {
+            const entry = activeSubagentRuns.get(chunk.run_id);
+            if (entry) {
+              activeSubagentRuns.delete(chunk.run_id);
+              const idx = attributionStack.lastIndexOf(entry);
+              if (idx !== -1) attributionStack.splice(idx, 1);
+              event.reply("node-finished", { nodeName: entry.name });
+            }
           }
+          event.reply("node-tool-finished", {
+            nodeName: currentAttribution().name,
+            toolName: chunk.name,
+            status: "success",
+          });
         }
-        event.reply("node-tool-finished", {
-          nodeName: currentAttribution().name,
-          toolName: chunk.name,
-          status: "success",
-        });
+      }
+    } finally {
+      // A stream can end abruptly mid-delegation — the HITL approval
+      // interrupt short-circuits the sub-agent's chain without emitting
+      // `on_tool_end`/`on_chain_end` for it — leaving stale attribution
+      // entries behind. If they aren't popped, the orchestrator's
+      // post-resume reply chunks get attributed to the sub-agent node
+      // (as node-thinking) and the orchestrator's canvas output stays
+      // empty even though the model produced real output tokens.
+      for (const [runId, entry] of activeSubagentRuns) {
+        activeSubagentRuns.delete(runId);
+        const idx = attributionStack.lastIndexOf(entry);
+        if (idx !== -1) attributionStack.splice(idx, 1);
       }
     }
   };
@@ -240,6 +259,11 @@ const runDeepAgentWithEvents = async (
       decisions.push({ type: approved ? "approve" : "reject" });
     }
 
+    // Each streamEvents call starts a fresh top-level chain execution, so
+    // chainDepth must be reset — otherwise the post-interrupt stream's
+    // chunks sit at a leftover depth offset and misclassify the
+    // orchestrator's reply as nested "thinking" instead of output.
+    chainDepth = 0;
     stream = agent.streamEvents(
       new Command({
         resume: { decisions },
