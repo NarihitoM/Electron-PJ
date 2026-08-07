@@ -104,7 +104,9 @@ export const chatauth = {
         try {
           const errBody = await response.json();
           errorMsg = errBody.message || errorMsg;
-        } catch {}
+        } catch {
+          // response body wasn't valid JSON, fall back to the generic message
+        }
         throw new Error(errorMsg);
       }
       if (!response.body)
@@ -114,7 +116,7 @@ export const chatauth = {
       const decoder = new TextDecoder();
       let buffer = "";
 
-      while (true) {
+      for (;;) {
         const { value, done } = await reader.read();
         if (done) break;
 
@@ -168,6 +170,10 @@ export const chatauth = {
         ...(limit !== undefined ? { limit } : {}),
       },
     });
+    return response.data;
+  },
+  getconnections: async (): Promise<{ success: boolean; data: Record<string, boolean> }> => {
+    const response = await Server.get("/chat/api/connections");
     return response.data;
   },
 };

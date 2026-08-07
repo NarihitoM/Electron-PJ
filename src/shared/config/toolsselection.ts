@@ -162,6 +162,75 @@ export const ToolLabels: Record<string, string> = {
 export const toolToRole = (toolId: string): string =>
   ToolLabels[toolId] ? `${ToolLabels[toolId]} Agent` : "";
 
+// Service key -> its tool-id/label map, used to build the connection-gated
+// tool dropdown in the Agent canvas (grouped by connected service).
+export const SERVICE_TOOLS: Record<string, Record<string, string>> = {
+  gmail: Googlegmailtool,
+  slack: Slacktool,
+  discord: Discordtool,
+  notion: Notiontool,
+  github: Githubtool,
+  n8n: N8ntool,
+  telegram: Telegramtool,
+  googlesheet: Googlesheettool,
+  googledocs: Googledocstool,
+  googlecalendar: Googlecalendartool,
+};
+
+const GENERIC_TOOL_IDS = new Set(Object.keys(Chattool));
+
+// Flattened tool-id -> owning-service lookup (excludes generic ids like
+// web_search/image_generation that every service map also carries).
+export const SERVICE_TOOL_MAP: Record<string, string> = Object.entries(SERVICE_TOOLS).reduce(
+  (acc, [service, tools]) => {
+    for (const toolId of Object.keys(tools)) {
+      if (!GENERIC_TOOL_IDS.has(toolId)) acc[toolId] = service;
+    }
+    return acc;
+  },
+  {} as Record<string, string>,
+);
+
+export const SERVICE_GROUP_LABELS: Record<string, string> = {
+  gmail: "Gmail",
+  slack: "Slack",
+  discord: "Discord",
+  notion: "Notion",
+  github: "GitHub",
+  n8n: "n8n",
+  telegram: "Telegram",
+  googlesheet: "Google Sheets",
+  googledocs: "Google Docs",
+  googlecalendar: "Google Calendar",
+};
+
+// Same brand icon URLs used on the sidebar/service pages (Navigationroute.ts).
+export const SERVICE_ICONS: Record<string, string> = {
+  gmail: "https://upload.wikimedia.org/wikipedia/commons/7/7e/Gmail_icon_%282020%29.svg",
+  slack: "https://cdn.worldvectorlogo.com/logos/slack-new-logo.svg",
+  discord: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
+  notion: "https://upload.wikimedia.org/wikipedia/commons/4/45/Notion_app_logo.png",
+  github: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
+  n8n: "https://n8n.io/favicon.ico",
+  telegram: "https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg",
+  googlesheet:
+    "https://upload.wikimedia.org/wikipedia/commons/3/30/Google_Sheets_logo_%282014-2020%29.svg",
+  googledocs:
+    "https://upload.wikimedia.org/wikipedia/commons/0/01/Google_Docs_logo_%282014-2020%29.svg",
+  googlecalendar:
+    "https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg",
+};
+
+// A node's `tool` field stores one representative tool id per connected
+// service (the whole service's toolset resolves as a bucket either way —
+// see electron/tools/toolsregister.ts), so display it by service name
+// instead of that one action's specific label.
+export const getToolDisplayLabel = (toolId: string): string => {
+  if (ToolLabels[toolId]) return ToolLabels[toolId];
+  const service = SERVICE_TOOL_MAP[toolId];
+  return service ? SERVICE_GROUP_LABELS[service] : toolId;
+};
+
 export const WRITE_TOOLS = new Set([
   // Telegram
   "send_message",

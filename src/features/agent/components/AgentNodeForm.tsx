@@ -18,20 +18,31 @@ import {
   getProviderImage,
   getProviderModels,
 } from "@/shared/config/providermodels";
-import { ToolLabels } from "@/shared/config/toolsselection";
+import {
+  ToolLabels,
+  SERVICE_TOOLS,
+  SERVICE_TOOL_MAP,
+  SERVICE_GROUP_LABELS,
+  SERVICE_ICONS,
+  getToolDisplayLabel,
+} from "@/shared/config/toolsselection";
 import { useagentstore } from "../store/store";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { agentauth } from "../api/api";
 import { useCreateAgentNode } from "../hooks/useCreateAgentNode";
 import { useDeleteAgentNode } from "../hooks/useDeleteAgentNode";
+import { useConnections } from "../hooks/useConnections";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
+type ToolEntry = { key: string; label: string; group?: string; icon?: string };
+
 export const AgentNodeForm = () => {
   const store = useagentstore();
   const { data: Api = [] } = useServiceKeys();
+  const { data: connections = {} } = useConnections();
   const queryClient = useQueryClient();
   const { mutateAsync: createAgentNode } = useCreateAgentNode();
   const { mutateAsync: deleteAgentNode } = useDeleteAgentNode();
@@ -53,6 +64,29 @@ export const AgentNodeForm = () => {
     ...item,
     imageUrl: BRAND_ASSETS[item.provider.toLowerCase()],
   }));
+
+  // A node with a service tool gets that service's ENTIRE toolset at
+  // runtime (electron/tools/toolsregister.ts resolves the whole bucket, not
+  // just the one picked action), so the dropdown offers one entry per
+  // connected service rather than one per individual action.
+  const toolEntries: ToolEntry[] = [
+    ...Object.entries(ToolLabels)
+      .filter(([key]) => !(key === "send_email" && connections.gmail))
+      .map(([key, label]) => ({ key, label })),
+    ...Object.entries(SERVICE_GROUP_LABELS)
+      .filter(([service]) => connections[service])
+      .map(([service, group]) => {
+        const serviceToolIds = Object.keys(SERVICE_TOOLS[service]).filter(
+          (key) => SERVICE_TOOL_MAP[key] === service,
+        );
+        return {
+          key: serviceToolIds[0],
+          label: group,
+          group: "Connected Services",
+          icon: SERVICE_ICONS[service],
+        };
+      }),
+  ];
 
   useEffect(() => {
     if (!open) return;
@@ -256,11 +290,21 @@ export const AgentNodeForm = () => {
                     onClick={() => store.setToolOpen(!store.toolOpen)}
                     className="w-full justify-between"
                   >
-                    {isOrchestrator
-                      ? "Delegates to sub-agents"
-                      : store.tool
-                        ? ToolLabels[store.tool]
-                        : "Select tool..."}
+                    {isOrchestrator ? (
+                      "Delegates to sub-agents"
+                    ) : store.tool ? (
+                      <span className="flex items-center gap-2">
+                        {SERVICE_TOOL_MAP[store.tool] && (
+                          <img
+                            src={SERVICE_ICONS[SERVICE_TOOL_MAP[store.tool]]}
+                            className="w-4 h-4 shrink-0 object-contain"
+                          />
+                        )}
+                        {getToolDisplayLabel(store.tool)}
+                      </span>
+                    ) : (
+                      "Select tool..."
+                    )}
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                   {store.toolOpen && !isOrchestrator && (
@@ -290,33 +334,50 @@ export const AgentNodeForm = () => {
                             Orchestrator
                           </button>
                         )}
-                        {Object.entries(ToolLabels).filter(([, label]) =>
-                          label.toLowerCase().includes(toolSearch.toLowerCase()),
-                        ).length === 0
-                          ? !"orchestrator".includes(toolSearch.toLowerCase()) && (
+                        {(() => {
+                          const filtered = toolEntries.filter((t) =>
+                            t.label.toLowerCase().includes(toolSearch.toLowerCase()),
+                          );
+                          if (
+                            filtered.length === 0 &&
+                            !"orchestrator".includes(toolSearch.toLowerCase())
+                          ) {
+                            return (
                               <p className="py-6 text-center text-sm text-muted-foreground">
                                 No tool found.
                               </p>
-                            )
-                          : Object.entries(ToolLabels)
-                              .filter(([, label]) =>
-                                label.toLowerCase().includes(toolSearch.toLowerCase()),
-                              )
-                              .map(([key, label]) => (
+                            );
+                          }
+                          let lastGroup: string | undefined;
+                          return filtered.map((t) => {
+                            const showHeader = t.group && t.group !== lastGroup;
+                            lastGroup = t.group;
+                            return (
+                              <div key={t.key}>
+                                {showHeader && (
+                                  <div className="px-2 pt-2 pb-1 text-xs font-medium text-muted-foreground">
+                                    {t.group}
+                                  </div>
+                                )}
                                 <button
-                                  key={key}
                                   type="button"
                                   onClick={() => {
-                                    store.setTool(key);
-                                    store.setActor(label);
+                                    store.setTool(t.key);
+                                    store.setActor(t.label);
                                     store.setToolOpen(false);
                                     setToolSearch("");
                                   }}
                                   className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
                                 >
-                                  {label}
+                                  {t.icon && (
+                                    <img src={t.icon} className="w-4 h-4 shrink-0 object-contain" />
+                                  )}
+                                  {t.label}
                                 </button>
-                              ))}
+                              </div>
+                            );
+                          });
+                        })()}
                       </div>
                     </div>
                   )}

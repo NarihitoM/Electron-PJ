@@ -8,7 +8,11 @@ import {
   DropdownMenuTrigger,
 } from "@/shared/components/ui/dropdown-menu";
 import { BRAND_ASSETS } from "@/shared/config/providermodels";
-import { ToolLabels } from "@/shared/config/toolsselection";
+import {
+  getToolDisplayLabel,
+  SERVICE_TOOL_MAP,
+  SERVICE_ICONS,
+} from "@/shared/config/toolsselection";
 import ThinkingBlock from "@/shared/components/ui/ThinkingBlock";
 import AiContent from "@/shared/components/layout/LayoutAiresponse";
 import { useagentstore } from "../store/store";
@@ -131,8 +135,14 @@ const AgentFlowNode = memo(({ data }: NodeProps<Node<AgentFlowNodeData>>) => {
 
       {/* Tools chip */}
       {agent.tool && (
-        <div className="px-2.5 pb-1.5 -mt-1 text-[11px]">
-          <span className="text-green-500">{ToolLabels[agent.tool] || agent.tool}</span>
+        <div className="px-2.5 pb-1.5 -mt-1 text-[11px] flex items-center gap-1">
+          {SERVICE_TOOL_MAP[agent.tool] && (
+            <img
+              src={SERVICE_ICONS[SERVICE_TOOL_MAP[agent.tool]]}
+              className="w-3 h-3 shrink-0 object-contain"
+            />
+          )}
+          <span className="text-green-500">{getToolDisplayLabel(agent.tool)}</span>
         </div>
       )}
 
