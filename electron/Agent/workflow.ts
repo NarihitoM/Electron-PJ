@@ -50,6 +50,35 @@ async function* withInactivityTimeout(
   }
 }
 
+// The chainDepth-based attribution in consumeStream classifies live stream
+// chunks by nesting depth heuristics, which can misattribute a node's
+// post-delegation reply (e.g. an Orchestrator's summary after its sub-agent's
+// "task" tool call returns) so it never lands on that node's canvas output —
+// even though the model demonstrably produced real text (non-zero output
+// tokens). This reads the actual final AI message straight out of the
+// agent's resolved state as an authoritative fallback, independent of
+// whichever stream chunks got attributed where.
+function extractFinalText(finalState: any): string {
+  const messages = finalState?.values?.messages;
+  if (!messages?.length) return "";
+
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i] as any;
+    if (!AIMessage.isInstance(m)) continue;
+    const content = m.content;
+    if (typeof content === "string") {
+      if (content.trim()) return content;
+    } else if (Array.isArray(content)) {
+      const text = content
+        .filter((c: any) => c?.type === "text" && c.text)
+        .map((c: any) => c.text)
+        .join("");
+      if (text.trim()) return text;
+    }
+  }
+  return "";
+}
+
 function extractTokenUsage(finalState: any): { inputTokens: number; outputTokens: number } {
   const messages = finalState?.values?.messages;
   if (!messages?.length) return { inputTokens: 0, outputTokens: 0 };
@@ -221,7 +250,7 @@ const runDeepAgentWithEvents = async (
   }
 
   const finalState = await agent.getState(config);
-  event.reply("node-finished", { nodeName });
+  event.reply("node-finished", { nodeName, finalText: extractFinalText(finalState) });
   return { finalState };
 };
 

@@ -158,9 +158,6 @@ export interface AgentClientState {
   modelOpen: boolean;
   setModelOpen: (v: boolean) => void;
 
-  servicesOpen: boolean;
-  setServicesOpen: (v: boolean) => void;
-
   copiedIndex: number | null;
   setCopiedIndex: (v: number | null) => void;
   lightboxImages: string[];

@@ -116,7 +116,12 @@ export const AgentChat = () => {
       if (finishedNode) {
         const outputText = finishedNode.output || "";
         const thinkingText = finishedNode.thinking || "";
-        const finalContent = outputText || thinkingText;
+        // finalText comes straight from the agent's resolved state (see
+        // extractFinalText in workflow.ts) and is authoritative — live
+        // stream-chunk attribution can miss a node's reply (e.g. an
+        // Orchestrator's summary after a sub-agent's task call returns)
+        // even though the model produced real output tokens.
+        const finalContent: string = data.finalText || outputText || thinkingText;
         if (finalContent) {
           const msg: Record<string, any> = {
             role: "assistant",

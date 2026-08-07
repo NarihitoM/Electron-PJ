@@ -1,12 +1,14 @@
 import { Button } from "@/shared/components/ui/button";
 import { Badge } from "@/shared/components/ui/badge";
 import { Bot } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useagentstore } from "../store/store";
 
 export const AgentChatHeader = () => {
   const { data: Api = [] } = useServiceKeys();
   const store = useagentstore();
+  const navigate = useNavigate();
 
   const onAddNode = () => {
     store.setNodeDialogMode("create");
@@ -15,7 +17,7 @@ export const AgentChatHeader = () => {
   };
 
   const onAddProvider = () => {
-    store.setServicesOpen(true);
+    navigate("/app/settings");
   };
 
   return (

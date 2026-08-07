@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ReactFlow,
   Background,
@@ -70,6 +71,7 @@ function computePosition(
 
 export const FlowCanvas = () => {
   const store = useagentstore();
+  const navigate = useNavigate();
   /* Stable action references — prevents infinite loop from `store` being a new ref every render */
   const setFlowEdges = useagentstore((s) => s.setFlowEdges);
   const setNodePositions = useagentstore((s) => s.setNodePositions);
@@ -435,8 +437,8 @@ export const FlowCanvas = () => {
   }, [store]);
 
   const onAddProvider = useCallback(() => {
-    store.setServicesOpen(true);
-  }, [store]);
+    navigate("/app/settings");
+  }, [navigate]);
 
   /* ── Loading state ── */
   if (isLoading) {

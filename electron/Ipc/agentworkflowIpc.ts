@@ -2,9 +2,48 @@ import { ipcMain } from "electron";
 import { runAgentOrchestration } from "../Agent/workflow";
 import { getusertoken } from "./authIpc";
 import { MemorySaver } from "@langchain/langgraph";
+import { AIMessage, HumanMessage } from "@langchain/core/messages";
 import { Server } from "../../src/shared/config/axioconfig";
 
 let currentAbortController: AbortController | null = null;
+
+function messageText(m: any): string {
+  if (!m) return "";
+  const content = m.content;
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content
+      .filter((c: any) => c?.type === "text" && c.text)
+      .map((c: any) => c.text)
+      .join("");
+  }
+  return "";
+}
+
+async function saveWorkflowMemory(
+  messages: any[],
+  nodes: any[],
+  token: string | null,
+): Promise<void> {
+  try {
+    const lastUser = [...messages].reverse().find((m) => HumanMessage.isInstance(m));
+    const lastAi = [...messages].reverse().find((m) => AIMessage.isInstance(m));
+    const recentText = `${messageText(lastUser)}\n${messageText(lastAi)}`.trim();
+    if (!recentText) return;
+
+    const primaryNode =
+      nodes.find((n: any) => n.actor?.trim().toLowerCase() === "orchestrator") || nodes[0];
+    if (!primaryNode) return;
+
+    await Server.post(
+      "/memory/api/extract",
+      { provider: primaryNode.provider, model: primaryNode.model, recentText },
+      { headers: token ? { Authorization: `Bearer ${token}` } : {} },
+    );
+  } catch (err) {
+    console.error("Failed to save workflow memory:", err);
+  }
+}
 
 async function logUsageToServer(usageData: any[], token: string | null) {
   if (!usageData.length) {
@@ -82,7 +121,7 @@ export const RunAgent = () => {
     };
 
     try {
-      const { usageData } = await runAgentOrchestration(
+      const { messages, usageData } = await runAgentOrchestration(
         event,
         nodes,
         useremail,
@@ -98,6 +137,7 @@ export const RunAgent = () => {
       );
       console.log("Workflow Completed");
       await logUsageToServer(usageData, token);
+      await saveWorkflowMemory(messages, nodes, token);
     } catch (error) {
       if ((error as any)?.name === "AbortError") {
         console.log("Workflow aborted by user");

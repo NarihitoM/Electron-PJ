@@ -70,9 +70,6 @@ export const useagentstore = create<AgentClientState>((set, get) => ({
   modelOpen: false,
   setModelOpen: (modelOpen) => set({ modelOpen }),
 
-  servicesOpen: false,
-  setServicesOpen: (servicesOpen) => set({ servicesOpen }),
-
   copiedIndex: null,
   setCopiedIndex: (copiedIndex) => set({ copiedIndex }),
   lightboxImages: [],

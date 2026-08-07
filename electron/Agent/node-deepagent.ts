@@ -73,6 +73,7 @@ const buildOrchestratorSystemPrompt = (
     `You are ${nodeConfig.actor}.\n\n` +
     (nodeConfig.systemPrompt ? `${nodeConfig.systemPrompt}\n\n` : "") +
     `You have NO tools of your own. You cannot browse, run commands, read files, or take any direct action yourself. Your only job is to delegate to the sub-agents below using the "task" tool, with subagent_type set to the exact name of the sub-agent to use. Never claim you performed an action yourself — always call "task" first, then report back what the sub-agent returned.\n\n` +
+    `MANDATORY: after a "task" call returns, you MUST immediately send a normal text reply summarizing or presenting the sub-agent's result to the user — do not end your turn with no message. The sub-agent's raw result is never shown to the user directly; only your own reply is visible to them. An empty final response means the user sees nothing at all, even though the sub-agent finished its work.\n\n` +
     `Available sub-agents:\n${roster}` +
     memoryBlock
   );
