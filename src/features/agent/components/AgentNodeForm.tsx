@@ -70,9 +70,7 @@ export const AgentNodeForm = () => {
   // just the one picked action), so the dropdown offers one entry per
   // connected service rather than one per individual action.
   const toolEntries: ToolEntry[] = [
-    ...Object.entries(ToolLabels)
-      .filter(([key]) => !(key === "send_email" && connections.gmail))
-      .map(([key, label]) => ({ key, label })),
+    ...Object.entries(ToolLabels).map(([key, label]) => ({ key, label })),
     ...Object.entries(SERVICE_GROUP_LABELS)
       .filter(([service]) => connections[service])
       .map(([service, group]) => {

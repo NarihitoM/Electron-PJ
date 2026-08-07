@@ -155,7 +155,6 @@ export const ToolLabels: Record<string, string> = {
   browser_agent: "Browser",
   read_file: "Read File",
   write_file: "Write File",
-  send_email: "Send Email",
   http_request: "HTTP Request",
 };
 
@@ -269,7 +268,6 @@ export const WRITE_TOOLS = new Set([
   // LocalAgent
   "run_command",
   "write_file",
-  "send_email",
   "http_request",
 ]);
 
@@ -301,6 +299,5 @@ export const WRITE_TOOLS_LABELS: Record<string, string> = {
   n8n_trigger_workflow: "Triggers an n8n workflow execution",
   run_command: "Runs a shell command on your system",
   write_file: "Writes content to a file on your system",
-  send_email: "Sends an email",
   http_request: "Makes an HTTP request to an external URL",
 };

@@ -4,7 +4,6 @@ import { webscraper } from "./webscraptool";
 import { websearch } from "./websearchtool";
 import { readfiletool } from "./readfiletool";
 import { writefiletool } from "./writefiletool";
-import { emailtool } from "./emailtool";
 import { httptool } from "./httptool";
 import {
   gmailTools,
@@ -26,7 +25,6 @@ export const toolRegistry: Record<string, any> = {
   "Web Scraper Agent": [webscraper],
   "Browser Agent": [browser_agent],
   "Utility Agent": [readfiletool, writefiletool],
-  "Email Agent": [emailtool],
   "HTTP Agent": [httptool],
   "Gmail Agent": gmailTools,
   "Slack Agent": slackTools,
@@ -64,7 +62,6 @@ export function getRegistryKey(toolId: string): string | undefined {
     browser_agent: "Browser Agent",
     read_file: "Utility Agent",
     write_file: "Utility Agent",
-    send_email: "Email Agent",
     http_request: "HTTP Agent",
   };
   return map[toolId];

@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from "@/shared/components/ui/sheet";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useAgentNodes } from "@/features/agent/hooks/useAgentNodes";
 import { useResetAgentMessages } from "@/features/agent/hooks/useResetAgentMessages";
@@ -21,12 +22,6 @@ import { useStoreAgentMessage } from "../hooks/useStoreAgentMessage";
 import { voiceauth } from "@/features/voice/api/api";
 import { AgentChatArea } from "./AgentChatArea";
 import { useUser } from "@/features/auth/hooks/useUser";
-import { useEmailCreds } from "@/features/email/hooks/useEmailCreds";
-import { useSaveEmailCreds } from "@/features/email/hooks/useSaveEmailCreds";
-import { useRemoveEmailCreds } from "@/features/email/hooks/useRemoveEmailCreds";
-import { Label } from "@/shared/components/ui/label";
-import { Input } from "@/shared/components/ui/input";
-import { CheckCircle2, XCircle, Mail, Eye, EyeOff } from "lucide-react";
 
 export const AgentInput = () => {
   const { data: Api = [] } = useServiceKeys();
@@ -36,6 +31,7 @@ export const AgentInput = () => {
   const { data: userdata } = useUser();
   const fetchAgentMessages = useAgentMessages();
   const { mutate: storeAgentMessage } = useStoreAgentMessage();
+  const navigate = useNavigate();
 
   const agents = nodesData ?? [];
 
@@ -55,26 +51,6 @@ export const AgentInput = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const lastSentInputRef = useRef("");
-
-  // Email service state
-  const { data: emailCreds, isLoading: loadingEmail } = useEmailCreds();
-  const saveEmailCreds = useSaveEmailCreds();
-  const removeEmailCreds = useRemoveEmailCreds();
-  const [showEmailForm, setShowEmailForm] = useState(false);
-  const [emailHost, setEmailHost] = useState("");
-  const [emailPort, setEmailPort] = useState("587");
-  const [emailUser, setEmailUser] = useState("");
-  const [emailPass, setEmailPass] = useState("");
-  const [showEmailPass, setShowEmailPass] = useState(false);
-
-  useEffect(() => {
-    if (emailCreds?.exists && emailCreds?.data) {
-      setEmailHost(emailCreds.data.smtp_host);
-      setEmailPort(String(emailCreds.data.smtp_port));
-      setEmailUser(emailCreds.data.smtp_user);
-      setEmailPass(emailCreds.data.smtp_pass);
-    }
-  }, [emailCreds]);
 
   useEffect(() => {
     return () => abortControllerRef.current?.abort();
@@ -290,167 +266,15 @@ export const AgentInput = () => {
           )}
           <div className="flex items-center justify-between gap-2 mt-2">
             <div className="flex items-center gap-2">
-              <Sheet open={store.servicesOpen} onOpenChange={store.setServicesOpen}>
-                <SheetTrigger asChild>
-                  <Button size="icon" className="bg-cyan-500 dark:bg-white rounded-full">
-                    <Settings size={14} />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-100 sm:w-135 overflow-y-auto">
-                  <SheetHeader className="px-5 pt-5">
-                    <SheetTitle>Services</SheetTitle>
-                    <SheetDescription>
-                      Configure external services for your MultiAgents.
-                    </SheetDescription>
-                  </SheetHeader>
-
-                  <div className="px-5 mt-6 space-y-6">
-                    {/* ── Integrations ── */}
-                    <div>
-                      <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-                        Integrations
-                      </h3>
-                      <div className="rounded-lg border p-3">
-                        {/* Email */}
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                              <Mail className="w-4 h-4" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-medium">Email (SMTP)</p>
-                              <p className="text-xs text-muted-foreground truncate">
-                                {loadingEmail
-                                  ? "Checking..."
-                                  : emailCreds?.exists
-                                    ? `Connected: ${emailCreds.data?.smtp_user}`
-                                    : "Not configured"}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            {emailCreds?.exists ? (
-                              <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                            ) : (
-                              <XCircle className="w-4 h-4 text-muted-foreground shrink-0" />
-                            )}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setShowEmailForm(!showEmailForm)}
-                              className="whitespace-nowrap"
-                            >
-                              {emailCreds?.exists ? "Edit" : "Configure"}
-                            </Button>
-                            {emailCreds?.exists && (
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={async () => {
-                                  try {
-                                    await removeEmailCreds.mutateAsync();
-                                    toast.success("Email credentials removed.");
-                                    setShowEmailForm(false);
-                                  } catch {
-                                    toast.error("Failed to remove email credentials.");
-                                  }
-                                }}
-                                disabled={removeEmailCreds.isPending}
-                                className="whitespace-nowrap"
-                              >
-                                {removeEmailCreds.isPending ? <Spinner /> : "Disconnect"}
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Email form */}
-                        {showEmailForm && (
-                          <div className="mt-4 space-y-3 border-t pt-4">
-                            <div className="grid grid-cols-3 gap-3">
-                              <div className="col-span-2 flex flex-col gap-1">
-                                <Label className="text-xs">SMTP Host</Label>
-                                <Input
-                                  placeholder="smtp.gmail.com"
-                                  value={emailHost}
-                                  onChange={(e) => setEmailHost(e.target.value)}
-                                  className="h-9 text-sm"
-                                />
-                              </div>
-                              <div className="flex flex-col gap-1">
-                                <Label className="text-xs">Port</Label>
-                                <Input
-                                  placeholder="587"
-                                  value={emailPort}
-                                  onChange={(e) => setEmailPort(e.target.value)}
-                                  className="h-9 text-sm"
-                                />
-                              </div>
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <Label className="text-xs">Email / Username</Label>
-                              <Input
-                                placeholder="user@gmail.com"
-                                value={emailUser}
-                                onChange={(e) => setEmailUser(e.target.value)}
-                                className="h-9 text-sm"
-                              />
-                            </div>
-                            <div className="flex flex-col gap-1">
-                              <Label className="text-xs">Password</Label>
-                              <div className="relative">
-                                <Input
-                                  type={showEmailPass ? "text" : "password"}
-                                  placeholder="App password"
-                                  value={emailPass}
-                                  onChange={(e) => setEmailPass(e.target.value)}
-                                  className="h-9 text-sm pr-9"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => setShowEmailPass(!showEmailPass)}
-                                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                                >
-                                  {showEmailPass ? (
-                                    <EyeOff className="w-4 h-4" />
-                                  ) : (
-                                    <Eye className="w-4 h-4" />
-                                  )}
-                                </button>
-                              </div>
-                            </div>
-                            <Button
-                              size="sm"
-                              className="bg-cyan-500 dark:bg-white w-full"
-                              onClick={async () => {
-                                if (!emailHost || !emailPort || !emailUser || !emailPass) {
-                                  toast.error("All fields are required.");
-                                  return;
-                                }
-                                try {
-                                  await saveEmailCreds.mutateAsync({
-                                    smtp_host: emailHost,
-                                    smtp_port: parseInt(emailPort, 10) || 587,
-                                    smtp_user: emailUser,
-                                    smtp_pass: emailPass,
-                                  });
-                                  toast.success("Email credentials saved.");
-                                  setShowEmailForm(false);
-                                } catch {
-                                  toast.error("Failed to save email credentials.");
-                                }
-                              }}
-                              disabled={saveEmailCreds.isPending}
-                            >
-                              {saveEmailCreds.isPending ? <Spinner /> : "Save"}
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
+              <Button
+                size="icon"
+                variant="outline"
+                className="rounded-full"
+                title="Service Settings"
+                onClick={() => navigate("/app/settings")}
+              >
+                <Settings size={14} />
+              </Button>
               <Sheet open={historyOpen} onOpenChange={onHistoryOpenChange}>
                 <SheetTrigger asChild>
                   <Button className="bg-cyan-500 dark:bg-white rounded-full">History</Button>
