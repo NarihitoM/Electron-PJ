@@ -23,13 +23,12 @@ MultimateAi is a desktop application that orchestrates AI agents across multiple
 
 ### Core Features
 
-- **Multi-Agent Workflow** — Chain multiple AI models to solve complex tasks in sequence, range, or simultaneously
+- **Multi-Agent Workflow** — Build agent workflows on a node-based canvas, with an Orchestrator node that delegates to connected sub-agent nodes (or run them in sequence, range, or simultaneously)
 - **Service Integrations** — Slack, Telegram, Discord, GitHub, Notion, N8n, Google Sheets, Google Docs, Google Calendar, Gmail
 - **AI Chat** — Chat with any supported AI model (OpenAI, Anthropic, Gemini, Groq, DeepSeek, Mistral, Ollama, OpenRouter, Z.AI)
 - **Discord** — Connect a bot, list guild channels, read history, send messages, and schedule cron messages
 - **GitHub** — Manage repos, issues, pull requests, notifications, and commit files directly via the agent
 - **Video Analysis** — Upload videos, transcribe, and generate AI-powered summaries
-- **Email Automation** — Send emails via SMTP with AI-generated content
 - **Usage Analytics** — Track token usage, costs, and activity across providers
 - **Scheduling** — Cron-based message scheduling for Telegram, Slack, and Discord
 - **Voice Input** — Record and transcribe voice messages
