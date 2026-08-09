@@ -8,6 +8,7 @@ import { ImageLightbox } from "@/shared/components/ImageLightbox";
 import { Toaster } from "@/shared/components/ui/sonner";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
+import AiContent from "@/shared/components/layout/LayoutAiresponse";
 import { AgentChatHeader } from "./AgentChatHeader";
 import { FlowCanvas } from "./FlowCanvas";
 import { AgentInput } from "./AgentInput";
@@ -311,16 +312,12 @@ export const AgentChat = () => {
             {subAgentReport && (
               <div className="min-w-0 space-y-1 rounded-md border p-3">
                 <p className="text-sm font-medium">{subAgentReport.name}</p>
-                <p className="whitespace-pre-wrap text-sm text-foreground">
-                  {subAgentReport.content}
-                </p>
+                <AiContent content={subAgentReport.content} />
               </div>
             )}
             <div className="min-w-0 space-y-1 rounded-md border p-3">
               <p className="text-sm font-medium">{orchestratorReport?.name || "Orchestrator"}</p>
-              <p className="whitespace-pre-wrap text-sm text-foreground">
-                {orchestratorReport?.content}
-              </p>
+              <AiContent content={orchestratorReport?.content || ""} />
             </div>
           </div>
         </DialogContent>
