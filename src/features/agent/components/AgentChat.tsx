@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useagentstore } from "../store/store";
 import { useAgentMessages } from "../hooks/useAgentMessages";
@@ -7,6 +7,13 @@ import { ToolApprovalDialog } from "@/shared/components/layout/ToolApprovalDialo
 import { ImageLightbox } from "@/shared/components/ImageLightbox";
 import { Toaster } from "@/shared/components/ui/sonner";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/shared/components/ui/dialog";
 import { AgentChatHeader } from "./AgentChatHeader";
 import { FlowCanvas } from "./FlowCanvas";
 import { AgentInput } from "./AgentInput";
@@ -17,6 +24,10 @@ export const AgentChat = () => {
   const queryClient = useQueryClient();
   const fetchAgentMessages = useAgentMessages();
   const { mutate: storeAgentMessage } = useStoreAgentMessage();
+  const [orchestratorReport, setOrchestratorReport] = useState<{
+    name: string;
+    content: string;
+  } | null>(null);
 
   useEffect(() => {
     return () => {
@@ -74,12 +85,15 @@ export const AgentChat = () => {
       const finishedNode = targetNode
         ? {
             name: targetNode.name,
+            actor: targetNode.actor,
             output: targetNode.output || "",
             thinking: targetNode.thinking || "",
             provider: targetNode.provider,
             model: targetNode.model,
           }
         : null;
+
+      let workflowJustEnded = false;
 
       store.setNodes((prev) => {
         if (store.workflowGenRef.current !== gen) return prev;
@@ -89,6 +103,7 @@ export const AgentChat = () => {
         );
 
         const isWorkflowStillRunning = updatedNodes.some((n) => n.status === "running");
+        workflowJustEnded = !isWorkflowStillRunning;
 
         if (!isWorkflowStillRunning) {
           // The workflow as a whole has ended — clear every node's status/
@@ -142,6 +157,10 @@ export const AgentChat = () => {
             provider: finishedNode.provider,
             model: finishedNode.model,
           });
+
+          if (workflowJustEnded && finishedNode.actor?.trim().toLowerCase() === "orchestrator") {
+            setOrchestratorReport({ name: finishedNode.name, content: finalContent });
+          }
         }
       }
     };
@@ -272,6 +291,19 @@ export const AgentChat = () => {
         open={store.lightboxOpen}
         onOpenChange={store.setLightboxOpen}
       />
+      <Dialog
+        open={orchestratorReport !== null}
+        onOpenChange={(open) => !open && setOrchestratorReport(null)}
+      >
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{orchestratorReport?.name || "Orchestrator"} Report</DialogTitle>
+            <DialogDescription className="whitespace-pre-wrap text-foreground">
+              {orchestratorReport?.content}
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
