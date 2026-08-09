@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useagentstore } from "../store/store";
 import { useAgentMessages } from "../hooks/useAgentMessages";
@@ -7,13 +7,7 @@ import { ToolApprovalDialog } from "@/shared/components/layout/ToolApprovalDialo
 import { ImageLightbox } from "@/shared/components/ImageLightbox";
 import { Toaster } from "@/shared/components/ui/sonner";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/shared/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/shared/components/ui/dialog";
 import { AgentChatHeader } from "./AgentChatHeader";
 import { FlowCanvas } from "./FlowCanvas";
 import { AgentInput } from "./AgentInput";
@@ -28,6 +22,10 @@ export const AgentChat = () => {
     name: string;
     content: string;
   } | null>(null);
+  const [subAgentReport, setSubAgentReport] = useState<{ name: string; content: string } | null>(
+    null,
+  );
+  const lastSubAgentReportRef = useRef<{ name: string; content: string } | null>(null);
 
   useEffect(() => {
     return () => {
@@ -158,7 +156,12 @@ export const AgentChat = () => {
             model: finishedNode.model,
           });
 
-          if (workflowJustEnded && finishedNode.actor?.trim().toLowerCase() === "orchestrator") {
+          const isOrchestrator = finishedNode.actor?.trim().toLowerCase() === "orchestrator";
+          if (!isOrchestrator) {
+            lastSubAgentReportRef.current = { name: finishedNode.name, content: finalContent };
+          }
+          if (workflowJustEnded && isOrchestrator) {
+            setSubAgentReport(lastSubAgentReportRef.current);
             setOrchestratorReport({ name: finishedNode.name, content: finalContent });
           }
         }
@@ -293,15 +296,33 @@ export const AgentChat = () => {
       />
       <Dialog
         open={orchestratorReport !== null}
-        onOpenChange={(open) => !open && setOrchestratorReport(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setOrchestratorReport(null);
+            setSubAgentReport(null);
+          }
+        }}
       >
-        <DialogContent className="max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{orchestratorReport?.name || "Orchestrator"} Report</DialogTitle>
-            <DialogDescription className="whitespace-pre-wrap text-foreground">
-              {orchestratorReport?.content}
-            </DialogDescription>
+            <DialogTitle>Workflow Report</DialogTitle>
           </DialogHeader>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {subAgentReport && (
+              <div className="min-w-0 space-y-1 rounded-md border p-3">
+                <p className="text-sm font-medium">{subAgentReport.name}</p>
+                <p className="whitespace-pre-wrap text-sm text-foreground">
+                  {subAgentReport.content}
+                </p>
+              </div>
+            )}
+            <div className="min-w-0 space-y-1 rounded-md border p-3">
+              <p className="text-sm font-medium">{orchestratorReport?.name || "Orchestrator"}</p>
+              <p className="whitespace-pre-wrap text-sm text-foreground">
+                {orchestratorReport?.content}
+              </p>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>
