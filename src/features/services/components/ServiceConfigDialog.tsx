@@ -285,7 +285,7 @@ export const ServiceConfigDialog = ({
             <img
               src={info.icon}
               alt={info.name}
-              className="w-8 h-8 rounded bg-white dark:bg-card object-contain"
+              className="w-8 h-8 rounded bg-white dark:bg-card object-contain dark:invert"
             />
             <div>
               <DialogTitle>Connect {info.name}</DialogTitle>

@@ -37,7 +37,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
-type ToolEntry = { key: string; label: string; group?: string; icon?: string };
+type ToolEntry = { key: string; label: string; group?: string; icon?: string; service?: string };
 
 export const AgentNodeForm = () => {
   const store = useagentstore();
@@ -82,6 +82,7 @@ export const AgentNodeForm = () => {
           label: group,
           group: "Connected Services",
           icon: SERVICE_ICONS[service],
+          service,
         };
       }),
   ];
@@ -295,7 +296,7 @@ export const AgentNodeForm = () => {
                         {SERVICE_TOOL_MAP[store.tool] && (
                           <img
                             src={SERVICE_ICONS[SERVICE_TOOL_MAP[store.tool]]}
-                            className="w-4 h-4 shrink-0 object-contain"
+                            className={`w-4 h-4 shrink-0 object-contain ${SERVICE_TOOL_MAP[store.tool] === "github" ? "dark:invert" : ""}`}
                           />
                         )}
                         {getToolDisplayLabel(store.tool)}
@@ -368,7 +369,10 @@ export const AgentNodeForm = () => {
                                   className="w-full flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm hover:bg-accent cursor-pointer"
                                 >
                                   {t.icon && (
-                                    <img src={t.icon} className="w-4 h-4 shrink-0 object-contain" />
+                                    <img
+                                      src={t.icon}
+                                      className={`w-4 h-4 shrink-0 object-contain ${t.service === "github" ? "dark:invert" : ""}`}
+                                    />
                                   )}
                                   {t.label}
                                 </button>

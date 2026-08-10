@@ -2,7 +2,7 @@ import { useRef, useState, useEffect } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Spinner } from "@/shared/components/ui/spinner";
-import { ArrowUp, Mic, Square, Settings } from "lucide-react";
+import { ArrowUp, Mic, Square, Settings, Bot } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -11,6 +11,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/shared/components/ui/sheet";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
@@ -35,9 +36,39 @@ export const AgentInput = () => {
 
   const agents = nodesData ?? [];
 
+  // When the canvas has more than one Orchestrator node, only one graph can
+  // run per message — the user picks which via the select below.
+  const orchestratorNodes = agents.filter((n) => n.actor?.trim().toLowerCase() === "orchestrator");
+  const activeOrchestratorId =
+    orchestratorNodes.length > 1
+      ? (store.activeOrchestratorId ?? orchestratorNodes[0]?.id ?? null)
+      : null;
+
+  useEffect(() => {
+    if (orchestratorNodes.length <= 1) {
+      if (store.activeOrchestratorId !== null) store.setActiveOrchestratorId(null);
+      return;
+    }
+    if (!orchestratorNodes.some((n) => n.id === store.activeOrchestratorId)) {
+      store.setActiveOrchestratorId(orchestratorNodes[0].id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orchestratorNodes.map((n) => n.id).join(",")]);
+
+  // Exclude every Orchestrator node other than the selected one so the run
+  // only ever targets one Orchestrator's graph.
+  const otherOrchestratorIds = new Set(
+    orchestratorNodes.filter((n) => n.id !== activeOrchestratorId).map((n) => n.id),
+  );
+  const runnableAgents = otherOrchestratorIds.size
+    ? agents.filter((n) => !otherOrchestratorIds.has(n.id))
+    : agents;
+
   // An Orchestrator node with no edges connecting it to any other node has
   // nothing to delegate to and would just error out if run.
-  const orchestratorNode = agents.find((n) => n.actor?.trim().toLowerCase() === "orchestrator");
+  const orchestratorNode = runnableAgents.find(
+    (n) => n.actor?.trim().toLowerCase() === "orchestrator",
+  );
   const orchestratorNeedsSubagents =
     !!orchestratorNode &&
     !store.flowEdges.some(
@@ -63,8 +94,10 @@ export const AgentInput = () => {
     }
     if (!store.input.trim() || store.messageloading) return;
 
-    const hasOrchestrator = agents.some((n) => n.actor?.trim().toLowerCase() === "orchestrator");
-    if (agents.length > 1 && !hasOrchestrator) {
+    const hasOrchestrator = runnableAgents.some(
+      (n) => n.actor?.trim().toLowerCase() === "orchestrator",
+    );
+    if (runnableAgents.length > 1 && !hasOrchestrator) {
       toast.info("No Orchestrator agent found", {
         description:
           'Add a node with Role set to "Orchestrator" to have it delegate to the other nodes automatically.',
@@ -109,27 +142,32 @@ export const AgentInput = () => {
     // ── Compute execution order from React Flow edges ──
     // Edges are keyed by each node's real DB id (names can repeat), so the
     // graph algorithms below must match on id too, not name.
-    const hasEdges = store.flowEdges.length > 0;
+    const runEdges = otherOrchestratorIds.size
+      ? store.flowEdges.filter(
+          (e) => !otherOrchestratorIds.has(e.source) && !otherOrchestratorIds.has(e.target),
+        )
+      : store.flowEdges;
+    const hasEdges = runEdges.length > 0;
     const isLoop =
       hasEdges &&
       hasCycle(
-        agents.map((n) => n.id),
-        store.flowEdges,
+        runnableAgents.map((n) => n.id),
+        runEdges,
       );
-    let runningNodes: typeof agents;
+    let runningNodes: typeof runnableAgents;
 
     if (hasEdges && !isLoop) {
       // Topological sort: determine execution order from edge direction
       const sorted = topologicalSort(
-        agents.map((n) => n.id),
-        store.flowEdges,
+        runnableAgents.map((n) => n.id),
+        runEdges,
       );
       runningNodes = sorted
-        .map((id) => agents.find((n) => n.id === id))
-        .filter(Boolean) as typeof agents;
+        .map((id) => runnableAgents.find((n) => n.id === id))
+        .filter(Boolean) as typeof runnableAgents;
     } else {
       // No edges or loop = all nodes run simultaneously / continuous
-      runningNodes = agents;
+      runningNodes = runnableAgents;
     }
 
     const useremail = userdata?.useremail ?? "";
@@ -142,7 +180,7 @@ export const AgentInput = () => {
       useremail,
       simultaneous: !hasEdges || isLoop,
       continuous: isLoop,
-      edges: store.flowEdges,
+      edges: runEdges,
     });
     store.setInput("");
   };
@@ -237,6 +275,30 @@ export const AgentInput = () => {
 
   return (
     <div className="w-full mx-auto max-w-5xl">
+      {orchestratorNodes.length > 1 && (
+        <div className="flex justify-end mb-2">
+          <Select
+            value={activeOrchestratorId ?? undefined}
+            onValueChange={(val) => store.setActiveOrchestratorId(val ?? null)}
+          >
+            <SelectTrigger className="w-56" title="Choose which Orchestrator to run">
+              <Bot className="w-4 h-4 text-cyan-500 dark:text-white shrink-0" />
+              <span className="truncate">
+                {orchestratorNodes.find((n) => n.id === activeOrchestratorId)?.name ??
+                  "Choose Orchestrator"}
+              </span>
+            </SelectTrigger>
+            <SelectContent>
+              {orchestratorNodes.map((n) => (
+                <SelectItem key={n.id} value={n.id}>
+                  <Bot className="w-4 h-4 text-cyan-500 dark:text-white shrink-0" />
+                  {n.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
       <div className="bg-card rounded-2xl border p-3 shadow-lg">
         <div className="relative flex flex-col">
           <Textarea

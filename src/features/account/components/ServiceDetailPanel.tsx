@@ -319,7 +319,7 @@ export const ServiceDetailPanel = () => {
                 return (
                   <>
                     {svc.icon ? (
-                      <img src={svc.icon} className="h-5 w-5 object-contain" alt="" />
+                      <img src={svc.icon} className="h-5 w-5 object-contain dark:invert" alt="" />
                     ) : (
                       <GoogleIcon />
                     )}
@@ -667,6 +667,7 @@ export const ServiceDetailPanel = () => {
                     <img
                       src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg"
                       alt="icon"
+                      className="dark:invert"
                     />
                   </div>
                   <div className="flex flex-col text-left">
@@ -689,6 +690,7 @@ export const ServiceDetailPanel = () => {
                       <img
                         src="https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg"
                         alt="icon"
+                        className="dark:invert"
                       />
                     </div>
                     <GithubForm

@@ -125,6 +125,9 @@ export const useagentstore = create<AgentClientState>((set, get) => ({
   pendingEdgeInsert: null,
   setPendingEdgeInsert: (pendingEdgeInsert) => set({ pendingEdgeInsert }),
 
+  activeOrchestratorId: null,
+  setActiveOrchestratorId: (activeOrchestratorId) => set({ activeOrchestratorId }),
+
   updateHistory: (updater) => set((state) => ({ history: updater(state.history) })),
   updateSessionMessages: (updater) => set((state) => ({ history: updater(state.history) })),
 }));

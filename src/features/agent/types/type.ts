@@ -202,6 +202,10 @@ export interface AgentClientState {
   pendingEdgeInsert: { edgeId: string; source: string; target: string } | null;
   setPendingEdgeInsert: (v: { edgeId: string; source: string; target: string } | null) => void;
 
+  /** Which Orchestrator node's graph to run, when the canvas has more than one */
+  activeOrchestratorId: string | null;
+  setActiveOrchestratorId: (v: string | null) => void;
+
   resetForm: () => void;
   updateHistory: (updater: (prev: agentsession[]) => agentsession[]) => void;
   updateSessionMessages: (updater: (prev: agentsession[]) => agentsession[]) => void;

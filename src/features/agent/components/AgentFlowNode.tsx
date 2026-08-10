@@ -139,7 +139,7 @@ const AgentFlowNode = memo(({ data }: NodeProps<Node<AgentFlowNodeData>>) => {
           {SERVICE_TOOL_MAP[agent.tool] && (
             <img
               src={SERVICE_ICONS[SERVICE_TOOL_MAP[agent.tool]]}
-              className="w-3 h-3 shrink-0 object-contain"
+              className={`w-3 h-3 shrink-0 object-contain ${SERVICE_TOOL_MAP[agent.tool] === "github" ? "dark:invert" : ""}`}
             />
           )}
           <span className="text-green-500">{getToolDisplayLabel(agent.tool)}</span>

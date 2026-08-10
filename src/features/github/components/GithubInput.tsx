@@ -336,7 +336,9 @@ export const GithubInput = () => {
               disabled={!store.provider || loadinggithub}
             >
               <SelectTrigger>
-                {store.repoid && <img src={BRAND_SERVICE["github"]} className="w-4 h-4 shrink-0" />}
+                {store.repoid && (
+                  <img src={BRAND_SERVICE["github"]} className="w-4 h-4 shrink-0 dark:invert" />
+                )}
                 <span className="truncate">
                   {store.repoid ? selectedReponame.substring(0, 15) + "..." : "Select Repos"}
                 </span>
@@ -344,7 +346,7 @@ export const GithubInput = () => {
               <SelectContent className="p-1 w-60">
                 {repos.map((m: any) => (
                   <SelectItem key={m.id} value={m.full_name}>
-                    <img src={BRAND_SERVICE["github"]} className="w-4 h-4 shrink-0" />
+                    <img src={BRAND_SERVICE["github"]} className="w-4 h-4 shrink-0 dark:invert" />
                     {m.full_name}
                   </SelectItem>
                 ))}

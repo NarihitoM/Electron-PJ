@@ -23,7 +23,7 @@ export const ServiceCard = ({ service, onClick }: ServiceCardProps) => {
     >
       <CardHeader className="px-4 pt-4 pb-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 dark:bg-white rounded-lg shrink-0">
+          <div className="p-2 bg-white rounded-lg shrink-0">
             {service.icon ? (
               <img src={service.icon} className="h-5 w-5 object-contain" alt={service.name} />
             ) : (
