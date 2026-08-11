@@ -444,7 +444,7 @@ export const ServiceApiKeyList = () => {
             if (value) setSelectedProvider(value);
           }}
         >
-          <SelectTrigger className="w-full max-w-md">
+          <SelectTrigger className="w-60">
             <SelectValue placeholder="Select provider">
               {selectedProvider && (
                 <div className="flex items-center gap-2">

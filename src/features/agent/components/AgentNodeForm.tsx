@@ -11,7 +11,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Spinner } from "@/shared/components/ui/spinner";
-import { ChevronsUpDown, Plus, Search } from "lucide-react";
+import { ChevronsUpDown, Paperclip, Plus, Search } from "lucide-react";
 import {
   BRAND_ASSETS,
   getProviderDisplayName,
@@ -32,7 +32,7 @@ import { agentauth } from "../api/api";
 import { useCreateAgentNode } from "../hooks/useCreateAgentNode";
 import { useDeleteAgentNode } from "../hooks/useDeleteAgentNode";
 import { useConnections } from "../hooks/useConnections";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
@@ -49,6 +49,8 @@ export const AgentNodeForm = () => {
   const navigate = useNavigate();
   const [loadingnode, setLoadingnode] = useState(false);
   const [toolSearch, setToolSearch] = useState("");
+  const [promptDragging, setPromptDragging] = useState(false);
+  const promptFileInputRef = useRef<HTMLInputElement>(null);
   const [modelSearch, setModelSearch] = useState("");
 
   const mode = store.nodeDialogMode;
@@ -59,6 +61,18 @@ export const AgentNodeForm = () => {
     if (isOrchestrator && store.tool) store.setTool("");
     // eslint-disable-next-line react-hooks/exhaustive-deps -- store is a zustand hook, its identity is unstable and must not retrigger this effect
   }, [isOrchestrator]);
+
+  const loadPromptFile = (file: File | undefined) => {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".md")) {
+      toast.error("Only .md files are supported");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => store.setPrompt(String(reader.result ?? ""));
+    reader.onerror = () => toast.error("Failed to read file");
+    reader.readAsText(file);
+  };
 
   const apiWithLogos = Api.map((item: any) => ({
     ...item,
@@ -207,13 +221,47 @@ export const AgentNodeForm = () => {
               )}
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="prompt">Prompt</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="prompt">Prompt</Label>
+                <button
+                  type="button"
+                  title="Attach a .md file"
+                  onClick={() => promptFileInputRef.current?.click()}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Paperclip className="w-3.5 h-3.5" />
+                </button>
+                <input
+                  ref={promptFileInputRef}
+                  type="file"
+                  accept=".md"
+                  className="hidden"
+                  onChange={(e) => {
+                    loadPromptFile(e.target.files?.[0]);
+                    e.target.value = "";
+                  }}
+                />
+              </div>
               <Textarea
                 id="prompt"
-                placeholder={mode === "create" ? "Enter Agent Prompt" : "Enter New Agent Prompt"}
-                className="resize-none h-20"
+                placeholder={
+                  mode === "create"
+                    ? "Enter Agent Prompt, or drop a .md file"
+                    : "Enter New Agent Prompt, or drop a .md file"
+                }
+                className={`resize-none h-20 transition-colors ${promptDragging ? "border-cyan-500 ring-1 ring-cyan-500" : ""}`}
                 value={store.prompt}
                 onChange={(e) => store.setPrompt(e.target.value)}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setPromptDragging(true);
+                }}
+                onDragLeave={() => setPromptDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setPromptDragging(false);
+                  loadPromptFile(e.dataTransfer.files?.[0]);
+                }}
               />
             </div>
             <div className="flex gap-2">

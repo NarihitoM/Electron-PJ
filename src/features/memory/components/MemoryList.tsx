@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/shared/components/ui/card";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { Button } from "@/shared/components/ui/button";
 import { Spinner } from "@/shared/components/ui/spinner";
+import { Skeleton } from "@/shared/components/ui/skeleton";
 import {
   Pagination,
   PaginationContent,
@@ -77,6 +78,29 @@ export const MemoryList = () => {
       }
     }
   };
+
+  if (!data && isFetching) {
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between px-1">
+          <Skeleton className="h-3 w-28" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+        {Array.from({ length: 5 }, (_, i) => (
+          <Card key={i} className="border border-transparent bg-card shadow-none p-4 rounded-2xl">
+            <CardContent className="p-0 flex items-start gap-3">
+              <Skeleton className="w-8 h-8 rounded-lg shrink-0" />
+              <div className="flex-1 min-w-0 space-y-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-3 w-20" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   if (totalCount === 0) {
     return (
