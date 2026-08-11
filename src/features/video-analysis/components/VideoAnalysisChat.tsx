@@ -92,13 +92,22 @@ export const VideoAnalysisChat = () => {
       store.setsummary(null);
       store.settimestamps([]);
       store.setloadingupload(true);
-      const response = await videoauth.videoupload(state.videoFile!);
-      const publicVideoUrl = response.data?.url;
-      if (!response.success || !publicVideoUrl) {
-        toast.error(response.message || "Fail to upload video");
+      const response = await videoauth.videouploadviasupabase(state.videoFile?.name ?? "");
+      const { path, token } = response.data ?? {};
+      if (!path || !token) {
+        toast.error("Fail to upload video");
         store.setloadingupload(false);
         return;
       }
+      try {
+        await videoauth.videoupload(path, token, state.videoFile!);
+      } catch {
+        toast.error("Fail to upload video");
+        store.setloadingupload(false);
+        return;
+      }
+      const supabaseUrl = import.meta.env.VITE_SUPABASE || "";
+      const publicVideoUrl = `${supabaseUrl}/storage/v1/object/public/Multimatevideo/${path}`;
       store.setloadingupload(false);
       const result = await videoTranscriptMutation.mutateAsync({
         url: publicVideoUrl,

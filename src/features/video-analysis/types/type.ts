@@ -19,7 +19,9 @@ export interface returndata {
 }
 
 export interface returnsignurl {
-  url: string;
+  uploadUrl: string;
+  path: string;
+  token: string;
 }
 
 export interface Apiresponse<T = void> {
