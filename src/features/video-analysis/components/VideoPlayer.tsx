@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Spinner } from "@/shared/components/ui/spinner";
-import { RefreshCw, ChevronsUpDown, Search } from "lucide-react";
+import { RefreshCw, ChevronsUpDown, Search, FileWarning } from "lucide-react";
 import { getProviderImage } from "@/shared/config/providermodels";
 import { videoauthstore } from "@/features/video-analysis/store/store";
 
 export const VideoPlayer = () => {
   const [modelSearch, setModelSearch] = useState("");
+  const [previewUnsupported, setPreviewUnsupported] = useState(false);
   const {
     videoSrc,
     videoFile,
@@ -26,11 +27,28 @@ export const VideoPlayer = () => {
 
   return (
     <div className="relative w-full h-full flex flex-col group gap-4">
-      <video
-        src={videoSrc!}
-        controls
-        className="rounded-lg w-full h-80 border dark:border-muted-foreground bg-black"
-      />
+      {previewUnsupported ? (
+        <div className="rounded-lg w-full h-80 border dark:border-muted-foreground bg-black flex flex-col items-center justify-center gap-2 text-zinc-400">
+          <FileWarning size={28} />
+          <p className="text-sm">Preview isn't supported for this video's codec (e.g. HEVC).</p>
+          <p className="text-xs text-zinc-500">
+            Analysis will still work — this only affects the preview.
+          </p>
+        </div>
+      ) : (
+        <video
+          src={videoSrc!}
+          controls
+          preload="auto"
+          // Chromium paints a black frame for a freshly-loaded local video
+          // until it seeks once — nudge it so the first frame actually shows.
+          onLoadedData={(e) => {
+            if (e.currentTarget.currentTime === 0) e.currentTarget.currentTime = 0.01;
+          }}
+          onError={() => setPreviewUnsupported(true)}
+          className="rounded-lg w-full h-80 border dark:border-muted-foreground bg-black"
+        />
+      )}
       <div className="w-full flex flex-col gap-3 border-t dark:border-zinc-800 pt-3 px-2">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-sm min-w-0 flex-1 truncate">
@@ -40,7 +58,9 @@ export const VideoPlayer = () => {
             >
               {videoFile?.name}
             </span>
-            <span className="shrink-0">{(videoFile?.size! / (1024 * 1024)).toFixed(1)} MB</span>
+            <span className="shrink-0">
+              {((videoFile?.size ?? 0) / (1024 * 1024)).toFixed(1)} MB
+            </span>
             <span className="shrink-0 uppercase bg-cyan-500 dark:bg-white px-1.5 py-0.5 rounded text-[10px] font-sans font-bold text-white dark:text-black border border-transparent">
               {videoFile?.type.split("/")[1] || "video"}
             </span>

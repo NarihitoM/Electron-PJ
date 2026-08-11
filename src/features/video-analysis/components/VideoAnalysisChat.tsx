@@ -28,10 +28,12 @@ export const VideoAnalysisChat = () => {
     if (ApiKeys.length > 0) {
       store.setApi(ApiKeys);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- store is a zustand hook, its identity is unstable and must not retrigger this effect
   }, [ApiKeys]);
 
   useEffect(() => {
     store.setisPending(videoTranscriptMutation.isPending);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- store is a zustand hook, its identity is unstable and must not retrigger this effect
   }, [videoTranscriptMutation.isPending]);
 
   useEffect(() => {
@@ -48,6 +50,7 @@ export const VideoAnalysisChat = () => {
         store.setModel(models[0].model);
       }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- store is a zustand hook, its identity is unstable and must not retrigger this effect
   }, [provider]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -89,24 +92,10 @@ export const VideoAnalysisChat = () => {
       store.setsummary(null);
       store.settimestamps([]);
       store.setloadingupload(true);
-      const response = await videoauth.videouploadviasupabase(state.videoFile?.name!);
-      const uploadurl = response.data?.uploadUrl;
-      if (!uploadurl) {
-        toast.error("Fail to upload video");
-        store.setloadingupload(false);
-        return;
-      }
-      const data = await videoauth.videoupload(uploadurl!, state.videoFile);
-      if (!data || !data.Key) {
-        toast.error("File is too large. Allowed only up to 50mb");
-        store.setloadingupload(false);
-        return;
-      }
-      const key = data.Key;
-      const supabaseUrl = import.meta.env.VITE_SUPABASE || "";
-      const publicVideoUrl = `${supabaseUrl}/storage/v1/object/public/${key}`;
-      if (!publicVideoUrl) {
-        toast.error("Fail to upload video");
+      const response = await videoauth.videoupload(state.videoFile!);
+      const publicVideoUrl = response.data?.url;
+      if (!response.success || !publicVideoUrl) {
+        toast.error(response.message || "Fail to upload video");
         store.setloadingupload(false);
         return;
       }
@@ -118,8 +107,8 @@ export const VideoAnalysisChat = () => {
       });
       if (result.success) {
         store.setanalysisError(false);
-        store.setsummary(result.data?.summary!);
-        store.settimestamps(result.data?.transcription!);
+        store.setsummary(result.data?.summary ?? null);
+        store.settimestamps(result.data?.transcription ?? []);
       }
     } catch (err: unknown) {
       store.setanalysisError(true);
@@ -139,6 +128,7 @@ export const VideoAnalysisChat = () => {
       handleClearVideo: handleClearVideo as (e: React.MouseEvent) => void,
       handleContainerClick,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handlers/store are re-created each render; this registers them once and reads latest state via getState() internally
   }, []);
 
   return (

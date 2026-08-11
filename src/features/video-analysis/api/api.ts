@@ -1,6 +1,5 @@
 import { Server } from "../../../shared/config/axioconfig";
 import { returnvideodata, returnvideourl } from "../types/type";
-import axios from "axios";
 
 export const videoauth = {
   videotranscript: async (
@@ -15,18 +14,10 @@ export const videoauth = {
     });
     return response.data;
   },
-  videouploadviasupabase: async (filename: string): Promise<returnvideourl> => {
-    const response = await Server.post("video/api/videoupload", {
-      filename,
-    });
-    return response.data;
-  },
-  videoupload: async (uploadurl: string, videoFile: File | null): Promise<{ Key: string }> => {
-    const response = await axios.put(uploadurl, videoFile, {
-      headers: {
-        "Content-Type": videoFile?.type || "video/mp4",
-      },
-    });
+  videoupload: async (videoFile: File): Promise<returnvideourl> => {
+    const form = new FormData();
+    form.append("video", videoFile);
+    const response = await Server.post("video/api/videoupload", form);
     return response.data;
   },
 };
