@@ -93,14 +93,14 @@ export const VideoAnalysisChat = () => {
       store.settimestamps([]);
       store.setloadingupload(true);
       const response = await videoauth.videouploadviasupabase(state.videoFile?.name ?? "");
-      const { path, token } = response.data ?? {};
-      if (!path || !token) {
+      const { uploadUrl, path } = response.data ?? {};
+      if (!uploadUrl || !path) {
         toast.error(response.message || "Fail to upload video");
         store.setloadingupload(false);
         return;
       }
       try {
-        await videoauth.videoupload(path, token, state.videoFile!);
+        await videoauth.videoupload(uploadUrl, state.videoFile!);
       } catch (uploadErr: unknown) {
         console.error("Video upload failed:", uploadErr);
         const message = uploadErr instanceof Error ? uploadErr.message : "Fail to upload video";
