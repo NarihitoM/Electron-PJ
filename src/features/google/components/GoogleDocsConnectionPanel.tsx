@@ -16,6 +16,10 @@ export const GoogleDocsConnectionPanel = () => {
   const store = googleauthstore();
 
   const adddocsurl = async () => {
+    if (!store.docsinput.trim()) {
+      toast.error("Please enter a Google Docs URL");
+      return;
+    }
     try {
       const response = await googleauth.addgoogledocsurl(store.docsinput);
       if (response.success) {
@@ -52,6 +56,7 @@ export const GoogleDocsConnectionPanel = () => {
         <DialogFooter>
           <Button
             onClick={adddocsurl}
+            disabled={!store.docsinput.trim()}
             className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
           >
             Add

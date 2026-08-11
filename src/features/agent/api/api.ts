@@ -99,16 +99,20 @@ export const agentauth = {
     return response.data;
   },
   Websearch: async (query: string): Promise<returnagentmessagefeedback> => {
+    if (!query.trim()) throw new Error("Search query is required");
     const response = await Server.post("/agent/api/websearch", {
       query,
     });
     return response.data;
   },
   FirecrawlScrape: async (url: string): Promise<any> => {
+    if (!url.trim()) throw new Error("URL is required");
     const response = await Server.post("/firecrawl/api/scrape", { url });
     return response.data;
   },
   FirecrawlInteract: async (url: string, prompt: string, sessionId?: string): Promise<any> => {
+    if (!url.trim()) throw new Error("URL is required");
+    if (!prompt.trim()) throw new Error("Prompt is required");
     const response = await Server.post("/firecrawl/api/interact", { url, prompt, sessionId });
     return response.data;
   },

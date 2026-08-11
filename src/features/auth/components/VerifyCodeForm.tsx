@@ -28,6 +28,10 @@ export const VerifyCodeForm = ({ stateid }: { stateid: string }) => {
   }, [timer]);
 
   const verifycodesignup = async () => {
+    if (code.length !== 6) {
+      toast.error("Please enter the 6-digit verification code");
+      return;
+    }
     try {
       setLoadingVerify(true);
       const data = await verifyCode({ stateid, code });
@@ -114,7 +118,7 @@ export const VerifyCodeForm = ({ stateid }: { stateid: string }) => {
       </div>
       <div className="flex gap-2 justify-end">
         <Button
-          disabled={loadingverify}
+          disabled={loadingverify || code.length !== 6}
           onClick={verifycodesignup}
           className="bg-cyan-500 dark:bg-white"
         >

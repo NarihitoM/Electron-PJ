@@ -17,6 +17,10 @@ export const GoogleSheetConnectionPanel = () => {
   const store = googleauthstore();
 
   const addsheetsheeturl = async () => {
+    if (!store.sheetinput.trim()) {
+      toast.error("Please enter a Google Sheet URL");
+      return;
+    }
     try {
       const response = await googleauth.addgooglesheeturl(store.sheetinput);
       if (response.success) {
@@ -53,7 +57,7 @@ export const GoogleSheetConnectionPanel = () => {
         <DialogFooter>
           <Button
             onClick={addsheetsheeturl}
-            disabled={store.loadingfetch_sheet}
+            disabled={store.loadingfetch_sheet || !store.sheetinput.trim()}
             className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
           >
             {" "}

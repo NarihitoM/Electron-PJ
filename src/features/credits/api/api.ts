@@ -13,6 +13,7 @@ export const creditApi = {
   },
 
   purchaseCredits: async (amount: number): Promise<{ success: boolean; message: string }> => {
+    if (!amount || amount <= 0) throw new Error("Amount must be a positive number");
     const response = await Server.post("/credits/purchase", { amount });
     return response.data;
   },

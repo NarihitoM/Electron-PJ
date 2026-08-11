@@ -15,6 +15,14 @@ export const ChangePasswordForm = ({ stateid }: { stateid: string }) => {
   const navigate = useNavigate();
 
   const handleChange = async () => {
+    if (!userpassword.trim()) {
+      toast.error("Password is required");
+      return;
+    }
+    if (userpassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
     try {
       setLoading(true);
       const data = await userauthapi.changepassword(stateid, userpassword);
@@ -66,7 +74,11 @@ export const ChangePasswordForm = ({ stateid }: { stateid: string }) => {
         />
       </div>
       <div className="flex gap-2 justify-end">
-        <Button disabled={loading} onClick={handleChange} className="bg-cyan-500 dark:bg-white">
+        <Button
+          disabled={loading || !userpassword.trim()}
+          onClick={handleChange}
+          className="bg-cyan-500 dark:bg-white"
+        >
           {loading ? <Spinner /> : "Change"}
         </Button>
         <Button

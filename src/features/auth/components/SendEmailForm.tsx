@@ -15,6 +15,11 @@ export const SendEmailForm = () => {
   const navigate = useNavigate();
 
   const verifycodeemail = async () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!useremail.trim() || !emailRegex.test(useremail)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
     try {
       setLoading(true);
       const data = await sendEmail(useremail);
@@ -57,7 +62,11 @@ export const SendEmailForm = () => {
         />
       </div>
       <div className="flex gap-2 justify-end">
-        <Button disabled={loading} onClick={verifycodeemail} className="bg-cyan-500 dark:bg-white">
+        <Button
+          disabled={loading || !useremail.trim()}
+          onClick={verifycodeemail}
+          className="bg-cyan-500 dark:bg-white"
+        >
           {loading ? <Spinner /> : "Send"}
         </Button>
         <Button

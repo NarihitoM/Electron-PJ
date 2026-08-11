@@ -119,6 +119,24 @@ export const AgentNodeForm = () => {
   }, [store.provider, open]);
 
   const onSubmit = async () => {
+    if (mode !== "delete") {
+      if (!store.name.trim()) {
+        toast.error("Agent name is required");
+        return;
+      }
+      if (!store.provider) {
+        toast.error("Please select a provider");
+        return;
+      }
+      if (!store.model) {
+        toast.error("Please select a model");
+        return;
+      }
+      if (!store.prompt.trim()) {
+        toast.error("Prompt is required");
+        return;
+      }
+    }
     setLoadingnode(true);
     try {
       if (mode === "create") {
@@ -518,7 +536,11 @@ export const AgentNodeForm = () => {
 
         <DialogFooter>
           <Button
-            disabled={loadingnode}
+            disabled={
+              loadingnode ||
+              (mode !== "delete" &&
+                (!store.name.trim() || !store.provider || !store.model || !store.prompt.trim()))
+            }
             onClick={onSubmit}
             className="bg-cyan-500 dark:bg-card-foreground dark:text-black"
           >

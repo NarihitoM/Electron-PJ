@@ -88,6 +88,10 @@ export const VideoAnalysisChat = () => {
       toast.error("Please select a provider and model first.");
       return;
     }
+    if (!state.videoFile) {
+      toast.error("Please select a video file first.");
+      return;
+    }
     try {
       store.setsummary(null);
       store.settimestamps([]);

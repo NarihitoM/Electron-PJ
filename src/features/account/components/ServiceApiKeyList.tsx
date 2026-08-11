@@ -67,6 +67,10 @@ const ProviderUI = ({ name, placeholder }: { name: string; placeholder: string }
   const [key, setkey] = useState("");
 
   const addkey = async () => {
+    if (!key.trim()) {
+      toast.error("API key is required");
+      return;
+    }
     try {
       const response = await addMutation.mutateAsync({ provider: name, key });
       if (response.success) {
@@ -148,7 +152,7 @@ const ProviderUI = ({ name, placeholder }: { name: string; placeholder: string }
           />
           <div className="flex flex-row gap-3">
             <Button
-              disabled={addMutation.isPending}
+              disabled={addMutation.isPending || !key.trim()}
               onClick={addkey}
               className="h-12 px-8 rounded-xl font-semibold shadow-lg bg-cyan-500 dark:bg-white shadow-primary/10 hover:shadow-primary/20 transition-all"
             >
@@ -218,6 +222,10 @@ const OllamaUI = () => {
   const savedConfig = Api?.find((s) => s.provider.toLowerCase() === "ollama");
 
   const addkey = async () => {
+    if (!host.trim()) {
+      toast.error("Host URL is required");
+      return;
+    }
     try {
       let resolvedHost = host || undefined;
 
@@ -327,7 +335,7 @@ const OllamaUI = () => {
 
         <div className="flex flex-row gap-3">
           <Button
-            disabled={addMutation.isPending || isTunneling}
+            disabled={addMutation.isPending || isTunneling || !host.trim()}
             onClick={addkey}
             className="h-12 px-8 rounded-xl font-semibold shadow-lg bg-cyan-500 dark:bg-white shadow-primary/10 hover:shadow-primary/20 transition-all"
           >

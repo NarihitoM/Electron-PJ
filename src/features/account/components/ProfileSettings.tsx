@@ -26,6 +26,7 @@ export const ProfileSettings = () => {
 
   useEffect(() => {
     if (userdata?.username) setUsername(userdata.username);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- setUsername is a stable zustand setter
   }, [userdata?.username]);
 
   useEffect(() => {
@@ -42,6 +43,14 @@ export const ProfileSettings = () => {
   };
 
   const handleSave = async () => {
+    if (!username.trim()) {
+      toast.error("Username is required");
+      return;
+    }
+    if (username.trim().length < 2) {
+      toast.error("Username must be at least 2 characters");
+      return;
+    }
     try {
       setLoadingupdate(true);
       const formdata = new FormData();
@@ -154,7 +163,9 @@ export const ProfileSettings = () => {
         {userdata?.authtype === "User" && (
           <Button
             onClick={handleSave}
-            disabled={(username === userdata?.username && !preview) || loadingupdate}
+            disabled={
+              (username === userdata?.username && !preview) || loadingupdate || !username.trim()
+            }
             className="bg-cyan-500 dark:bg-white"
           >
             {loadingupdate ? <Spinner /> : "Save Changes"}
