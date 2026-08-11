@@ -8,11 +8,11 @@ export const videoauth = {
     provider: string,
     model: string,
   ): Promise<returnvideodata> => {
-    const response = await Server.post("video/api/videotranscript", {
-      url,
-      provider,
-      model,
-    });
+    const response = await Server.post(
+      "video/api/videotranscript",
+      { url, provider, model },
+      { timeout: 0 },
+    );
     return response.data;
   },
   videouploadviasupabase: async (filename: string): Promise<returnvideourl> => {
