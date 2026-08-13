@@ -26,6 +26,7 @@ AGENTS.md
 *.njsproj
 *.sln
 *.sw?
+supabase
 
 # Husky auto-generated scripts
 .husky/_

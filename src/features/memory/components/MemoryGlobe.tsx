@@ -18,23 +18,78 @@ declare global {
   }
 }
 
-const RADIUS = 3.2;
+// Force-directed layout tuning, similar in spirit to Obsidian's graph view:
+// nodes repel each other, edges pull related nodes together, and a weak
+// center pull keeps the whole cluster from drifting off screen.
+const SPAWN_RADIUS = 3;
+const REPEL_STRENGTH = 0.8;
+const SPRING_LENGTH = 1.8;
+const SPRING_STRENGTH = 0.05;
+const CENTER_STRENGTH = 0.015;
+const DAMPING = 0.82;
+const SETTLE_TICKS = 220;
 
-// Fibonacci sphere: evenly distributes N points across a sphere's surface.
-const fibonacciSphere = (count: number) => {
-  const points: [number, number, number][] = [];
-  const goldenAngle = Math.PI * (3 - Math.sqrt(5));
-  for (let i = 0; i < count; i++) {
-    const y = 1 - (i / Math.max(count - 1, 1)) * 2;
-    const radiusAtY = Math.sqrt(1 - y * y);
-    const theta = goldenAngle * i;
-    points.push([
-      Math.cos(theta) * radiusAtY * RADIUS,
-      y * RADIUS,
-      Math.sin(theta) * radiusAtY * RADIUS,
-    ]);
-  }
-  return points;
+const useForceLayout = (count: number, edgePairs: [number, number][]) => {
+  const positionsRef = useRef<THREE.Vector3[]>([]);
+  const velocitiesRef = useRef<THREE.Vector3[]>([]);
+  const tickRef = useRef(0);
+
+  useMemo(() => {
+    positionsRef.current = Array.from({ length: count }, () => {
+      const r = SPAWN_RADIUS * (0.3 + Math.random() * 0.7);
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      return new THREE.Vector3(
+        r * Math.sin(phi) * Math.cos(theta),
+        r * Math.sin(phi) * Math.sin(theta),
+        r * Math.cos(phi),
+      );
+    });
+    velocitiesRef.current = Array.from({ length: count }, () => new THREE.Vector3());
+    tickRef.current = 0;
+  }, [count]);
+
+  const step = () => {
+    if (tickRef.current > SETTLE_TICKS) return;
+    tickRef.current += 1;
+
+    const pos = positionsRef.current;
+    const vel = velocitiesRef.current;
+    const n = pos.length;
+    if (n === 0) return;
+
+    const forces = pos.map(() => new THREE.Vector3());
+
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 1; j < n; j++) {
+        const delta = pos[i].clone().sub(pos[j]);
+        const distSq = Math.max(delta.lengthSq(), 0.01);
+        delta.normalize().multiplyScalar(REPEL_STRENGTH / distSq);
+        forces[i].add(delta);
+        forces[j].sub(delta);
+      }
+    }
+
+    edgePairs.forEach(([a, b]) => {
+      const delta = pos[b].clone().sub(pos[a]);
+      const dist = Math.max(delta.length(), 0.01);
+      const stretch = dist - SPRING_LENGTH;
+      delta.normalize().multiplyScalar(stretch * SPRING_STRENGTH);
+      forces[a].add(delta);
+      forces[b].sub(delta);
+    });
+
+    for (let i = 0; i < n; i++) {
+      forces[i].add(pos[i].clone().multiplyScalar(-CENTER_STRENGTH));
+    }
+
+    for (let i = 0; i < n; i++) {
+      vel[i].add(forces[i]).multiplyScalar(DAMPING);
+      pos[i].add(vel[i]);
+    }
+  };
+
+  return { positionsRef, step };
 };
 
 const Controls = () => {
@@ -48,8 +103,8 @@ const Controls = () => {
       enablePan={false}
       autoRotate
       autoRotateSpeed={0.6}
-      minDistance={4}
-      maxDistance={12}
+      minDistance={2}
+      maxDistance={22}
     />
   );
 };
@@ -59,7 +114,7 @@ const Stars = () => {
     const count = 800;
     const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      // spread stars in a large shell around the globe so they don't clip through it
+      // spread stars in a large shell around the graph so they don't clip through it
       const r = 15 + Math.random() * 35;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
@@ -80,56 +135,62 @@ const Stars = () => {
   );
 };
 
-const GlobeCore = () => (
-  <mesh>
-    <sphereGeometry args={[RADIUS * 0.55, 32, 32]} />
-    <meshBasicMaterial color="#06b6d4" wireframe transparent opacity={0.15} />
-  </mesh>
-);
-
 const Edges = ({
-  positionById,
-  similarity,
+  positionsRef,
+  edgePairs,
 }: {
-  positionById: Map<string, [number, number, number]>;
-  similarity: { id: string; relatedIds: string[] }[];
+  positionsRef: React.MutableRefObject<THREE.Vector3[]>;
+  edgePairs: [number, number][];
 }) => {
-  const geometry = useMemo(() => {
-    const points: THREE.Vector3[] = [];
-    // connect each memory to the other memories it's semantically related to (via embedding similarity)
-    similarity.forEach(({ id, relatedIds }) => {
-      const from = positionById.get(id);
-      if (!from) return;
-      relatedIds.forEach((relatedId) => {
-        const to = positionById.get(relatedId);
-        if (!to) return;
-        points.push(new THREE.Vector3(...from), new THREE.Vector3(...to));
-      });
-    });
-    return new THREE.BufferGeometry().setFromPoints(points);
-  }, [positionById, similarity]);
+  const geometryRef = useRef<THREE.BufferGeometry>(null);
+  const positionsArray = useMemo(
+    () => new Float32Array(edgePairs.length * 2 * 3),
+    [edgePairs.length],
+  );
 
-  if (isGeometryEmpty(geometry)) return null;
+  useFrame(() => {
+    const geom = geometryRef.current;
+    if (!geom) return;
+    const pos = positionsRef.current;
+    edgePairs.forEach(([a, b], i) => {
+      const pa = pos[a];
+      const pb = pos[b];
+      if (!pa || !pb) return;
+      const o = i * 6;
+      positionsArray[o] = pa.x;
+      positionsArray[o + 1] = pa.y;
+      positionsArray[o + 2] = pa.z;
+      positionsArray[o + 3] = pb.x;
+      positionsArray[o + 4] = pb.y;
+      positionsArray[o + 5] = pb.z;
+    });
+    const attr = geom.getAttribute("position") as THREE.BufferAttribute;
+    attr.needsUpdate = true;
+  });
+
+  if (edgePairs.length === 0) return null;
 
   return (
-    <lineSegments geometry={geometry}>
+    <lineSegments>
+      <bufferGeometry ref={geometryRef}>
+        <bufferAttribute attach="attributes-position" args={[positionsArray, 3]} />
+      </bufferGeometry>
       <lineBasicMaterial color="#06b6d4" transparent opacity={0.35} />
     </lineSegments>
   );
 };
 
-const isGeometryEmpty = (geometry: THREE.BufferGeometry) =>
-  (geometry.getAttribute("position")?.count ?? 0) === 0;
-
 const MemoryNode = ({
-  position,
+  index,
+  positionsRef,
   memory,
   onSelect,
   onHover,
   highlighted,
   dimmed,
 }: {
-  position: [number, number, number];
+  index: number;
+  positionsRef: React.MutableRefObject<THREE.Vector3[]>;
   memory: Memoryitem;
   onSelect: (m: Memoryitem) => void;
   onHover: (m: Memoryitem | null) => void;
@@ -137,12 +198,18 @@ const MemoryNode = ({
   dimmed: boolean;
 }) => {
   const [hovered, setHovered] = useState(false);
+  const meshRef = useRef<THREE.Mesh>(null);
   const color = memory.source === "auto" ? "#06b6d4" : "#a1a1aa";
   const size = hovered || highlighted ? 0.16 : 0.09;
 
+  useFrame(() => {
+    const p = positionsRef.current[index];
+    if (p && meshRef.current) meshRef.current.position.copy(p);
+  });
+
   return (
     <mesh
-      position={position}
+      ref={meshRef}
       onClick={(e) => {
         e.stopPropagation();
         onSelect(memory);
@@ -182,23 +249,37 @@ const Scene = ({
   onHover: (m: Memoryitem | null) => void;
   highlightedIds: Set<string>;
 }) => {
-  const positions = useMemo(() => fibonacciSphere(memories.length), [memories.length]);
-  const positionById = useMemo(
-    () => new Map(memories.map((m, i) => [m.id, positions[i]])),
-    [memories, positions],
-  );
+  const idToIndex = useMemo(() => new Map(memories.map((m, i) => [m.id, i])), [memories]);
+
+  const edgePairs = useMemo(() => {
+    const pairs: [number, number][] = [];
+    // connect each memory to the other memories it's semantically related to (via embedding similarity)
+    similarity.forEach(({ id, relatedIds }) => {
+      const a = idToIndex.get(id);
+      if (a === undefined) return;
+      relatedIds.forEach((relatedId) => {
+        const b = idToIndex.get(relatedId);
+        if (b === undefined || b === a) return;
+        pairs.push([a, b]);
+      });
+    });
+    return pairs;
+  }, [similarity, idToIndex]);
+
+  const { positionsRef, step } = useForceLayout(memories.length, edgePairs);
+  useFrame(() => step());
 
   return (
     <>
       <ambientLight intensity={0.6} />
       <pointLight position={[5, 5, 5]} intensity={1.2} />
       <Stars />
-      <GlobeCore />
-      <Edges positionById={positionById} similarity={similarity} />
+      <Edges positionsRef={positionsRef} edgePairs={edgePairs} />
       {memories.map((memory, i) => (
         <MemoryNode
           key={memory.id}
-          position={positions[i]}
+          index={i}
+          positionsRef={positionsRef}
           memory={memory}
           onSelect={onSelect}
           onHover={onHover}
@@ -271,7 +352,7 @@ export const MemoryGlobe = () => {
         setHovered(null);
       }}
     >
-      <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
+      <Canvas camera={{ position: [0, 0, 13], fov: 50 }}>
         <Scene
           memories={filteredMemories}
           similarity={similarity}
