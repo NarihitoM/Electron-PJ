@@ -296,62 +296,6 @@ export const N8nInput = () => {
             </Button>
           )}
         </div>
-        <div className="flex gap-2 items-center">
-          {connected && (
-            <DropdownMenu>
-              <DropdownMenuTrigger>
-                <Button variant="outline" className="flex gap-1 items-center cursor-pointer">
-                  <Box size={15} />
-                  <span className="text-sm">Tools</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" side="top" className="w-40">
-                <DropdownMenuItem onClick={() => store.settype("text")}>
-                  <Box /> General Chat
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => store.settype("create")}>
-                  <Box /> Create Workflow
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => store.settype("list")}>
-                  <Box /> List Workflows
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => store.settype("trigger")}>
-                  <Box /> Trigger Workflow
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => store.settype("executions")}>
-                  <Box /> View Executions
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-          {store.type !== "text" && (
-            <button
-              onClick={() => {
-                store.settype("text");
-                store.setHover(false);
-              }}
-              disabled={store.sending}
-              onMouseEnter={() => store.setHover(true)}
-              onMouseLeave={() => store.setHover(false)}
-              className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
-            >
-              {store.hover ? (
-                <X size={17} className="text-blue-400" />
-              ) : (
-                <Box size={17} className="text-blue-400" />
-              )}
-              <span className="text-[13px] text-blue-400">
-                {store.type === "create"
-                  ? "Create Workflow"
-                  : store.type === "list"
-                    ? "List Workflows"
-                    : store.type === "trigger"
-                      ? "Trigger Workflow"
-                      : "View Executions"}
-              </span>
-            </button>
-          )}
-        </div>
       </div>
       <div className="w-full bg-card mx-auto max-w-5xl rounded-2xl border p-3 shadow-lg">
         <ImagePreview
@@ -391,16 +335,59 @@ export const N8nInput = () => {
               }
               maxImages={4}
             />
+            {connected && (
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <Button variant="outline" className="flex gap-1 items-center cursor-pointer">
+                    <Box size={15} />
+                    <span className="text-sm">Tools</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" side="top" className="w-40">
+                  <DropdownMenuItem onClick={() => store.settype("text")}>
+                    <Box /> General Chat
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => store.settype("create")}>
+                    <Box /> Create Workflow
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => store.settype("list")}>
+                    <Box /> List Workflows
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => store.settype("trigger")}>
+                    <Box /> Trigger Workflow
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => store.settype("executions")}>
+                    <Box /> View Executions
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
             {store.type !== "text" && (
-              <span className="flex items-center gap-1 px-2 py-1 rounded-full border bg-cyan-500/5 border-cyan-500/20 text-[12px] text-blue-400">
-                {store.type === "create"
-                  ? "Create Workflow"
-                  : store.type === "list"
-                    ? "List Workflows"
-                    : store.type === "trigger"
-                      ? "Trigger Workflow"
-                      : "View Executions"}
-              </span>
+              <button
+                onClick={() => {
+                  store.settype("text");
+                  store.setHover(false);
+                }}
+                disabled={store.sending}
+                onMouseEnter={() => store.setHover(true)}
+                onMouseLeave={() => store.setHover(false)}
+                className="flex gap-1 items-center p-1 rounded-lg border cursor-pointer transition bg-cyan-500/5 border-cyan-500/20 hover:bg-cyan-500/20"
+              >
+                {store.hover ? (
+                  <X size={17} className="text-blue-400" />
+                ) : (
+                  <Box size={17} className="text-blue-400" />
+                )}
+                <span className="text-[13px] text-blue-400">
+                  {store.type === "create"
+                    ? "Create Workflow"
+                    : store.type === "list"
+                      ? "List Workflows"
+                      : store.type === "trigger"
+                        ? "Trigger Workflow"
+                        : "View Executions"}
+                </span>
+              </button>
             )}
           </div>
           <div className="flex gap-2">

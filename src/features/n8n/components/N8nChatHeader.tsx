@@ -14,8 +14,8 @@ export const N8nChatHeader = () => {
   const store = n8nauthstore();
   const navigate = useNavigate();
 
-  const connected = !!(n8nConfig as any)?.connected;
-  const authType = (n8nConfig as any)?.authType ?? "";
+  const connected = !!n8nConfig?.connected;
+  const authType = n8nConfig?.authType ?? "";
   const loadingn8n = !n8nConfig;
 
   const apiWithLogos = Api.map((provider: any) => ({
@@ -30,7 +30,7 @@ export const N8nChatHeader = () => {
           <img src="https://n8n.io/favicon.ico" className="w-7 h-7" />
           n8nAgent
         </h1>
-        <p className="text-muted-foreground">Manage n8n workflows with your AI agent.</p>
+        <p className="text-muted-foreground">You can manage your n8n workflows with your agent.</p>
       </div>
       <div className="flex gap-2 items-center">
         {loadingn8n ? (
@@ -38,23 +38,19 @@ export const N8nChatHeader = () => {
             <Skeleton className="w-4 h-4 rounded-sm bg-zinc-200 dark:bg-zinc-800 shrink-0" />
             <Skeleton className="w-20 h-4 rounded-md bg-zinc-200 dark:bg-zinc-800" />
           </span>
+        ) : connected ? (
+          <span className="text-[13px] flex items-center gap-2 px-2 py-1 rounded-full border bg-card">
+            {authType === "none" ? (
+              <Globe className="h-3.5 w-3.5" />
+            ) : (
+              <Wifi className="h-3.5 w-3.5" />
+            )}
+            {authType === "none" ? "Webhook" : "Connected"}
+          </span>
         ) : (
           <Button variant="outline" size="sm" onClick={() => store.setSettingsOpen(true)}>
-            {connected ? (
-              <>
-                {authType === "none" ? (
-                  <Globe className="mr-2 h-3 w-3" />
-                ) : (
-                  <Wifi className="mr-2 h-3 w-3" />
-                )}
-                {authType === "none" ? "Webhook" : "Connected"}
-              </>
-            ) : (
-              <>
-                <Unlink className="mr-2 h-3 w-3" />
-                Not Connected
-              </>
-            )}
+            <Unlink className="mr-2 h-3 w-3" />
+            Not Connected
           </Button>
         )}
         {apiWithLogos.length > 0 ? (
