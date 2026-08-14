@@ -18,6 +18,7 @@ import { vercelauthstore } from "../store/store";
 import { chatauth } from "@/features/chat/api/api";
 import { voiceauth } from "@/features/voice/api/api";
 import { useVercelAccount } from "../hooks/useVercelAccount";
+import { useVercelProjects } from "../hooks/useVercelProjects";
 import { useSendVercelMessage } from "../hooks/useSendVercelMessage";
 import { useDeleteVercelMessage } from "../hooks/useDeleteVercelMessage";
 import { useQueryClient } from "@tanstack/react-query";
@@ -27,12 +28,14 @@ import { VercelCronScheduler } from "./VercelCronScheduler";
 export const VercelInput = () => {
   const { data: Api = [] } = useServiceKeys();
   const { data: vercelAccount } = useVercelAccount();
+  const { data: vercelProjects = [] } = useVercelProjects();
   const store = vercelauthstore();
   const queryClient = useQueryClient();
   const sendVercelMessage = useSendVercelMessage();
   const { mutateAsync: deleteVercelMessage } = useDeleteVercelMessage();
 
   const connected = !!vercelAccount?.connected;
+  const selectedProject = vercelProjects.find((project) => project.id === store.projectId);
 
   const [recordstatus, setrecordstatus] = useState(false);
   const [loadingrecord, setloadingrecord] = useState(false);
@@ -123,6 +126,7 @@ export const VercelInput = () => {
         currentInput,
         store.provider,
         store.model,
+        selectedProject?.name,
         uploadedUrls.length > 0 ? uploadedUrls : undefined,
         (chunk) => {
           store.updateSessionMessages((prev) => {

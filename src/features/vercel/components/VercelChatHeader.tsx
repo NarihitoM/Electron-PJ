@@ -6,18 +6,22 @@ import { BRAND_ASSETS, getProviderDisplayName } from "@/shared/config/providermo
 import { useNavigate } from "react-router-dom";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useVercelAccount } from "../hooks/useVercelAccount";
+import { useVercelProjects } from "../hooks/useVercelProjects";
 import { vercelauthstore } from "../store/store";
+import type { vercelserviceprovider } from "../types/type";
 
 export const VercelChatHeader = () => {
   const store = vercelauthstore();
   const { data: Api = [] } = useServiceKeys();
   const { data: vercelAccount } = useVercelAccount();
+  const { data: vercelProjects = [] } = useVercelProjects();
   const navigate = useNavigate();
 
   const username = vercelAccount?.username ?? "";
   const loadingvercel = !vercelAccount;
+  const selectedProject = vercelProjects.find((project) => project.id === store.projectId);
 
-  const apiWithLogos = Api.map((provider: any) => ({
+  const apiWithLogos = Api.map((provider: vercelserviceprovider) => ({
     ...provider,
     imageUrl: BRAND_ASSETS[provider.provider.toLowerCase()],
   }));
@@ -51,51 +55,76 @@ export const VercelChatHeader = () => {
             {username.substring(0, 10)}
           </span>
         ) : null}
-        {apiWithLogos.length > 0 ? (
-          <div className="flex gap-2">
+        <div className="flex gap-2">
+          {vercelProjects.length > 0 && (
             <Select
-              onValueChange={(value) => store.setProvider(value ?? "")}
-              value={store.provider}
+              onValueChange={(value) => store.setProjectId(value ?? "")}
+              value={store.projectId}
             >
               <SelectTrigger>
-                {store.provider ? (
+                {store.projectId ? (
                   <>
-                    <img
-                      src={BRAND_ASSETS[store.provider.toLowerCase()]}
-                      className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
-                    />
-                    <span>{getProviderDisplayName(store.provider)}</span>
+                    <span className="truncate">{selectedProject?.name ?? "Select Project"}</span>
                   </>
                 ) : (
-                  "Select Provider"
+                  "Select Project"
                 )}
               </SelectTrigger>
               <SelectContent>
-                {apiWithLogos.map((item: any) => (
-                  <SelectItem key={item.provider} value={item.provider}>
-                    <img
-                      src={item.imageUrl}
-                      className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
-                    />
-                    <span>{getProviderDisplayName(item.provider)}</span>
+                {vercelProjects.map((project) => (
+                  <SelectItem key={project.id} value={project.id}>
+                    <span>{project.name}</span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => navigate("/app/settings")}
-              title="Add Provider"
-            >
-              <Plus className="h-4 w-4" />
+          )}
+          {apiWithLogos.length > 0 ? (
+            <>
+              <Select
+                onValueChange={(value) => store.setProvider(value ?? "")}
+                value={store.provider}
+              >
+                <SelectTrigger>
+                  {store.provider ? (
+                    <>
+                      <img
+                        src={BRAND_ASSETS[store.provider.toLowerCase()]}
+                        className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
+                      />
+                      <span>{getProviderDisplayName(store.provider)}</span>
+                    </>
+                  ) : (
+                    "Select Provider"
+                  )}
+                </SelectTrigger>
+                <SelectContent>
+                  {apiWithLogos.map((item) => (
+                    <SelectItem key={item.provider} value={item.provider}>
+                      <img
+                        src={item.imageUrl}
+                        className="bg-white rounded-lg p-0.5 w-5 h-5 object-contain shrink-0"
+                      />
+                      <span>{getProviderDisplayName(item.provider)}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate("/app/settings")}
+                title="Add Provider"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </>
+          ) : (
+            <Button className="bg-cyan-500 dark:bg-white" onClick={() => navigate("/app/settings")}>
+              Add Provider
             </Button>
-          </div>
-        ) : (
-          <Button className="bg-cyan-500 dark:bg-white" onClick={() => navigate("/app/settings")}>
-            Add Provider
-          </Button>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

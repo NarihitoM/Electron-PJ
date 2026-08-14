@@ -5,6 +5,7 @@ import {
   returnvercelfeedback,
   returnvercelmsg,
   returnvercelcrondata,
+  returnvercelprojects,
   vercelcrondata,
 } from "../types/type";
 
@@ -15,6 +16,10 @@ export const vercelauth = {
   },
   getConfig: async (): Promise<returnvercelacc> => {
     const response = await Server.get("/vercel/api/config");
+    return response.data;
+  },
+  getProjects: async (): Promise<returnvercelprojects> => {
+    const response = await Server.get("/vercel/api/projects");
     return response.data;
   },
   fetchvercelmsg: async (cursor?: string, limit?: number): Promise<returnvercelmsg> => {
@@ -30,6 +35,7 @@ export const vercelauth = {
     content: string,
     provider: string,
     model: string,
+    projectName: string | undefined,
     images: string[] | undefined,
     onChunk: (chunk: string) => void,
     onThinking?: (chunk: string) => void,
@@ -64,6 +70,7 @@ export const vercelauth = {
         content,
         provider,
         model,
+        projectName,
         images,
         reasoningLevel: reasoningLevel || undefined,
       }),

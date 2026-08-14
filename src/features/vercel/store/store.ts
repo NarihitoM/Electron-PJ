@@ -15,6 +15,7 @@ export const initialVercelCron: vercelcrondata = {
 export const vercelauthstore = create<VercelClientState>((set) => ({
   provider: "",
   model: "",
+  projectId: "",
   sessionmessage: [],
   input: "",
   sending: false,
@@ -49,6 +50,7 @@ export const vercelauthstore = create<VercelClientState>((set) => ({
 
   setProvider: (v) => set({ provider: v, model: "" }),
   setModel: (v) => set({ model: v }),
+  setProjectId: (v) => set({ projectId: v }),
   setsessionmessage: (v) => set({ sessionmessage: v }),
   setInput: (v) => set({ input: v }),
   setSending: (v) => set({ sending: v }),
@@ -79,7 +81,7 @@ export const vercelauthstore = create<VercelClientState>((set) => ({
   setCustomDayOfMonth: (v) => set({ customDayOfMonth: v }),
   setCustomMonth: (v) => set({ customMonth: v }),
 
-  resetvercel: () => set({ provider: "", model: "" }),
+  resetvercel: () => set({ provider: "", model: "", projectId: "" }),
   updateSessionMessages: (updater) =>
     set((state) => ({ sessionmessage: updater(state.sessionmessage) })),
 }));

@@ -6,6 +6,22 @@ export interface vercelaccountdata {
   teamId?: string;
 }
 
+export interface vercelprojectdata {
+  id: string;
+  name: string;
+  framework?: string | null;
+  latestDeployment?: {
+    id: string;
+    state?: string | null;
+    url?: string | null;
+    createdAt?: number | null;
+  } | null;
+}
+
+export interface vercelserviceprovider {
+  provider: string;
+}
+
 export interface Apiresponse<T = void> {
   success: true;
   message: string;
@@ -19,6 +35,7 @@ export type returnvercelmsg = Apiresponse<{
 }>;
 export type returnvercelfeedback = Apiresponse;
 export type returnvercelacc = Apiresponse<vercelaccountdata>;
+export type returnvercelprojects = Apiresponse<vercelprojectdata[]>;
 
 export interface vercelcrondata {
   isActive: boolean;
@@ -36,6 +53,7 @@ export type returnvercelcrondata = Apiresponse<vercelcrondata>;
 export interface VercelClientState {
   provider: string;
   model: string;
+  projectId: string;
   sessionmessage: chatsession[];
   input: string;
   sending: boolean;
@@ -70,6 +88,7 @@ export interface VercelClientState {
 
   setProvider: (v: string) => void;
   setModel: (v: string) => void;
+  setProjectId: (v: string) => void;
   setsessionmessage: (v: chatsession[]) => void;
   setInput: (v: string) => void;
   setSending: (v: boolean) => void;
