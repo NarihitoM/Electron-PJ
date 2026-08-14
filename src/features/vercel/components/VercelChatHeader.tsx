@@ -6,7 +6,6 @@ import { BRAND_ASSETS, getProviderDisplayName } from "@/shared/config/providermo
 import { useNavigate } from "react-router-dom";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useVercelAccount } from "../hooks/useVercelAccount";
-import { useVercelProjects } from "../hooks/useVercelProjects";
 import { vercelauthstore } from "../store/store";
 import type { vercelserviceprovider } from "../types/type";
 
@@ -14,12 +13,10 @@ export const VercelChatHeader = () => {
   const store = vercelauthstore();
   const { data: Api = [] } = useServiceKeys();
   const { data: vercelAccount } = useVercelAccount();
-  const { data: vercelProjects = [] } = useVercelProjects();
   const navigate = useNavigate();
 
   const username = vercelAccount?.username ?? "";
   const loadingvercel = !vercelAccount;
-  const selectedProject = vercelProjects.find((project) => project.id === store.projectId);
 
   const apiWithLogos = Api.map((provider: vercelserviceprovider) => ({
     ...provider,
@@ -56,29 +53,6 @@ export const VercelChatHeader = () => {
           </span>
         ) : null}
         <div className="flex gap-2">
-          {vercelProjects.length > 0 && (
-            <Select
-              onValueChange={(value) => store.setProjectId(value ?? "")}
-              value={store.projectId}
-            >
-              <SelectTrigger>
-                {store.projectId ? (
-                  <>
-                    <span className="truncate">{selectedProject?.name ?? "Select Project"}</span>
-                  </>
-                ) : (
-                  "Select Project"
-                )}
-              </SelectTrigger>
-              <SelectContent>
-                {vercelProjects.map((project) => (
-                  <SelectItem key={project.id} value={project.id}>
-                    <span>{project.name}</span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
           {apiWithLogos.length > 0 ? (
             <>
               <Select

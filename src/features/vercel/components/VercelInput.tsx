@@ -11,6 +11,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/shared/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/shared/components/ui/select";
+import { BRAND_SERVICE } from "@/shared/config/service";
 import { toast } from "sonner";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { getProviderModels } from "@/shared/config/providermodels";
@@ -303,6 +305,25 @@ export const VercelInput = () => {
             </Button>
           )}
         </div>
+        {vercelProjects.length > 0 && (
+          <Select
+            onValueChange={(value) => store.setProjectId(value ?? "")}
+            value={store.projectId}
+          >
+            <SelectTrigger>
+              <img src={BRAND_SERVICE["vercel"]} className="w-4 h-4 shrink-0 dark:invert" />
+              <span className="truncate">{selectedProject?.name ?? "Select Project"}</span>
+            </SelectTrigger>
+            <SelectContent>
+              {vercelProjects.map((project) => (
+                <SelectItem key={project.id} value={project.id}>
+                  <img src={BRAND_SERVICE["vercel"]} className="w-4 h-4 shrink-0 dark:invert" />
+                  <span>{project.name}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
       <div className="w-full bg-card mx-auto max-w-5xl rounded-2xl border p-3 shadow-lg">
         <ImagePreview
