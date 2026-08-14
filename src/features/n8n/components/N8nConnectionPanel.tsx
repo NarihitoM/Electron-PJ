@@ -124,7 +124,7 @@ export const N8nConnectionPanel = () => {
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="header" />
                 <Label className="flex items-center gap-1">
-                  <Key className="h-3 w-3" /> Header Auth
+                  <Key className="h-3 w-3" /> API Key
                 </Label>
               </div>
               <div className="flex items-center space-x-2">
@@ -140,7 +140,9 @@ export const N8nConnectionPanel = () => {
               <Label>Auth Value</Label>
               <Input
                 placeholder={
-                  store.authTypeInput === "cookie" ? "cookie_session=abc123" : "Bearer abc123..."
+                  store.authTypeInput === "cookie"
+                    ? "n8n-auth=abc123..."
+                    : "Your n8n API key (Settings > n8n API)"
                 }
                 value={store.authValueInput}
                 onChange={(e) => store.setAuthValueInput(e.target.value)}

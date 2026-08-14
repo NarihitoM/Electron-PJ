@@ -32,10 +32,7 @@ export const N8nInput = () => {
   const sendN8nMessage = useSendN8nMessage();
   const { mutateAsync: deleteN8nMessage } = useDeleteN8nMessage();
 
-  const connected = !!(n8nConfig as any)?.connected;
-  const n8nUrl = (n8nConfig as any)?.n8nUrl ?? "";
-  const authType = (n8nConfig as any)?.authType ?? "";
-  const authValue = (n8nConfig as any)?.authValue ?? "";
+  const connected = !!n8nConfig?.connected;
 
   const [recordstatus, setrecordstatus] = useState(false);
   const [loadingrecord, setloadingrecord] = useState(false);
@@ -126,9 +123,6 @@ export const N8nInput = () => {
         currentInput,
         store.provider,
         store.model,
-        n8nUrl,
-        authType,
-        authValue || undefined,
         uploadedUrls.length > 0 ? uploadedUrls : undefined,
         (chunk) => {
           store.updateSessionMessages((prev) => {
