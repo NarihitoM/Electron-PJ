@@ -91,7 +91,7 @@ export const N8nConnectionPanel = () => {
 
   return (
     <Dialog open={store.settingsOpen} onOpenChange={store.setSettingsOpen}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-150">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {connected ? (

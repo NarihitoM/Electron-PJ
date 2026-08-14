@@ -19,15 +19,25 @@ import { telegramauth } from "../../telegram/api/api";
 import { useGoogleConnect } from "../../google/hooks/useGoogleConnect";
 import { githubauth } from "../../github/api/api";
 import { discordauth } from "../../discord/api/api";
+import { vercelauth } from "../../vercel/api/api";
 import { useConnectSlack } from "../../slack/hooks/useConnectSlack";
 import { useNotionConnect } from "../../notion/hooks/useNotionConnect";
 import { useConnectGithub } from "../../github/hooks/useConnectGithub";
 import { useConnectDiscord } from "../../discord/hooks/useConnectDiscord";
 import { useConnectN8n } from "../../n8n/hooks/useConnectN8n";
 import { useTestN8n } from "../../n8n/hooks/useTestN8n";
+import { useConnectVercel } from "../../vercel/hooks/useConnectVercel";
 
 type ServiceType =
-  "slack" | "notion" | "telegram" | "googlesheet" | "googledocs" | "n8n" | "github" | "discord";
+  | "slack"
+  | "notion"
+  | "telegram"
+  | "googlesheet"
+  | "googledocs"
+  | "n8n"
+  | "github"
+  | "discord"
+  | "vercel";
 
 interface ServiceConfigDialogProps {
   open: boolean;
@@ -76,6 +86,11 @@ const SERVICE_INFO: Record<ServiceType, { name: string; icon: string; descriptio
     name: "Discord",
     icon: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
     description: "Install the Multimate bot into your Discord server to send and read messages.",
+  },
+  vercel: {
+    name: "Vercel",
+    icon: "https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg",
+    description: "Connect your Vercel account to manage projects, deployments, and env vars.",
   },
 };
 
@@ -335,6 +350,8 @@ const ServiceForm = ({ service, onComplete }: { service: ServiceType; onComplete
       return <GithubForm onComplete={onComplete} />;
     case "discord":
       return <DiscordForm onComplete={onComplete} />;
+    case "vercel":
+      return <VercelForm onComplete={onComplete} />;
     default:
       return null;
   }
@@ -507,6 +524,83 @@ export const GithubForm = ({ onComplete }: { onComplete: () => void }) => {
           <Button onClick={connect} className="bg-cyan-500 dark:bg-white gap-2">
             <ExternalLink className="w-4 h-4" />
             Authorize with GitHub
+          </Button>
+        </>
+      )}
+    </div>
+  );
+};
+
+export const VercelForm = ({ onComplete }: { onComplete: () => void }) => {
+  const [checking, setChecking] = useState(false);
+  const [polling, setPolling] = useState(false);
+  const { mutateAsync: vercelState } = useConnectVercel();
+
+  const connect = async () => {
+    try {
+      const response = await vercelState();
+      const stateId = response.stateId;
+      const slug = import.meta.env.VITE_VERCEL_INTEGRATION_SLUG;
+      if (!slug) {
+        toast.error("Vercel Integration slug not configured.");
+        return;
+      }
+      const url = `https://vercel.com/integrations/${slug}/new?state=${stateId}`;
+      (window.ipcRenderer as any).openInBrowser(url);
+      setChecking(true);
+      setPolling(true);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to initiate Vercel connection.");
+    }
+  };
+
+  useEffect(() => {
+    if (!polling) return;
+    const poll = async () => {
+      try {
+        const status = await vercelauth.getConfig();
+        if (status.data?.connected) {
+          setPolling(false);
+          toast.success("Connected to Vercel!");
+          onComplete();
+        }
+      } catch (err) {
+        console.error("Vercel status poll failed:", err);
+      }
+    };
+
+    const interval = setInterval(poll, 2000);
+    const timeout = setTimeout(() => {
+      setPolling(false);
+      clearInterval(interval);
+      toast.error("Connection timed out. Please try again.");
+    }, 180000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [polling, onComplete]);
+
+  return (
+    <div className="flex flex-col gap-4 py-4">
+      {checking ? (
+        <div className="flex flex-col items-center gap-3 py-4">
+          <Spinner className="w-6 h-6 text-cyan-500" />
+          <p className="text-sm text-muted-foreground">Waiting for Vercel authorization...</p>
+          <p className="text-xs text-muted-foreground">
+            A browser window has opened. Complete the authorization there.
+          </p>
+        </div>
+      ) : (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Click the button below to open Vercel's authorization page. You'll be asked to grant
+            access to your account or team.
+          </p>
+          <Button onClick={connect} className="bg-cyan-500 dark:bg-white gap-2">
+            <ExternalLink className="w-4 h-4" />
+            Authorize with Vercel
           </Button>
         </>
       )}

@@ -8,6 +8,7 @@ export const BRAND_SERVICE: Record<string, any> = {
   n8n: "https://upload.wikimedia.org/wikipedia/commons/5/53/N8n-logo-new.svg",
   github: "https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg",
   discord: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
+  vercel: "https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg",
 };
 
 export const SERVICES = [
@@ -46,5 +47,10 @@ export const SERVICES = [
     name: "Discord",
     image: BRAND_SERVICE["discord"],
     description: "Connect Discord to send messages and read channels through a bot.",
+  },
+  {
+    name: "Vercel",
+    image: BRAND_SERVICE["vercel"],
+    description: "Connect Vercel to manage projects, deployments, and environment variables.",
   },
 ];

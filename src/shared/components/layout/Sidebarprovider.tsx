@@ -60,6 +60,7 @@ import Multimate from "../../assets/Multimate.png";
 import { Separator } from "../ui/separator";
 import { notionauthstore } from "../../../features/notion/store/store";
 import { githubauthstore } from "../../../features/github/store/store";
+import { vercelauthstore } from "../../../features/vercel/store/store";
 import { discordauthstore } from "../../../features/discord/store/store";
 import { googleauthstore } from "../../../features/google/store/store";
 import { useSlackAccount } from "../../../features/slack/hooks/useSlackAccount";
@@ -69,6 +70,7 @@ import { useGoogleService } from "../../../features/google/hooks/useGoogleServic
 import { useTelegramAccount } from "../../../features/telegram/hooks/useTelegramAccount";
 import { useNotionAccount } from "../../../features/notion/hooks/useNotionAccount";
 import { useN8nConfig } from "../../../features/n8n/hooks/useN8nConfig";
+import { useVercelAccount } from "../../../features/vercel/hooks/useVercelAccount";
 import { usagestore } from "../../../features/usage/store/store";
 import { dashboardstore } from "../../../features/dashboard/store/store";
 
@@ -116,6 +118,7 @@ export const Sidebarprovider = () => {
   const { resetnotion } = notionauthstore();
   const { resetgithub } = githubauthstore();
   const { resetdiscord } = discordauthstore();
+  const { resetvercel } = vercelauthstore();
 
   const { resetagent } = useagentstore();
 
@@ -134,6 +137,9 @@ export const Sidebarprovider = () => {
 
   const { data: n8nConfig } = useN8nConfig();
   const n8nConnected = !!(n8nConfig as any)?.connected;
+
+  const { data: vercelAccount } = useVercelAccount();
+  const vercelConnected = !!vercelAccount?.connected;
 
   const ollamaResyncMutation = useAddServiceKey();
 
@@ -170,6 +176,7 @@ export const Sidebarprovider = () => {
       resetnotion();
       resetgithub();
       resetdiscord();
+      resetvercel();
       resetgoogle();
       resetUsage();
       resetDashboard();
@@ -333,11 +340,13 @@ export const Sidebarprovider = () => {
         case "Telegram":
           return !!telegramUserdata;
         case "n8n":
-          return n8nConnected;
+          return !!n8nConnected;
         case "Github":
           return !!githubusername;
         case "Discord":
           return !!guildName;
+        case "Vercel":
+          return vercelConnected;
         default:
           return false;
       }
@@ -350,6 +359,7 @@ export const Sidebarprovider = () => {
     n8nConnected,
     githubusername,
     guildName,
+    vercelConnected,
   ]);
 
   const filteredAgentItems = useMemo(() => {

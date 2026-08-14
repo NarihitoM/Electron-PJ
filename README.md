@@ -24,10 +24,11 @@ MultimateAi is a desktop application that orchestrates AI agents across multiple
 ### Core Features
 
 - **Multi-Agent Workflow** — Build agent workflows on a node-based canvas, with an Orchestrator node that delegates to connected sub-agent nodes (or run them in sequence, range, or simultaneously)
-- **Service Integrations** — Slack, Telegram, Discord, GitHub, Notion, N8n, Google Sheets, Google Docs, Google Calendar, Gmail
+- **Service Integrations** — Slack, Telegram, Discord, GitHub, Vercel, Notion, N8n, Google Sheets, Google Docs, Google Calendar, Gmail
 - **AI Chat** — Chat with any supported AI model (OpenAI, Anthropic, Gemini, Groq, DeepSeek, Mistral, Ollama, OpenRouter, Z.AI)
 - **Discord** — Connect a bot, list guild channels, read history, send messages, and schedule cron messages
 - **GitHub** — Manage repos, issues, pull requests, notifications, and commit files directly via the agent
+- **Vercel** — Manage projects, deployments, logs, domains, and environment variables via the agent
 - **Video Analysis** — Upload videos, transcribe, and generate AI-powered summaries
 - **Usage Analytics** — Track token usage, costs, and activity across providers
 - **Scheduling** — Cron-based message scheduling for Telegram, Slack, and Discord
@@ -92,6 +93,24 @@ npm run dev
 | `npm run deploy`  | Build and publish release                            |
 | `npm run lint`    | Run ESLint                                           |
 | `npm run preview` | Preview production build                             |
+
+---
+
+## Environment Variables
+
+Create a `.env` file in the project root:
+
+| Variable                       | Purpose                                                            |
+| ------------------------------ | ------------------------------------------------------------------ |
+| `VITE_BACKEND_URL`             | Backend API base URL (defaults to the hosted deployment)           |
+| `VITE_SUPABASE`                | Supabase project URL, used for video upload storage                |
+| `VITE_CLIENTID`                | Google OAuth client ID (Electron main process login flow)          |
+| `VITE_GOOGLE_CLIENT_ID`        | Google OAuth client ID (Sheets/Docs/Calendar/Gmail connect)        |
+| `VITE_SLACK_CLIENT_ID`         | Slack OAuth app client ID                                          |
+| `VITE_NOTION_CLIENT_ID`        | Notion OAuth integration client ID                                 |
+| `VITE_GITHUB_CLIENT_ID`        | GitHub OAuth app client ID                                         |
+| `VITE_DISCORD_CLIENT_ID`       | Discord OAuth app client ID                                        |
+| `VITE_VERCEL_INTEGRATION_SLUG` | Vercel Integration URL slug (`vercel.com/integrations/<slug>/new`) |
 
 ---
 

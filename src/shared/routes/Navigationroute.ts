@@ -72,6 +72,12 @@ export const Agent = [
     url: "/app/discord",
     icon: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
   },
+  {
+    title: "Vercel",
+    url: "/app/vercel",
+    icon: "https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg",
+    invertDark: true,
+  },
 ];
 
 //LocalAiAgent

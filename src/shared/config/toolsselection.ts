@@ -133,6 +133,27 @@ export const N8ntool: Record<string, string> = {
   image_generator: "Generating Image",
 };
 
+export const Verceltool: Record<string, string> = {
+  vercel_list_projects: "Listing Projects",
+  vercel_get_project: "Getting Project Details",
+  vercel_list_deployments: "Listing Deployments",
+  vercel_get_deployment: "Getting Deployment Details",
+  vercel_get_deployment_logs: "Reading Deployment Logs",
+  vercel_list_domains: "Listing Domains",
+  vercel_redeploy: "Redeploying",
+  vercel_cancel_deployment: "Cancelling Deployment",
+  vercel_promote_deployment: "Promoting Deployment",
+  vercel_list_env: "Listing Environment Variables",
+  vercel_add_env: "Adding Environment Variable",
+  vercel_update_env: "Updating Environment Variable",
+  vercel_remove_env: "Removing Environment Variable",
+  vercel_delete_deployment: "Deleting Deployment",
+  vercel_delete_project: "Deleting Project",
+  web_search: "Searching The Web",
+  image_generation: "Generating Image",
+  image_generator: "Generating Image",
+};
+
 export const Designtool: Record<string, string> = {
   design_tool: "Designing Layout",
   create_new_file_tool: "Creating A New File",
@@ -174,6 +195,7 @@ export const SERVICE_TOOLS: Record<string, Record<string, string>> = {
   googlesheet: Googlesheettool,
   googledocs: Googledocstool,
   googlecalendar: Googlecalendartool,
+  vercel: Verceltool,
 };
 
 const GENERIC_TOOL_IDS = new Set(Object.keys(Chattool));
@@ -201,6 +223,7 @@ export const SERVICE_GROUP_LABELS: Record<string, string> = {
   googlesheet: "Google Sheets",
   googledocs: "Google Docs",
   googlecalendar: "Google Calendar",
+  vercel: "Vercel",
 };
 
 // Same brand icon URLs used on the sidebar/service pages (Navigationroute.ts).
@@ -218,6 +241,7 @@ export const SERVICE_ICONS: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/0/01/Google_Docs_logo_%282014-2020%29.svg",
   googlecalendar:
     "https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg",
+  vercel: "https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg",
 };
 
 // A node's `tool` field stores one representative tool id per connected
@@ -265,6 +289,15 @@ export const WRITE_TOOLS = new Set([
   "n8n_update_workflow",
   "n8n_delete_workflow",
   "n8n_trigger_workflow",
+  // Vercel
+  "vercel_redeploy",
+  "vercel_cancel_deployment",
+  "vercel_promote_deployment",
+  "vercel_add_env",
+  "vercel_update_env",
+  "vercel_remove_env",
+  "vercel_delete_deployment",
+  "vercel_delete_project",
   // LocalAgent
   "run_command",
   "write_file",
@@ -297,6 +330,14 @@ export const WRITE_TOOLS_LABELS: Record<string, string> = {
   n8n_update_workflow: "Updates an existing n8n workflow",
   n8n_delete_workflow: "Deletes an n8n workflow",
   n8n_trigger_workflow: "Triggers an n8n workflow execution",
+  vercel_redeploy: "Redeploys a Vercel deployment",
+  vercel_cancel_deployment: "Cancels a building Vercel deployment",
+  vercel_promote_deployment: "Promotes a deployment to production",
+  vercel_add_env: "Adds a Vercel environment variable",
+  vercel_update_env: "Updates a Vercel environment variable",
+  vercel_remove_env: "Removes a Vercel environment variable",
+  vercel_delete_deployment: "Permanently deletes a Vercel deployment",
+  vercel_delete_project: "Permanently deletes a Vercel project",
   run_command: "Runs a shell command on your system",
   write_file: "Writes content to a file on your system",
   http_request: "Makes an HTTP request to an external URL",

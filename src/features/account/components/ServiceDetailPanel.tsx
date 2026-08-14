@@ -19,6 +19,7 @@ import {
   N8nForm,
   GithubForm,
   DiscordForm,
+  VercelForm,
 } from "@/features/services/components/ServiceConfigDialog";
 import { toast } from "sonner";
 import { ServiceCardData } from "./ServiceCard";
@@ -29,6 +30,7 @@ import { useSlackAccount } from "@/features/slack/hooks/useSlackAccount";
 import { useN8nConfig } from "@/features/n8n/hooks/useN8nConfig";
 import { useGithubAccount } from "@/features/github/hooks/useGithubAccount";
 import { useDiscordAccount } from "@/features/discord/hooks/useDiscordAccount";
+import { useVercelAccount } from "@/features/vercel/hooks/useVercelAccount";
 import { useDisconnectTelegram } from "@/features/telegram/hooks/useDisconnectTelegram";
 import { useDisconnectGoogle } from "@/features/google/hooks/useDisconnectGoogle";
 import { useDisconnectNotion } from "@/features/notion/hooks/useDisconnectNotion";
@@ -36,6 +38,7 @@ import { useDisconnectSlack } from "@/features/slack/hooks/useDisconnectSlack";
 import { useDeleteN8nService } from "@/features/n8n/hooks/useDeleteN8nService";
 import { useDisconnectGithub } from "@/features/github/hooks/useDisconnectGithub";
 import { useDisconnectDiscord } from "@/features/discord/hooks/useDisconnectDiscord";
+import { useDisconnectVercel } from "@/features/vercel/hooks/useDisconnectVercel";
 import { accountstore } from "../store/store";
 
 export const ServiceDetailPanel = () => {
@@ -85,6 +88,12 @@ export const ServiceDetailPanel = () => {
     isError: discordError,
     refetch: discordRefetch,
   } = useDiscordAccount();
+  const {
+    data: vercelAccount,
+    isLoading: loadingvercel,
+    isError: vercelError,
+    refetch: vercelRefetch,
+  } = useVercelAccount();
 
   const { mutateAsync: disconnectTelegram } = useDisconnectTelegram();
   const { mutateAsync: disconnectGoogle } = useDisconnectGoogle();
@@ -93,6 +102,7 @@ export const ServiceDetailPanel = () => {
   const { mutateAsync: deleteN8nService } = useDeleteN8nService();
   const { mutateAsync: disconnectGithub } = useDisconnectGithub();
   const { mutateAsync: disconnectDiscord } = useDisconnectDiscord();
+  const { mutateAsync: disconnectVercel } = useDisconnectVercel();
 
   const userdata = telegramData;
   const serviceemail = (googleServiceData as any)?.serviceemail ?? "";
@@ -102,12 +112,15 @@ export const ServiceDetailPanel = () => {
   const n8nUrl = (n8nConfig as any)?.n8nUrl ?? "";
   const githubusername = (githubAccount as any)?.username ?? "";
   const guildName = (discordAccount as any)?.guildName ?? "";
+  const vercelConnected = !!vercelAccount?.connected;
+  const vercelUsername = vercelAccount?.username ?? "";
 
   const [deletingTelegram, setDeletingTelegram] = useState(false);
   const [deletingGoogle, setDeletingGoogle] = useState(false);
   const [deletingNotion, setDeletingNotion] = useState(false);
   const [deletingGithub, setDeletingGithub] = useState(false);
   const [deletingDiscord, setDeletingDiscord] = useState(false);
+  const [deletingVercel, setDeletingVercel] = useState(false);
 
   const connectedServices: ServiceCardData[] = [
     {
@@ -158,6 +171,13 @@ export const ServiceDetailPanel = () => {
       icon: "https://cdn.worldvectorlogo.com/logos/discord-6.svg",
       description: "Configure your Discord bot server.",
       isActive: !!guildName,
+    },
+    {
+      id: "vercel",
+      name: "Vercel",
+      icon: "https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg",
+      description: "Configure your Vercel account.",
+      isActive: vercelConnected,
     },
   ];
 
@@ -299,6 +319,27 @@ export const ServiceDetailPanel = () => {
       }
     } finally {
       setDeletingDiscord(false);
+    }
+  };
+
+  const deletevercel = async () => {
+    setDeletingVercel(true);
+    try {
+      const response = await disconnectVercel();
+      if (response.success) {
+        toast.success(response.message);
+        queryClient.invalidateQueries({ queryKey: ["vercel"] });
+        setDialogService(null);
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        const Error = err as any;
+        toast.error(Error.response?.data?.message || err.message);
+      } else {
+        toast.error("An unexpected error occurred.");
+      }
+    } finally {
+      setDeletingVercel(false);
     }
   };
 
@@ -756,6 +797,72 @@ export const ServiceDetailPanel = () => {
                         await discordRefetch();
                         setDialogService(null);
                         toast.success("Discord connected!");
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {dialogService === "vercel" && (
+            <div className="flex flex-col items-center justify-center text-center py-4">
+              {loadingvercel ? (
+                <div className="flex flex-col items-center gap-2">
+                  <Spinner className="w-8 h-8 animate-spin text-cyan-500 dark:text-white" />
+                  <p className="text-sm text-muted-foreground animate-pulse">
+                    Loading Vercel Service...
+                  </p>
+                </div>
+              ) : vercelError ? (
+                <div className="flex flex-col gap-2 items-center justify-center py-4">
+                  <AlertTriangle className="w-8 h-8 text-red-500" />
+                  <p className="text-sm text-red-500 font-medium">Failed to load Vercel service</p>
+                  <Button
+                    size="sm"
+                    onClick={() => vercelRefetch()}
+                    className="bg-cyan-500 dark:bg-white"
+                  >
+                    Retry
+                  </Button>
+                </div>
+              ) : vercelConnected ? (
+                <div className="flex items-center gap-4 w-full">
+                  <div className="h-12 w-12 rounded-full flex items-center justify-center">
+                    <img
+                      src="https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg"
+                      alt="icon"
+                      className="dark:invert"
+                    />
+                  </div>
+                  <div className="flex flex-col text-left">
+                    <p className="text-sm font-medium">Connected Vercel Account</p>
+                    <h3 className="text-lg font-semibold">{vercelUsername || "Connected"}</h3>
+                  </div>
+                  <Button
+                    onClick={deletevercel}
+                    disabled={deletingVercel}
+                    variant="destructive"
+                    className="ml-auto"
+                  >
+                    {deletingVercel ? <Spinner /> : "Disconnect"}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center py-4">
+                  <div className="space-y-4 w-full">
+                    <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
+                      <img
+                        src="https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg"
+                        alt="icon"
+                        className="dark:invert"
+                      />
+                    </div>
+                    <VercelForm
+                      onComplete={async () => {
+                        await vercelRefetch();
+                        setDialogService(null);
+                        toast.success("Vercel connected!");
                       }}
                     />
                   </div>

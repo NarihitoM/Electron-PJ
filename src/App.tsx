@@ -25,6 +25,7 @@ import { Slack } from "./pages/Slack";
 import { Github } from "./pages/Github";
 import { Discord } from "./pages/Discord";
 import { N8n } from "./pages/N8n";
+import { Vercel } from "./pages/Vercel";
 import { Emailcheck } from "./pages/SendEmail";
 import { Verifychangepassword } from "./pages/VerifyChangePassword";
 import { Passwordchange } from "./pages/ChangePasswordPage";
@@ -76,6 +77,7 @@ function App() {
                 <Route path="googlecalendar" element={<Googlecalendar />} />
                 <Route path="googlegmail" element={<Googlegmail />} />
                 <Route path="n8n" element={<N8n />} />
+                <Route path="vercel" element={<Vercel />} />
                 <Route path="localagent" element={<LocalAgent />} />
                 //done
                 <Route path="usage" element={<Usage />} />
