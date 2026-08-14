@@ -241,7 +241,7 @@ export const SERVICE_ICONS: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/0/01/Google_Docs_logo_%282014-2020%29.svg",
   googlecalendar:
     "https://upload.wikimedia.org/wikipedia/commons/a/a5/Google_Calendar_icon_%282020%29.svg",
-  vercel: "https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg",
+  vercel: "https://cdn.worldvectorlogo.com/logos/vercel.svg",
 };
 
 // A node's `tool` field stores one representative tool id per connected

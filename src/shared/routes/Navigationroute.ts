@@ -75,7 +75,7 @@ export const Agent = [
   {
     title: "Vercel",
     url: "/app/vercel",
-    icon: "https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg",
+    icon: "https://cdn.worldvectorlogo.com/logos/vercel.svg",
     invertDark: true,
   },
 ];

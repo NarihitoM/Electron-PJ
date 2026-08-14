@@ -175,7 +175,7 @@ export const ServiceDetailPanel = () => {
     {
       id: "vercel",
       name: "Vercel",
-      icon: "https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg",
+      icon: "https://cdn.worldvectorlogo.com/logos/vercel.svg",
       description: "Configure your Vercel account.",
       isActive: vercelConnected,
     },
@@ -830,7 +830,7 @@ export const ServiceDetailPanel = () => {
                 <div className="flex items-center gap-4 w-full">
                   <div className="h-12 w-12 rounded-full flex items-center justify-center">
                     <img
-                      src="https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg"
+                      src="https://cdn.worldvectorlogo.com/logos/vercel.svg"
                       alt="icon"
                       className="dark:invert"
                     />
@@ -853,7 +853,7 @@ export const ServiceDetailPanel = () => {
                   <div className="space-y-4 w-full">
                     <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center">
                       <img
-                        src="https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg"
+                        src="https://cdn.worldvectorlogo.com/logos/vercel.svg"
                         alt="icon"
                         className="dark:invert"
                       />

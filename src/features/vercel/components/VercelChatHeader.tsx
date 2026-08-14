@@ -27,7 +27,7 @@ export const VercelChatHeader = () => {
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold flex items-center gap-3">
           <img
-            src="https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg"
+            src="https://cdn.worldvectorlogo.com/logos/vercel.svg"
             className="w-7 h-7 dark:invert"
           />
           VercelAgent
@@ -45,7 +45,7 @@ export const VercelChatHeader = () => {
         ) : username ? (
           <span className="text-[13px] flex items-center gap-2 px-2 py-1 rounded-full border bg-card">
             <img
-              src="https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg"
+              src="https://cdn.worldvectorlogo.com/logos/vercel.svg"
               className="w-4 h-4 dark:invert"
             />
             {username.substring(0, 10)}

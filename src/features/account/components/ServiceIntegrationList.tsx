@@ -87,7 +87,7 @@ export const ServiceIntegrationList = () => {
     {
       id: "vercel",
       name: "Vercel",
-      icon: "https://assets.vercel.com/image/upload/front/favicon/vercel/favicon.svg",
+      icon: "https://cdn.worldvectorlogo.com/logos/vercel.svg",
       description: "Configure your Vercel account.",
       isActive: vercelConnected,
     },
