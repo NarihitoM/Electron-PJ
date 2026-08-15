@@ -60,7 +60,7 @@ export const ChatInput = () => {
         setModelList([]);
         setModelsLoading(false);
       });
-  }, [store.provider]);
+  }, [store, store.provider]);
 
   useEffect(() => () => abortControllerRef.current?.abort(), []);
 

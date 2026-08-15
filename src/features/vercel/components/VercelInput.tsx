@@ -62,8 +62,7 @@ export const VercelInput = () => {
         store.setModel(models[0].model);
       }
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [store.provider]);
+  }, [store, store.provider]);
 
   useEffect(() => () => abortControllerRef.current?.abort(), []);
 
