@@ -10,7 +10,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { toast } from "sonner";
-import { Copy, Play, Square, Zap } from "lucide-react";
+import { Copy, Eye, EyeOff, Play, Square, Zap } from "lucide-react";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { PROVIDER_MODELS } from "@/shared/config/providermodels";
@@ -30,6 +30,7 @@ export const LocalApiEndpoint = () => {
   const [running, setRunning] = useState(false);
   const [url, setUrl] = useState("http://127.0.0.1:8787/v1");
   const [apiKey, setApiKey] = useState("");
+  const [showApiKey, setShowApiKey] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -161,13 +162,22 @@ export const LocalApiEndpoint = () => {
               Copy
             </Button>
           </div>
-          <Input
-            value={apiKey}
-            readOnly
-            type="password"
-            className="flex-1 h-12 rounded-xl focus-visible:ring-primary/30 text-base font-mono"
-            placeholder="Start the server to generate an API key"
-          />
+          <div className="relative">
+            <Input
+              value={apiKey}
+              readOnly
+              type={showApiKey ? "text" : "password"}
+              className="flex-1 h-12 rounded-xl focus-visible:ring-primary/30 text-base font-mono pr-10"
+              placeholder="Start the server to generate an API key"
+            />
+            <button
+              type="button"
+              onClick={() => setShowApiKey((v) => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-row gap-3">
