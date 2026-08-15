@@ -15,6 +15,11 @@ const ALLOWED_INVOKE_CHANNELS = [
   "fetch-ollama-models",
   "ensure-ollama-tunnel",
   "get-ollama-local-host",
+  "ensure-local-api-key",
+  "get-local-api-status",
+  "start-local-api",
+  "stop-local-api",
+  "get-local-api-url",
 ];
 const ALLOWED_ON_CHANNELS = [
   "oauth-window-closed",
@@ -77,4 +82,15 @@ contextBridge.exposeInMainWorld("api", {
     ipcRenderer.invoke("fetch-ollama-models", baseUrl, apiKey),
   ensureOllamaTunnel: (localUrl: string) => ipcRenderer.invoke("ensure-ollama-tunnel", localUrl),
   getOllamaLocalHost: () => ipcRenderer.invoke("get-ollama-local-host"),
+  ensureLocalApiKey: () => ipcRenderer.invoke("ensure-local-api-key"),
+  getLocalApiStatus: () => ipcRenderer.invoke("get-local-api-status"),
+  startLocalApi: (config: {
+    encryptkey: any[];
+    useremail: string;
+    hostmap: Record<string, string>;
+    models: Record<string, { model: string }[]>;
+    port?: number;
+  }) => ipcRenderer.invoke("start-local-api", config),
+  stopLocalApi: () => ipcRenderer.invoke("stop-local-api"),
+  getLocalApiUrl: () => ipcRenderer.invoke("get-local-api-url"),
 });

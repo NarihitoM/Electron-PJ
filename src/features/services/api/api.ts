@@ -4,13 +4,13 @@ import { authservicedata, authservicefeedback } from "../types/type";
 export const serviceauth = {
   serviceadd: async (
     provider: string,
-    key: string,
-    host?: string,
+    key?: string,
+    host?: string | null,
   ): Promise<authservicefeedback> => {
     const response = await Server.post("/service/api/addservice", {
       provider,
-      key,
-      host: host || undefined,
+      key: key ?? "",
+      ...(host !== undefined ? { host } : {}),
     });
     return response.data;
   },

@@ -1,5 +1,5 @@
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
-import { AlertTriangle, Key, Plug } from "lucide-react";
+import { AlertTriangle, Key, Plug, Zap } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/shared/components/ui/card";
 import { Toaster } from "@/shared/components/ui/sonner";
@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui
 import { ServiceApiKeyList } from "./ServiceApiKeyList";
 import { ServiceIntegrationList } from "./ServiceIntegrationList";
 import { ServiceDetailPanel } from "./ServiceDetailPanel";
+import { LocalApiEndpoint } from "./LocalApiEndpoint";
 
 export const SettingsPage = () => {
   const { isLoading, isError, refetch } = useServiceKeys();
@@ -97,12 +98,18 @@ export const SettingsPage = () => {
           <TabsTrigger value="integrations" className="flex-1 gap-1.5">
             <Plug className="w-4 h-4" /> Integrations
           </TabsTrigger>
+          <TabsTrigger value="localapi" className="flex-1 gap-1.5">
+            <Zap className="w-4 h-4" /> Local API
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="providers">
           <ServiceApiKeyList />
         </TabsContent>
         <TabsContent value="integrations">
           <ServiceIntegrationList />
+        </TabsContent>
+        <TabsContent value="localapi">
+          <LocalApiEndpoint />
         </TabsContent>
       </Tabs>
       <ServiceDetailPanel />

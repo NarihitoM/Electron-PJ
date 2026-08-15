@@ -4,6 +4,7 @@ import * as dotenv from "dotenv";
 import path from "node:path";
 import { Auth } from "./Ipc/authIpc";
 import { RunAgent } from "./Ipc/agentworkflowIpc";
+import { LocalApi } from "./Ipc/localApiIpc";
 import { fetchOllamaModels } from "./lib/ollamabridge";
 import {
   ensureOllamaTunnel,
@@ -68,6 +69,7 @@ function createWindow() {
 
   Auth();
   RunAgent();
+  LocalApi();
 }
 
 app.on("window-all-closed", () => {

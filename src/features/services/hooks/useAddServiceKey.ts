@@ -5,7 +5,11 @@ import type { authservicefeedback } from "../types/type";
 export const useAddServiceKey = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<authservicefeedback, Error, { provider: string; key: string; host?: string }>({
+  return useMutation<
+    authservicefeedback,
+    Error,
+    { provider: string; key?: string; host?: string | null }
+  >({
     mutationFn: ({ provider, key, host }) => serviceauth.serviceadd(provider, key, host),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["key"] });

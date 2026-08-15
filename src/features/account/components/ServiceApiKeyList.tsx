@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -65,14 +65,25 @@ const ProviderUI = ({ name, placeholder }: { name: string; placeholder: string }
   const addMutation = useAddServiceKey();
   const deleteMutation = useDeleteServiceKey();
   const [key, setkey] = useState("");
+  const [endpoint, setEndpoint] = useState("");
+  const savedEntry = Api?.find((s) => s.provider.toLowerCase() === name.toLowerCase());
+
+  useEffect(() => {
+    setEndpoint(savedEntry?.host ?? "");
+    setkey("");
+  }, [savedEntry]);
 
   const addkey = async () => {
-    if (!key.trim()) {
+    if (!key.trim() && !savedEntry) {
       toast.error("API key is required");
       return;
     }
     try {
-      const response = await addMutation.mutateAsync({ provider: name, key });
+      const response = await addMutation.mutateAsync({
+        provider: name,
+        key: key.trim() || "",
+        host: endpoint.trim() || (savedEntry ? null : undefined),
+      });
       if (response.success) {
         toast.success(response.message);
         clearModelCache(name);
@@ -109,7 +120,7 @@ const ProviderUI = ({ name, placeholder }: { name: string; placeholder: string }
     }
   };
 
-  const isvalidkey = Api?.find((s) => s.provider.toLowerCase() === name.toLowerCase());
+  const isvalidkey = savedEntry;
 
   return (
     <Card className="border-none bg-card shadow-none mt-6 p-4 animate-in fade-in slide-in-from-bottom-2">
@@ -152,7 +163,11 @@ const ProviderUI = ({ name, placeholder }: { name: string; placeholder: string }
           />
           <div className="flex flex-row gap-3">
             <Button
-              disabled={addMutation.isPending || !key.trim()}
+              disabled={
+                addMutation.isPending ||
+                (!key.trim() && !isvalidkey) ||
+                (!endpoint.trim() && !key.trim())
+              }
               onClick={addkey}
               className="h-12 px-8 rounded-xl font-semibold shadow-lg bg-cyan-500 dark:bg-white shadow-primary/10 hover:shadow-primary/20 transition-all"
             >
@@ -161,7 +176,7 @@ const ProviderUI = ({ name, placeholder }: { name: string; placeholder: string }
               ) : isvalidkey ? (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  Change Key
+                  Update
                 </>
               ) : (
                 <>
@@ -190,10 +205,26 @@ const ProviderUI = ({ name, placeholder }: { name: string; placeholder: string }
           </div>
         </div>
 
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+              API Endpoint (Chat Completion URL)
+            </Label>
+          </div>
+          <Input
+            value={endpoint}
+            onChange={(e) => setEndpoint(e.target.value)}
+            type="url"
+            placeholder="https://api.openai.com/v1"
+            className="flex-1 h-12 rounded-xl focus-visible:ring-primary/30 text-base"
+          />
+        </div>
+
         <div className="p-4 rounded-xl bg-cyan-500/5 border border-cyan-500/10">
           <p className="text-xs dark:text-muted-foreground text-cyan-500 leading-relaxed">
             <strong>Tip:</strong> You can find your {name} keys in your developer dashboard. We also
-            encrypt for security purpose. Never share these keys with anyone.
+            encrypt for security purpose. Never share these keys with anyone. Leave the API Endpoint
+            empty to use the provider's default URL.
           </p>
         </div>
       </CardContent>
