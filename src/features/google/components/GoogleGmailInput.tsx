@@ -141,6 +141,8 @@ export const GoogleGmailInput = () => {
         store.setSending_gmail(false);
         store.setUploadingImages_gmail(false);
         store.setUploadingImageUrls_gmail(new Set());
+        store.setInput_gmail(currentInput);
+        store.setPendingImages_gmail(currentImages);
         store.updateSessionMessages_gmail((prev) => prev.slice(0, -2));
         return;
       }

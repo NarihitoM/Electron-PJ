@@ -103,6 +103,8 @@ export const N8nInput = () => {
         store.setSending(false);
         store.setUploadingImages(false);
         store.setUploadingImageUrls(new Set());
+        store.setInput(currentInput);
+        store.setPendingImages(currentImages);
         store.updateSessionMessages((prev) => prev.slice(0, -2));
         return;
       }

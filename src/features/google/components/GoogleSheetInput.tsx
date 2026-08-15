@@ -149,6 +149,8 @@ export const GoogleSheetInput = () => {
         store.setSending_sheet(false);
         store.setUploadingImages_sheet(false);
         store.setUploadingImageUrls_sheet(new Set());
+        store.setInput_sheet(currentInput);
+        store.setPendingImages_sheet(currentImages);
         store.updateSessionMessages_sheet((prev) => prev.slice(0, -2));
         return;
       }

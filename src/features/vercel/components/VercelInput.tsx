@@ -108,6 +108,8 @@ export const VercelInput = () => {
         store.setSending(false);
         store.setUploadingImages(false);
         store.setUploadingImageUrls(new Set());
+        store.setInput(currentInput);
+        store.setPendingImages(currentImages);
         store.updateSessionMessages((prev) => prev.slice(0, -2));
         return;
       }
@@ -311,7 +313,9 @@ export const VercelInput = () => {
             value={store.projectId}
           >
             <SelectTrigger>
-              <img src={BRAND_SERVICE["vercel"]} className="w-4 h-4 shrink-0 dark:invert" />
+              {selectedProject && (
+                <img src={BRAND_SERVICE["vercel"]} className="w-4 h-4 shrink-0 dark:invert" />
+              )}
               <span className="truncate">{selectedProject?.name ?? "Select Project"}</span>
             </SelectTrigger>
             <SelectContent>

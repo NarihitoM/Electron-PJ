@@ -132,6 +132,8 @@ export const GoogleDocsInput = () => {
         store.setSending_docs(false);
         store.setUploadingImages_docs(false);
         store.setUploadingImageUrls_docs(new Set());
+        store.setInput_docs(currentInput);
+        store.setPendingImages_docs(currentImages);
         store.updateSessionMessages_docs((prev) => prev.slice(0, -2));
         return;
       }

@@ -340,6 +340,8 @@ export const SlackInput = () => {
         setSending(false);
         setUploadingImages(false);
         setUploadingImageUrls(new Set());
+        setInput(currentInput);
+        setPendingImages(currentImages);
         setsessionmessage((prev) => prev.slice(0, -2));
         return;
       }

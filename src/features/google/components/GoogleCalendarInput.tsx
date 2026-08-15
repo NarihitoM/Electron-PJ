@@ -150,6 +150,8 @@ export const GoogleCalendarInput = () => {
         store.setSending_calendar(false);
         store.setUploadingImages_calendar(false);
         store.setUploadingImageUrls_calendar(new Set());
+        store.setInput_calendar(currentInput);
+        store.setPendingImages_calendar(currentImages);
         store.updateSessionMessages_calendar((prev) => prev.slice(0, -2));
         return;
       }
