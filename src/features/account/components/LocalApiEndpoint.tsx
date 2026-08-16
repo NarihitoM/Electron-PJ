@@ -20,7 +20,11 @@ import { toast } from "sonner";
 import { Copy, Eye, EyeOff, Play, Plus, RefreshCw, Square, Trash2, Zap } from "lucide-react";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useUser } from "@/features/auth/hooks/useUser";
-import { PROVIDER_MODELS, getProviderDisplayName } from "@/shared/config/providermodels";
+import {
+  PROVIDER_MODELS,
+  BRAND_ASSETS,
+  getProviderDisplayName,
+} from "@/shared/config/providermodels";
 
 const copyToClipboard = async (text: string, label: string) => {
   try {
@@ -43,7 +47,8 @@ export const LocalApiEndpoint = () => {
   const [loading, setLoading] = useState(false);
   const [modelAliases, setModelAliases] = useState<ModelAlias[]>([]);
   const [newAlias, setNewAlias] = useState("");
-  const [newModel, setNewModel] = useState("");
+  const [selectedProvider, setSelectedProvider] = useState("");
+  const [selectedModel, setSelectedModel] = useState("");
 
   useEffect(() => {
     (window as any).api
@@ -109,8 +114,8 @@ export const LocalApiEndpoint = () => {
       toast.error("Alias name is required");
       return;
     }
-    if (!newModel) {
-      toast.error("Select a model from the dropdown");
+    if (!selectedProvider || !selectedModel) {
+      toast.error("Select a provider and model");
       return;
     }
     const alias = newAlias.trim();
@@ -118,15 +123,11 @@ export const LocalApiEndpoint = () => {
       toast.error("Alias already exists");
       return;
     }
-    const matched = availableModels.find((m) => m.model === newModel);
-    if (!matched) {
-      toast.error("Selected model not found in your configured providers");
-      return;
-    }
-    const updated = [...modelAliases, { alias, provider: matched.provider, model: matched.model }];
+    const updated = [...modelAliases, { alias, provider: selectedProvider, model: selectedModel }];
     setModelAliases(updated);
     setNewAlias("");
-    setNewModel("");
+    setSelectedProvider("");
+    setSelectedModel("");
     await (window as any).api?.saveModelAliases?.(updated);
     toast.success(`Model alias "${alias}" added`);
   };
@@ -284,39 +285,76 @@ export const LocalApiEndpoint = () => {
           <p className="text-xs text-muted-foreground">
             Map custom model IDs for Copilot, Codex, or IDE tools.
           </p>
-          {availableModels.length === 0 ? (
+          {configuredProviders.length === 0 ? (
             <p className="text-xs text-muted-foreground italic">
               No providers configured. Add API keys in Service Providers first.
             </p>
           ) : (
-            <div className="flex gap-2">
-              <Input
-                value={newAlias}
-                onChange={(e) => setNewAlias(e.target.value)}
-                placeholder="Alias (e.g. gpt-4o)"
-                className="w-48 h-10 rounded-lg text-sm"
-              />
-              <Select value={newModel} onValueChange={setNewModel}>
-                <SelectTrigger className="flex-1 h-10 rounded-lg text-sm">
-                  <SelectValue placeholder="Select provider model" />
-                </SelectTrigger>
-                <SelectContent>
-                  {configuredProviders.map((provider) => {
-                    const models = PROVIDER_MODELS[provider];
-                    if (!models) return null;
-                    return (
-                      <SelectItem key={provider} value={`__header_${provider}`} disabled>
-                        {getProviderDisplayName(provider)}
+            <div className="flex gap-2 items-end">
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground">Alias</Label>
+                <Input
+                  value={newAlias}
+                  onChange={(e) => setNewAlias(e.target.value)}
+                  placeholder="e.g. gpt-4o"
+                  className="w-40 h-10 rounded-lg text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground">Provider</Label>
+                <Select
+                  value={selectedProvider}
+                  onValueChange={(v) => {
+                    setSelectedProvider(v);
+                    setSelectedModel("");
+                  }}
+                >
+                  <SelectTrigger className="w-48 h-10 rounded-lg text-sm">
+                    <SelectValue placeholder="Select provider" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {configuredProviders.map((provider) => (
+                      <SelectItem key={provider} value={provider}>
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={BRAND_ASSETS[provider]}
+                            className="w-4 h-4 rounded bg-white object-contain"
+                          />
+                          <span>{getProviderDisplayName(provider)}</span>
+                        </div>
                       </SelectItem>
-                    );
-                  })}
-                  {availableModels.map((m) => (
-                    <SelectItem key={m.model} value={m.model}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground">Model</Label>
+                <Select
+                  value={selectedModel}
+                  onValueChange={setSelectedModel}
+                  disabled={!selectedProvider}
+                >
+                  <SelectTrigger className="w-64 h-10 rounded-lg text-sm">
+                    <SelectValue
+                      placeholder={selectedProvider ? "Select model" : "Pick provider first"}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedProvider &&
+                      PROVIDER_MODELS[selectedProvider]?.map((m) => (
+                        <SelectItem key={m.model} value={m.model}>
+                          <div className="flex items-center gap-2">
+                            <img
+                              src={BRAND_ASSETS[selectedProvider]}
+                              className="w-4 h-4 rounded bg-white object-contain"
+                            />
+                            <span>{m.model}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <Button variant="ghost" size="sm" className="h-10 px-3" onClick={handleAddAlias}>
                 <Plus className="w-4 h-4" />
               </Button>
