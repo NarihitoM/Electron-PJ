@@ -258,10 +258,13 @@ const handleChatCompletions = async (req: http.IncomingMessage, res: http.Server
 
   const memoryContext = await fetchMemoryContext();
   if (memoryContext) {
-    promptMessages.unshift({
-      type: "system",
-      content: `# What you remember about this user\n${memoryContext}`,
-    });
+    const memoryBlock = `# What you remember about this user\n${memoryContext}`;
+    const existingSystem = promptMessages.find((m) => m.type === "system");
+    if (existingSystem) {
+      existingSystem.content = `${existingSystem.content}\n\n${memoryBlock}`;
+    } else {
+      promptMessages.unshift({ type: "system", content: memoryBlock });
+    }
   }
 
   const callOptions: any = {
