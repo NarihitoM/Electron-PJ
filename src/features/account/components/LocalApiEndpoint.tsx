@@ -310,7 +310,17 @@ export const LocalApiEndpoint = () => {
                   }}
                 >
                   <SelectTrigger className="w-48 h-10 rounded-lg text-sm">
-                    <SelectValue placeholder="Select provider" />
+                    <SelectValue placeholder="Select provider">
+                      {selectedProvider && (
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={BRAND_ASSETS[selectedProvider]}
+                            className="w-4 h-4 rounded bg-white object-contain"
+                          />
+                          <span>{getProviderDisplayName(selectedProvider)}</span>
+                        </div>
+                      )}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {configuredProviders.map((provider) => (
