@@ -47,8 +47,8 @@ export const LocalApiEndpoint = () => {
   const [loading, setLoading] = useState(false);
   const [modelAliases, setModelAliases] = useState<ModelAlias[]>([]);
   const [newAlias, setNewAlias] = useState("");
-  const [selectedProvider, setSelectedProvider] = useState("");
-  const [selectedModel, setSelectedModel] = useState("");
+  const [selectedProvider, setSelectedProvider] = useState<string | undefined>(undefined);
+  const [selectedModel, setSelectedModel] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     (window as any).api
@@ -126,8 +126,8 @@ export const LocalApiEndpoint = () => {
     const updated = [...modelAliases, { alias, provider: selectedProvider, model: selectedModel }];
     setModelAliases(updated);
     setNewAlias("");
-    setSelectedProvider("");
-    setSelectedModel("");
+    setSelectedProvider(undefined);
+    setSelectedModel(undefined);
     await (window as any).api?.saveModelAliases?.(updated);
     toast.success(`Model alias "${alias}" added`);
   };
@@ -306,7 +306,7 @@ export const LocalApiEndpoint = () => {
                   value={selectedProvider}
                   onValueChange={(v) => {
                     setSelectedProvider(v);
-                    setSelectedModel("");
+                    setSelectedModel(undefined);
                   }}
                 >
                   <SelectTrigger className="w-48 h-10 rounded-lg text-sm">
