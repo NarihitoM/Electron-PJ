@@ -20,6 +20,7 @@ const ALLOWED_INVOKE_CHANNELS = [
   "start-local-api",
   "stop-local-api",
   "get-local-api-url",
+  "regenerate-local-api-key",
 ];
 const ALLOWED_ON_CHANNELS = [
   "oauth-window-closed",
@@ -93,4 +94,5 @@ contextBridge.exposeInMainWorld("api", {
   }) => ipcRenderer.invoke("start-local-api", config),
   stopLocalApi: () => ipcRenderer.invoke("stop-local-api"),
   getLocalApiUrl: () => ipcRenderer.invoke("get-local-api-url"),
+  regenerateLocalApiKey: () => ipcRenderer.invoke("regenerate-local-api-key"),
 });

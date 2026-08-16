@@ -69,4 +69,10 @@ export const LocalApi = () => {
       running: status.running,
     };
   });
+
+  ipcMain.handle("regenerate-local-api-key", () => {
+    const key = crypto.randomBytes(32).toString("hex");
+    store.set("localApiKey", key);
+    return key;
+  });
 };

@@ -10,7 +10,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { toast } from "sonner";
-import { Copy, Eye, EyeOff, Play, Square, Zap } from "lucide-react";
+import { Copy, Eye, EyeOff, Play, RefreshCw, Square, Zap } from "lucide-react";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { PROVIDER_MODELS } from "@/shared/config/providermodels";
@@ -99,6 +99,18 @@ export const LocalApiEndpoint = () => {
     }
   };
 
+  const handleRegenerateKey = async () => {
+    try {
+      const key = await (window as any).api.regenerateLocalApiKey();
+      if (key) {
+        setApiKey(key);
+        toast.success("New API key generated");
+      }
+    } catch {
+      toast.error("Failed to generate API key");
+    }
+  };
+
   return (
     <Card className="border-none bg-card shadow-none mt-6 p-4 animate-in fade-in slide-in-from-bottom-2">
       <CardHeader className="px-0 pt-0">
@@ -160,6 +172,10 @@ export const LocalApiEndpoint = () => {
             >
               <Copy className="w-3.5 h-3.5 mr-1" />
               Copy
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 px-2" onClick={handleRegenerateKey}>
+              <RefreshCw className="w-3.5 h-3.5 mr-1" />
+              Generate
             </Button>
           </div>
           <div className="relative">
