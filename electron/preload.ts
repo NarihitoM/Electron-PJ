@@ -92,6 +92,7 @@ contextBridge.exposeInMainWorld("api", {
     useremail: string;
     hostmap: Record<string, string>;
     models: Record<string, { model: string }[]>;
+    aliases?: { alias: string; provider: string; model: string }[];
     port?: number;
   }) => ipcRenderer.invoke("start-local-api", config),
   stopLocalApi: () => ipcRenderer.invoke("stop-local-api"),

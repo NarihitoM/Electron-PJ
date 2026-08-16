@@ -155,6 +155,7 @@ export const LocalApiEndpoint = () => {
         useremail: userdata.useremail,
         hostmap,
         models: modelsMap,
+        aliases: modelAliases,
       });
       setRunning(true);
       if (result?.url) setUrl(result.url);

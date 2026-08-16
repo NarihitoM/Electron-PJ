@@ -14,6 +14,7 @@ let providerConfigs: {
   useremail: string;
   hostmap: Record<string, string>;
   models: Record<string, { model: string }[]>;
+  aliases: { alias: string; provider: string; model: string }[];
 } | null = null;
 
 const splitModel = (model: string): { provider: string; model: string } => {
@@ -25,10 +26,13 @@ const splitModel = (model: string): { provider: string; model: string } => {
 };
 
 const matchProviderForModel = (model: string): { provider: string; model: string } | null => {
+  if (!providerConfigs) return null;
+
+  const aliasHit = providerConfigs.aliases.find((a) => a.alias === model);
+  if (aliasHit) return { provider: aliasHit.provider, model: aliasHit.model };
+
   const explicit = splitModel(model);
   if (explicit.provider) return explicit;
-
-  if (!providerConfigs) return null;
 
   for (const [provider, models] of Object.entries(providerConfigs.models)) {
     const hit = models.find((m) => m.model === model);
@@ -369,12 +373,13 @@ export const startLocalApiServer = async (config: {
   useremail: string;
   hostmap: Record<string, string>;
   models: Record<string, { model: string }[]>;
+  aliases?: { alias: string; provider: string; model: string }[];
   port?: number;
   apiKey?: string;
   token?: string;
 }): Promise<{ port: number; url: string }> => {
   if (server) {
-    providerConfigs = config;
+    providerConfigs = { ...config, aliases: config.aliases || [] };
     if (config.apiKey) localApiKey = config.apiKey;
     if (config.token) authToken = config.token;
     return { port: currentPort, url: `http://127.0.0.1:${currentPort}/v1` };

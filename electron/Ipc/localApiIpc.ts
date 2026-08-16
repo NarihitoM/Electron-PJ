@@ -31,7 +31,7 @@ export const LocalApi = () => {
   });
 
   ipcMain.handle("start-local-api", async (_event, config) => {
-    const { encryptkey, useremail, hostmap, models, port } = config || {};
+    const { encryptkey, useremail, hostmap, models, aliases, port } = config || {};
 
     if (!encryptkey || !useremail) {
       throw new Error(
@@ -52,6 +52,7 @@ export const LocalApi = () => {
       useremail,
       hostmap: hostmap || {},
       models: models || {},
+      aliases: aliases || [],
       port,
       apiKey,
       token,
