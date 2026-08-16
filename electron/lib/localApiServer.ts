@@ -237,8 +237,7 @@ const handleChatCompletions = async (req: http.IncomingMessage, res: http.Server
     return { type: "human", content: text };
   });
 
-  const invokeOptions: any = {
-    messages: promptMessages,
+  const callOptions: any = {
     ...(typeof temperature === "number" ? { temperature } : {}),
     ...(typeof max_tokens === "number" ? { maxTokens: max_tokens } : {}),
   };
@@ -251,7 +250,7 @@ const handleChatCompletions = async (req: http.IncomingMessage, res: http.Server
     });
 
     try {
-      const streamResponse: any = await llm.stream(invokeOptions);
+      const streamResponse: any = await llm.stream(promptMessages, callOptions);
       let fullText = "";
       let usage: any = null;
 
@@ -304,7 +303,7 @@ const handleChatCompletions = async (req: http.IncomingMessage, res: http.Server
   }
 
   try {
-    const response = await llm.invoke(invokeOptions);
+    const response = await llm.invoke(promptMessages, callOptions);
 
     const content = Array.isArray(response?.content)
       ? response.content
