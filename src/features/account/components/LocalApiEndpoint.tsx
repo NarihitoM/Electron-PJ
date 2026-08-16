@@ -303,6 +303,7 @@ export const LocalApiEndpoint = () => {
               <div className="space-y-1.5">
                 <Label className="text-[10px] text-muted-foreground">Provider</Label>
                 <Select
+                  key={selectedProvider ?? "provider-empty"}
                   value={selectedProvider}
                   onValueChange={(v) => {
                     setSelectedProvider(v);
@@ -340,6 +341,7 @@ export const LocalApiEndpoint = () => {
               <div className="space-y-1.5">
                 <Label className="text-[10px] text-muted-foreground">Model</Label>
                 <Select
+                  key={`${selectedProvider ?? "none"}-${selectedModel ?? "empty"}`}
                   value={selectedModel}
                   onValueChange={setSelectedModel}
                   disabled={!selectedProvider}
