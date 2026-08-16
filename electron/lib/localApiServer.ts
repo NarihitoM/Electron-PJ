@@ -218,10 +218,23 @@ const handleChatCompletions = async (req: http.IncomingMessage, res: http.Server
   }
 
   const startTime = Date.now();
+
+  const extractText = (content: any): string => {
+    if (typeof content === "string") return content;
+    if (Array.isArray(content)) {
+      return content
+        .filter((p: any) => p.type === "text" && p.text)
+        .map((p: any) => p.text)
+        .join("");
+    }
+    return "";
+  };
+
   const promptMessages = messages.map((m: any) => {
-    if (m.role === "system") return { type: "system", content: m.content };
-    if (m.role === "assistant") return { type: "ai", content: m.content };
-    return { type: "human", content: m.content };
+    const text = extractText(m.content);
+    if (m.role === "system") return { type: "system", content: text };
+    if (m.role === "assistant") return { type: "ai", content: text };
+    return { type: "human", content: text };
   });
 
   const invokeOptions: any = {
