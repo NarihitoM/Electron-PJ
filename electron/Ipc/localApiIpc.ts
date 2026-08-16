@@ -8,6 +8,7 @@ const store = new Store({
   name: "user-preferences",
   defaults: {
     localApiKey: null,
+    modelAliases: [],
   },
 });
 
@@ -74,5 +75,14 @@ export const LocalApi = () => {
     const key = crypto.randomBytes(32).toString("hex");
     store.set("localApiKey", key);
     return key;
+  });
+
+  ipcMain.handle("get-model-aliases", () => {
+    return store.get("modelAliases") || [];
+  });
+
+  ipcMain.handle("save-model-aliases", (_event, aliases) => {
+    store.set("modelAliases", aliases);
+    return true;
   });
 };

@@ -21,6 +21,8 @@ const ALLOWED_INVOKE_CHANNELS = [
   "stop-local-api",
   "get-local-api-url",
   "regenerate-local-api-key",
+  "get-model-aliases",
+  "save-model-aliases",
 ];
 const ALLOWED_ON_CHANNELS = [
   "oauth-window-closed",
@@ -95,4 +97,6 @@ contextBridge.exposeInMainWorld("api", {
   stopLocalApi: () => ipcRenderer.invoke("stop-local-api"),
   getLocalApiUrl: () => ipcRenderer.invoke("get-local-api-url"),
   regenerateLocalApiKey: () => ipcRenderer.invoke("regenerate-local-api-key"),
+  getModelAliases: () => ipcRenderer.invoke("get-model-aliases"),
+  saveModelAliases: (aliases: any[]) => ipcRenderer.invoke("save-model-aliases", aliases),
 });

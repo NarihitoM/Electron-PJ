@@ -10,7 +10,7 @@ import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
 import { toast } from "sonner";
-import { Copy, Eye, EyeOff, Play, RefreshCw, Square, Zap } from "lucide-react";
+import { Copy, Eye, EyeOff, Play, Plus, RefreshCw, Square, Trash2, Zap } from "lucide-react";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useUser } from "@/features/auth/hooks/useUser";
 import { PROVIDER_MODELS } from "@/shared/config/providermodels";
@@ -24,6 +24,8 @@ const copyToClipboard = async (text: string, label: string) => {
   }
 };
 
+type ModelAlias = { alias: string; provider: string; model: string };
+
 export const LocalApiEndpoint = () => {
   const { data: Api = [] } = useServiceKeys();
   const { data: userdata } = useUser();
@@ -32,6 +34,9 @@ export const LocalApiEndpoint = () => {
   const [apiKey, setApiKey] = useState("");
   const [showApiKey, setShowApiKey] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [modelAliases, setModelAliases] = useState<ModelAlias[]>([]);
+  const [newAlias, setNewAlias] = useState("");
+  const [newModel, setNewModel] = useState("");
 
   useEffect(() => {
     (window as any).api
@@ -45,6 +50,13 @@ export const LocalApiEndpoint = () => {
         if (key) setApiKey(key);
       })
       .catch(() => {});
+
+    (window as any).api
+      ?.getModelAliases?.()
+      .then((aliases: ModelAlias[]) => {
+        if (aliases) setModelAliases(aliases);
+      })
+      .catch(() => {});
   }, []);
 
   const hostmap: Record<string, string> = {};
@@ -56,6 +68,55 @@ export const LocalApiEndpoint = () => {
   for (const [provider, models] of Object.entries(PROVIDER_MODELS)) {
     modelsMap[provider] = models.map((m) => ({ model: m.model }));
   }
+
+  for (const alias of modelAliases) {
+    if (!modelsMap[alias.provider]) {
+      modelsMap[alias.provider] = [];
+    }
+    if (!modelsMap[alias.provider].some((m) => m.model === alias.model)) {
+      modelsMap[alias.provider].push({ model: alias.model });
+    }
+  }
+
+  const handleAddAlias = async () => {
+    if (!newAlias.trim() || !newModel.trim()) {
+      toast.error("Both alias and model ID are required");
+      return;
+    }
+    const providerEntries = Object.entries(PROVIDER_MODELS);
+    let matchedProvider = "";
+    let matchedModel = "";
+    for (const [provider, models] of providerEntries) {
+      const found = models.find((m) => m.model === newModel.trim());
+      if (found) {
+        matchedProvider = provider;
+        matchedModel = found.model;
+        break;
+      }
+    }
+    if (!matchedProvider) {
+      toast.error(`Model "${newModel}" not found. Use an existing model ID from your providers.`);
+      return;
+    }
+    const alias = newAlias.trim();
+    if (modelAliases.some((a) => a.alias === alias)) {
+      toast.error("Alias already exists");
+      return;
+    }
+    const updated = [...modelAliases, { alias, provider: matchedProvider, model: matchedModel }];
+    setModelAliases(updated);
+    setNewAlias("");
+    setNewModel("");
+    await (window as any).api?.saveModelAliases?.(updated);
+    toast.success(`Model alias "${alias}" added`);
+  };
+
+  const handleRemoveAlias = async (alias: string) => {
+    const updated = modelAliases.filter((a) => a.alias !== alias);
+    setModelAliases(updated);
+    await (window as any).api?.saveModelAliases?.(updated);
+    toast.success(`Model alias "${alias}" removed`);
+  };
 
   const handleStart = async () => {
     if (!userdata?.useremail) {
@@ -194,6 +255,61 @@ export const LocalApiEndpoint = () => {
               {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
           </div>
+        </div>
+
+        <div className="space-y-3">
+          <Label className="text-[11px] font-bold uppercase tracking-widest text-zinc-500">
+            Model ID Configuration
+          </Label>
+          <p className="text-xs text-muted-foreground">
+            Add custom model IDs for Copilot, Codex, or IDE tools. Maps alias to an existing
+            provider model.
+          </p>
+          <div className="flex gap-2">
+            <Input
+              value={newAlias}
+              onChange={(e) => setNewAlias(e.target.value)}
+              placeholder="Alias (e.g. gpt-4o)"
+              className="flex-1 h-10 rounded-lg text-sm"
+            />
+            <Input
+              value={newModel}
+              onChange={(e) => setNewModel(e.target.value)}
+              placeholder="Provider model (e.g. gpt-4o)"
+              className="flex-1 h-10 rounded-lg text-sm"
+            />
+            <Button variant="ghost" size="sm" className="h-10 px-3" onClick={handleAddAlias}>
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+          {modelAliases.length > 0 && (
+            <div className="space-y-2">
+              {modelAliases.map((a) => (
+                <div
+                  key={a.alias}
+                  className="flex items-center justify-between p-2 rounded-lg bg-zinc-50 dark:bg-zinc-800/50"
+                >
+                  <div className="flex items-center gap-2 text-sm">
+                    <code className="font-mono text-xs bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded">
+                      {a.alias}
+                    </code>
+                    <span className="text-muted-foreground">→</span>
+                    <code className="font-mono text-xs text-muted-foreground">
+                      {a.provider}/{a.model}
+                    </code>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 w-7 p-0"
+                    onClick={() => handleRemoveAlias(a.alias)}
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="flex flex-row gap-3">
