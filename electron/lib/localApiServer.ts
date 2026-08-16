@@ -1,4 +1,5 @@
 import http from "node:http";
+import net from "node:net";
 import { createModel } from "../Agent/provider";
 import { type Servicefetch } from "../../src/features/services/types/type";
 
@@ -367,10 +368,18 @@ export const startLocalApiServer = async (config: {
     return { port: currentPort, url: `http://127.0.0.1:${currentPort}/v1` };
   }
 
+  const port = config.port || DEFAULT_PORT;
+  const portAvailable = await checkPortAvailable(port);
+  if (!portAvailable) {
+    throw new Error(
+      `Port ${port} is already in use. Stop the other process or use a different port.`,
+    );
+  }
+
   providerConfigs = config;
   localApiKey = config.apiKey || "";
   authToken = config.token || "";
-  currentPort = config.port || DEFAULT_PORT;
+  currentPort = port;
 
   await new Promise<void>((resolve) => {
     server = http.createServer((req, res) => {
@@ -415,14 +424,38 @@ export const startLocalApiServer = async (config: {
 
 export const stopLocalApiServer = async (): Promise<void> => {
   if (!server) return;
+  const s = server;
+  server = null;
+  providerConfigs = null;
   await new Promise<void>((resolve) => {
-    server?.close(() => resolve());
-    server = null;
-    providerConfigs = null;
+    const timeout = setTimeout(() => {
+      try {
+        (s as any).closeAllConnections?.();
+      } catch {
+        // ignore - connection cleanup is best effort
+      }
+      resolve();
+    }, 2000);
+    s.close(() => {
+      clearTimeout(timeout);
+      resolve();
+    });
   });
 };
 
 export const getLocalApiStatus = (): { running: boolean; port: number; url: string | null } => {
   if (!server) return { running: false, port: currentPort, url: null };
   return { running: true, port: currentPort, url: `http://127.0.0.1:${currentPort}/v1` };
+};
+
+export const checkPortAvailable = (port: number): Promise<boolean> => {
+  return new Promise((resolve) => {
+    const tester = net
+      .createServer()
+      .once("error", () => resolve(false))
+      .once("listening", () => {
+        tester.close(() => resolve(true));
+      })
+      .listen(port, "127.0.0.1");
+  });
 };
