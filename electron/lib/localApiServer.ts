@@ -393,7 +393,7 @@ export const startLocalApiServer = async (config: {
     );
   }
 
-  providerConfigs = config;
+  providerConfigs = { ...config, aliases: config.aliases || [] };
   localApiKey = config.apiKey || "";
   authToken = config.token || "";
   currentPort = port;
