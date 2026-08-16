@@ -9,11 +9,18 @@ import {
 import { Button } from "@/shared/components/ui/button";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/components/ui/select";
 import { toast } from "sonner";
 import { Copy, Eye, EyeOff, Play, Plus, RefreshCw, Square, Trash2, Zap } from "lucide-react";
 import { useServiceKeys } from "@/features/services/hooks/useServiceKeys";
 import { useUser } from "@/features/auth/hooks/useUser";
-import { PROVIDER_MODELS } from "@/shared/config/providermodels";
+import { PROVIDER_MODELS, getProviderDisplayName } from "@/shared/config/providermodels";
 
 const copyToClipboard = async (text: string, label: string) => {
   try {
@@ -64,9 +71,28 @@ export const LocalApiEndpoint = () => {
     if (item.host) hostmap[item.provider.toLowerCase()] = item.host;
   });
 
+  const configuredProviders = Api.map((k) => k.provider.toLowerCase());
+
+  const availableModels: { provider: string; model: string; label: string }[] = [];
+  for (const provider of configuredProviders) {
+    const models = PROVIDER_MODELS[provider];
+    if (models) {
+      for (const m of models) {
+        availableModels.push({
+          provider,
+          model: m.model,
+          label: `${getProviderDisplayName(provider)} — ${m.model}`,
+        });
+      }
+    }
+  }
+
   const modelsMap: Record<string, { model: string }[]> = {};
-  for (const [provider, models] of Object.entries(PROVIDER_MODELS)) {
-    modelsMap[provider] = models.map((m) => ({ model: m.model }));
+  for (const provider of configuredProviders) {
+    const models = PROVIDER_MODELS[provider];
+    if (models) {
+      modelsMap[provider] = models.map((m) => ({ model: m.model }));
+    }
   }
 
   for (const alias of modelAliases) {
@@ -79,23 +105,12 @@ export const LocalApiEndpoint = () => {
   }
 
   const handleAddAlias = async () => {
-    if (!newAlias.trim() || !newModel.trim()) {
-      toast.error("Both alias and model ID are required");
+    if (!newAlias.trim()) {
+      toast.error("Alias name is required");
       return;
     }
-    const providerEntries = Object.entries(PROVIDER_MODELS);
-    let matchedProvider = "";
-    let matchedModel = "";
-    for (const [provider, models] of providerEntries) {
-      const found = models.find((m) => m.model === newModel.trim());
-      if (found) {
-        matchedProvider = provider;
-        matchedModel = found.model;
-        break;
-      }
-    }
-    if (!matchedProvider) {
-      toast.error(`Model "${newModel}" not found. Use an existing model ID from your providers.`);
+    if (!newModel) {
+      toast.error("Select a model from the dropdown");
       return;
     }
     const alias = newAlias.trim();
@@ -103,7 +118,12 @@ export const LocalApiEndpoint = () => {
       toast.error("Alias already exists");
       return;
     }
-    const updated = [...modelAliases, { alias, provider: matchedProvider, model: matchedModel }];
+    const matched = availableModels.find((m) => m.model === newModel);
+    if (!matched) {
+      toast.error("Selected model not found in your configured providers");
+      return;
+    }
+    const updated = [...modelAliases, { alias, provider: matched.provider, model: matched.model }];
     setModelAliases(updated);
     setNewAlias("");
     setNewModel("");
@@ -262,26 +282,46 @@ export const LocalApiEndpoint = () => {
             Model ID Configuration
           </Label>
           <p className="text-xs text-muted-foreground">
-            Add custom model IDs for Copilot, Codex, or IDE tools. Maps alias to an existing
-            provider model.
+            Map custom model IDs for Copilot, Codex, or IDE tools.
           </p>
-          <div className="flex gap-2">
-            <Input
-              value={newAlias}
-              onChange={(e) => setNewAlias(e.target.value)}
-              placeholder="Alias (e.g. gpt-4o)"
-              className="flex-1 h-10 rounded-lg text-sm"
-            />
-            <Input
-              value={newModel}
-              onChange={(e) => setNewModel(e.target.value)}
-              placeholder="Provider model (e.g. gpt-4o)"
-              className="flex-1 h-10 rounded-lg text-sm"
-            />
-            <Button variant="ghost" size="sm" className="h-10 px-3" onClick={handleAddAlias}>
-              <Plus className="w-4 h-4" />
-            </Button>
-          </div>
+          {availableModels.length === 0 ? (
+            <p className="text-xs text-muted-foreground italic">
+              No providers configured. Add API keys in Service Providers first.
+            </p>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                value={newAlias}
+                onChange={(e) => setNewAlias(e.target.value)}
+                placeholder="Alias (e.g. gpt-4o)"
+                className="w-48 h-10 rounded-lg text-sm"
+              />
+              <Select value={newModel} onValueChange={setNewModel}>
+                <SelectTrigger className="flex-1 h-10 rounded-lg text-sm">
+                  <SelectValue placeholder="Select provider model" />
+                </SelectTrigger>
+                <SelectContent>
+                  {configuredProviders.map((provider) => {
+                    const models = PROVIDER_MODELS[provider];
+                    if (!models) return null;
+                    return (
+                      <SelectItem key={provider} value={`__header_${provider}`} disabled>
+                        {getProviderDisplayName(provider)}
+                      </SelectItem>
+                    );
+                  })}
+                  {availableModels.map((m) => (
+                    <SelectItem key={m.model} value={m.model}>
+                      {m.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant="ghost" size="sm" className="h-10 px-3" onClick={handleAddAlias}>
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
           {modelAliases.length > 0 && (
             <div className="space-y-2">
               {modelAliases.map((a) => (
@@ -293,7 +333,7 @@ export const LocalApiEndpoint = () => {
                     <code className="font-mono text-xs bg-zinc-100 dark:bg-zinc-700 px-1.5 py-0.5 rounded">
                       {a.alias}
                     </code>
-                    <span className="text-muted-foreground">→</span>
+                    <span className="text-muted-foreground">&rarr;</span>
                     <code className="font-mono text-xs text-muted-foreground">
                       {a.provider}/{a.model}
                     </code>
