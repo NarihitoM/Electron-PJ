@@ -337,7 +337,17 @@ export const LocalApiEndpoint = () => {
                   <SelectTrigger className="w-64 h-10 rounded-lg text-sm">
                     <SelectValue
                       placeholder={selectedProvider ? "Select model" : "Pick provider first"}
-                    />
+                    >
+                      {selectedModel && selectedProvider && (
+                        <div className="flex items-center gap-2">
+                          <img
+                            src={BRAND_ASSETS[selectedProvider]}
+                            className="w-4 h-4 rounded bg-white object-contain"
+                          />
+                          <span>{selectedModel}</span>
+                        </div>
+                      )}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {selectedProvider &&
