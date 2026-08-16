@@ -74,6 +74,21 @@ const extractTokenUsage = (response: any): { inputTokens: number; outputTokens: 
   return { inputTokens: 0, outputTokens: 0 };
 };
 
+const fetchMemoryContext = async (): Promise<string | undefined> => {
+  try {
+    if (!authToken) return undefined;
+    const { Server } = await import("../../src/shared/config/axioconfig");
+    const res = await Server.get("/memory/api/context", {
+      headers: { Authorization: `Bearer ${authToken}` },
+    });
+    const data = res.data?.data;
+    return data?.enabled && data?.text ? data.text : undefined;
+  } catch (err) {
+    console.error("Failed to fetch memory context for local API:", err);
+    return undefined;
+  }
+};
+
 const logUsage = async (
   provider: string,
   model: string,
@@ -240,6 +255,14 @@ const handleChatCompletions = async (req: http.IncomingMessage, res: http.Server
     if (m.role === "assistant") return { type: "ai", content: text };
     return { type: "human", content: text };
   });
+
+  const memoryContext = await fetchMemoryContext();
+  if (memoryContext) {
+    promptMessages.unshift({
+      type: "system",
+      content: `# What you remember about this user\n${memoryContext}`,
+    });
+  }
 
   const callOptions: any = {
     ...(typeof temperature === "number" ? { temperature } : {}),
