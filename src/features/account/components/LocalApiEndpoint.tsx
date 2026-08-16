@@ -307,7 +307,7 @@ export const LocalApiEndpoint = () => {
                   key={selectedProvider ?? "provider-empty"}
                   value={selectedProvider}
                   onValueChange={(v) => {
-                    setSelectedProvider(v);
+                    setSelectedProvider(v ?? undefined);
                     setSelectedModel(undefined);
                   }}
                 >
@@ -344,7 +344,7 @@ export const LocalApiEndpoint = () => {
                 <Select
                   key={`${selectedProvider ?? "none"}-${selectedModel ?? "empty"}`}
                   value={selectedModel}
-                  onValueChange={setSelectedModel}
+                  onValueChange={(v) => setSelectedModel(v ?? undefined)}
                   disabled={!selectedProvider}
                 >
                   <SelectTrigger className="w-64 h-10 rounded-lg text-sm">
