@@ -219,8 +219,11 @@ export const PROVIDER_MODELS: Record<string, { model: string; imageUrl: string }
   zen: [
     { model: "deepseek-v4-flash-free", imageUrl: MultimateLogo },
     { model: "mimo-v2.5-free", imageUrl: MultimateLogo },
-    { model: "north-mini-code-free", imageUrl: MultimateLogo },
     { model: "nemotron-3-ultra-free", imageUrl: MultimateLogo },
+    { model: "nemotron-3.5-lightning-free", imageUrl: MultimateLogo },
+    { model: "muse-spark-1.2-contributor-free", imageUrl: MultimateLogo },
+    { model: "ling-3.0-flash-fin-free", imageUrl: MultimateLogo },
+    { model: "laguna-s-2.1-free", imageUrl: MultimateLogo },
     { model: "big-pickle", imageUrl: MultimateLogo },
   ],
 };
